@@ -98,13 +98,40 @@ export class Input {
     const rect = this._canvas.getBoundingClientRect();
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-    // Account for CSS border by using clientWidth/clientHeight (content only)
-    const scaleX = this._canvas.width / this._canvas.clientWidth;
-    const scaleY = this._canvas.height / this._canvas.clientHeight;
+
     const borderLeft = parseFloat(getComputedStyle(this._canvas).borderLeftWidth) || 0;
     const borderTop = parseFloat(getComputedStyle(this._canvas).borderTopWidth) || 0;
-    event.canvasX = (clientX - rect.left - borderLeft) * scaleX;
-    event.canvasY = (clientY - rect.top - borderTop) * scaleY;
+
+    // Content area inside borders
+    const contentW = this._canvas.clientWidth;
+    const contentH = this._canvas.clientHeight;
+
+    // Internal canvas buffer resolution
+    const cw = this._canvas.width;
+    const ch = this._canvas.height;
+
+    // Account for object-fit: contain — the rendered content may be
+    // letter-boxed or pillar-boxed inside the CSS content box.
+    const canvasAspect = cw / ch;
+    const contentAspect = contentW / contentH;
+
+    let renderW, renderH;
+    if (contentAspect > canvasAspect) {
+      // Pillarboxed (bars on left & right)
+      renderH = contentH;
+      renderW = contentH * canvasAspect;
+    } else {
+      // Letterboxed (bars on top & bottom)
+      renderW = contentW;
+      renderH = contentW / canvasAspect;
+    }
+    const offsetX = (contentW - renderW) / 2;
+    const offsetY = (contentH - renderH) / 2;
+
+    const localX = clientX - rect.left - borderLeft - offsetX;
+    const localY = clientY - rect.top - borderTop - offsetY;
+    event.canvasX = (localX / renderW) * cw;
+    event.canvasY = (localY / renderH) * ch;
   }
 
   _onPointerDown(event) {
