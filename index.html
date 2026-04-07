@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>365 Giorni in Italia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hud" id="gameHeader">
+        <h1>365 Giorni in Italia</h1>
+        <p class="subtitle">RPG language-learning prototype in Bologna.</p>
+      </header>
+      <canvas id="gameCanvas" width="800" height="512" aria-label="365 Giorni in Italia game canvas"></canvas>
+      <aside id="infoDrawer" class="info-drawer" aria-live="polite">
+        <section id="statusPanel" class="panel"></section>
+        <section id="promptPanel" class="panel"></section>
+      </aside>
+    </main>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

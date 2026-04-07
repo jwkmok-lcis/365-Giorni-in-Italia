@@ -1,0 +1,102 @@
+:root {
+  --bg-night: #0f1720;
+  --bg-night-soft: #1b2835;
+  --panel-paper: #efe6d7;
+  --accent-terracotta: #b34c32;
+  --accent-olive: #5d6b3f;
+  --text-dark: #1d232b;
+  --text-light: #f2efe7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: var(--text-light);
+  background: radial-gradient(circle at 15% 10%, #324558, var(--bg-night) 45%),
+    linear-gradient(140deg, var(--bg-night-soft), #111920);
+}
+
+.app {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  padding: 1.25rem;
+  position: relative;
+}
+
+.hud h1 {
+  margin: 0;
+  letter-spacing: 0.06em;
+}
+
+.subtitle {
+  margin: 0.25rem 0 1rem;
+  color: #d2c8b3;
+}
+
+/* Hide header after game starts */
+.hud.hidden {
+  display: none;
+}
+
+canvas {
+  width: 800px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border: 2px solid var(--accent-olive);
+  background: #121a23;
+}
+
+.info-drawer {
+  display: none;
+  margin-top: 0.75rem;
+}
+
+.panel {
+  margin-top: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0.65rem 0.8rem;
+  background: var(--panel-paper);
+  color: var(--text-dark);
+  border-left: 5px solid var(--accent-terracotta);
+  border-radius: 2px;
+}
+
+/* ── Mobile fullscreen ─────────────────────── */
+@media (max-width: 840px) {
+  body {
+    background: #000;
+    overflow: hidden;
+  }
+
+  .app {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .hud {
+    display: none !important;
+  }
+
+  .info-drawer {
+    display: none !important;
+  }
+
+  canvas {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    border: none;
+    object-fit: contain;
+  }
+
+  .panel {
+    display: none;
+  }
+}
