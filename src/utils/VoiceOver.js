@@ -11,6 +11,7 @@ export class VoiceOver {
     this.strictItalian = false;
     this._voices = [];
     this._unlocked = false;
+    this._speaking = false;
 
     if (this.isSupported()) {
       this._voices = window.speechSynthesis.getVoices();
@@ -41,11 +42,13 @@ export class VoiceOver {
       return { ok: false, reason: "no-italian-voice" };
     }
 
-    // Stop any current speech first
-    window.speechSynthesis.cancel();
+    const synthesis = window.speechSynthesis;
+    const shouldInterrupt = options.interrupt !== false;
+    const hasActiveSpeech = synthesis.speaking || synthesis.pending;
 
-    // Chrome bug workaround: cancel() + speak() in the same tick silently
-    // fails. Deferring speak() to the next microtask fixes it reliably.
+    // Some browsers get stuck in paused state after tab/background changes.
+    synthesis.resume();
+
     const doSpeak = () => {
       const utterance = new SpeechSynthesisUtterance(String(text));
       utterance.lang = preferredVoice?.lang ?? lang;
@@ -53,15 +56,32 @@ export class VoiceOver {
       utterance.rate = options.rate ?? this.defaultRate;
       utterance.pitch = options.pitch ?? this.defaultPitch;
       utterance.volume = options.volume ?? this.defaultVolume;
-      utterance.onstart = () => { this._unlocked = true; };
-      utterance.onerror = () => { this._speaking = false; };
-      utterance.onend = () => { this._speaking = false; };
-      this._speaking = true;
-      window.speechSynthesis.speak(utterance);
+      utterance.onstart = () => {
+        this._unlocked = true;
+        this._speaking = true;
+      };
+      utterance.onerror = () => {
+        this._speaking = false;
+      };
+      utterance.onend = () => {
+        this._speaking = false;
+      };
+
+      synthesis.speak(utterance);
     };
 
-    // Use setTimeout(0) so the cancel() fully completes first
-    setTimeout(doSpeak, 50);
+    if (shouldInterrupt && hasActiveSpeech) {
+      synthesis.cancel();
+      // Chrome bug: cancel()+speak() same tick can fail. Delay only when
+      // interrupting existing speech, preserving gesture sync on first tap.
+      if (this._unlocked) {
+        setTimeout(doSpeak, 40);
+      } else {
+        doSpeak();
+      }
+    } else {
+      doSpeak();
+    }
 
     return {
       ok: true,
@@ -77,8 +97,7 @@ export class VoiceOver {
 
   unlockFromGesture() {
     if (!this.isSupported()) return { ok: false, reason: "unsupported" };
-    // Just mark as unlocked — the actual speak() call will work from the
-    // same gesture context since browsers track the gesture chain.
+    // Mark unlocked from a real user gesture.
     this._unlocked = true;
     return { ok: true, unlocked: true };
   }
@@ -89,6 +108,7 @@ export class VoiceOver {
 
   stop() {
     if (!this.isSupported()) return;
+    this._speaking = false;
     window.speechSynthesis.cancel();
   }
 
