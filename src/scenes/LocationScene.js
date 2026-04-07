@@ -140,10 +140,19 @@ export class LocationScene extends Scene {
   }
 
   handleInput(event) {
-    if (event.type !== "keydown") return;
+    const isKey = event.type === "keydown";
+    const isTap = event.type === "pointerdown" || event.type === "touchstart";
+
+    if (!isKey && !isTap) return;
 
     if (this._shopOpen) {
-      this._handleShopInput(event);
+      if (isKey) this._handleShopInput(event);
+      return;
+    }
+
+    // Tap: route through handlePointer for walk-to / NPC click
+    if (isTap && event.canvasX !== undefined) {
+      this.handlePointer({ type: "mousedown", button: 0, canvasX: event.canvasX, canvasY: event.canvasY });
       return;
     }
 

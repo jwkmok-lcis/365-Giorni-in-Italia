@@ -11,8 +11,8 @@ export const DIALOGUES = {
     nodes: {
       start: {
         speaker: "Marco",
-        // Good morning! Looking for something special in this square?
         text: "Buongiorno! Stai cercando qualcosa di speciale in questa piazza?",
+        en: "Good morning! Are you looking for something special in this square?",
         choices: [
           {
             text: "Sì — cerco il ragù leggendario di Bologna.",
@@ -28,9 +28,8 @@ export const DIALOGUES = {
       },
       ragu_hook: {
         speaker: "Marco",
-        // Lower your voice. Too many questions about ragù can make enemies.
-        // But if you really want to know, start with the bread.
         text: "Abbassa la voce. Chi fa troppe domande sul ragù... ha nemici. Ma se vuoi davvero capire, inizia dal pane.",
+        en: "Lower your voice. Too many questions about ragù can make enemies. But if you really want to know, start with the bread.",
         choices: [
           {
             text: "Dal pane? Spiegami meglio.",
@@ -46,9 +45,8 @@ export const DIALOGUES = {
       },
       pane_clue: {
         speaker: "Marco",
-        // The soft bread of Bologna absorbs a good ragù without breaking apart.
-        // Go to Lucia at the market. Ask about the soffritto. Don't say I sent you.
         text: "Il pane bolognese — morbido dentro, crosta leggera. Un ragù fatto bene lo assorbe senza rompersi. È tutta una questione di equilibrio. Vai da Lucia al mercato. Chiedile del soffritto. Non dire che ti mando io.",
+        en: "Bolognese bread — soft inside, light crust. A good ragù is absorbed without it falling apart. It's all about balance. Go to Lucia at the market. Ask about the soffritto. Don't say I sent you.",
         choices: [
           {
             text: "Capito. Grazie mille, Marco.",
@@ -59,8 +57,8 @@ export const DIALOGUES = {
       },
       dismissal: {
         speaker: "Marco",
-        // Fine. Come back when you're ready to take Bolognese cooking seriously.
         text: "Vabbè. Torna quando sei pronto a prendere sul serio la cucina bolognese.",
+        en: "Fine. Come back when you're ready to take Bolognese cooking seriously.",
         choices: [
           {
             text: "Scusa — hai ragione. Dal pane, dicevi?",
@@ -71,8 +69,8 @@ export const DIALOGUES = {
       },
       casual: {
         speaker: "Marco",
-        // Of course. I'm here every morning if you have questions.
         text: "Ci mancherebbe. Sono qui ogni mattina. Se trovi qualcosa di interessante, torna a dirmelo.",
+        en: "Of course. I'm here every morning. If you find something interesting, come back and tell me.",
         choices: [
           {
             text: "A presto, Marco.",
@@ -90,9 +88,8 @@ export const DIALOGUES = {
     nodes: {
       start: {
         speaker: "Lucia",
-        // There you are! I bet Marco sent you. Typical.
-        // Everyone at the market is talking about your investigation.
         text: "Eccoti! Scommetto che Marco ti ha mandato. Il solito... Al mercato si sa già tutto.",
+        en: "There you are! I bet Marco sent you. Typical. Everyone at the market already knows.",
         choices: [
           {
             text: "Sì. Mi ha detto di chiederti del soffritto.",
@@ -108,9 +105,8 @@ export const DIALOGUES = {
       },
       soffritto_reveal: {
         speaker: "Lucia",
-        // Finally someone asking the right questions.
-        // Onion, carrot, celery — always all three. Anyone who skips one is a fraud.
         text: "Finalmente qualcuno che fa le domande giuste. Cipolla, carota, sedano — sempre tutti e tre. Chi ne omette uno è un impostore. Punto.",
+        en: "Finally someone asking the right questions. Onion, carrot, celery — always all three. Anyone who skips one is a fraud. Period.",
         choices: [
           {
             text: "E la carne? Quando si aggiunge?",
@@ -126,9 +122,8 @@ export const DIALOGUES = {
       },
       meat_follow: {
         speaker: "Lucia",
-        // That comes after. First let the soffritto sweat slowly over low heat.
-        // Rushing kills the ragù.
         text: "La carne viene dopo. Prima il soffritto. Lo fai sudare piano, fuoco basso, almeno venti minuti. La fretta uccide il ragù — ricordatelo.",
+        en: "The meat comes after. First the soffritto. Let it sweat slowly, low heat, at least twenty minutes. Rushing kills the ragù — remember that.",
         choices: [
           {
             text: "Grazie, Lucia. Hai già detto tutto.",
@@ -139,9 +134,8 @@ export const DIALOGUES = {
       },
       fresh_tip: {
         speaker: "Lucia",
-        // Here at the market, obviously. But be careful — not everyone sells good produce.
-        // I'll pick them for you.
         text: "Qui al mercato, ovviamente! Ma stai attenta — non tutti vendono roba buona. Io te le scelgo io. E non comprare mai le carote già tagliate.",
+        en: "Here at the market, obviously! But be careful — not everyone sells good produce. I'll pick them for you. And never buy pre-cut carrots.",
         choices: [
           {
             text: "Grazie mille, Lucia.",
@@ -160,9 +154,8 @@ export const DIALOGUES = {
     nodes: {
       start: {
         speaker: "Donna Rosa",
-        // It doesn't surprise me that you're here.
-        // Bologna has a long memory. The ragù story goes back further than you think.
         text: "Non mi sorprende che tu sia qui. Bologna ha una lunga memoria. La storia del ragù risale più indietro di quanto pensi.",
+        en: "It doesn't surprise me that you're here. Bologna has a long memory. The ragù story goes back further than you think.",
         choices: [
           {
             text: "Hai sentito qualcosa di strano sull'osteria?",
@@ -178,9 +171,8 @@ export const DIALOGUES = {
       },
       osteria_rumor: {
         speaker: "Donna Rosa",
-        // Giorgio at the Osteria del Sole has been nervous lately.
-        // He used to be open about the recipe. Now he avoids the subject completely.
         text: "Giorgio al Sole è nervoso ultimamente. Prima parlava della ricetta con chiunque. Adesso schiva l'argomento. Vai a parlargli — ma ascolta anche quello che non dice.",
+        en: "Giorgio at the Osteria del Sole has been nervous lately. He used to talk about the recipe with anyone. Now he avoids the subject. Go talk to him — but listen to what he doesn't say too.",
         choices: [
           {
             text: "E tu cosa pensi che nasconda?",
@@ -196,9 +188,8 @@ export const DIALOGUES = {
       },
       cooking_time: {
         speaker: "Donna Rosa",
-        // The real ragù needs at least three hours over very low heat.
-        // My grandmother said the sauce should barely shiver, not boil.
         text: "Il ragù vero vuole almeno tre ore, fuoco bassissimo. Mia nonna diceva: 'Il sugo deve tremare, non bollire.' Tre ore — non un minuto di meno.",
+        en: "The real ragù needs at least three hours on very low heat. My grandmother said: 'The sauce should shiver, not boil.' Three hours — not a minute less.",
         choices: [
           {
             text: "Ho sentito qualcuno dire sei ore.",
@@ -214,9 +205,8 @@ export const DIALOGUES = {
       },
       contradiction: {
         speaker: "Donna Rosa",
-        // Six hours? Who told you that? Giorgio again, I'll bet.
-        // He exaggerates to confuse people. Or maybe he's hiding something different entirely.
         text: "Sei ore? Chi te lo ha detto? Giorgio, scommetto. O esagera per confondere le idee... oppure nasconde qualcos'altro di diverso.",
+        en: "Six hours? Who told you that? Giorgio, I bet. Either he exaggerates to confuse people... or he's hiding something else entirely.",
         choices: [
           {
             text: "Interessante. Grazie, ci penso.",
@@ -234,9 +224,8 @@ export const DIALOGUES = {
     nodes: {
       start: {
         speaker: "Giorgio",
-        // The ragù is not discussed. It's eaten.
-        // You can't learn it from questions. You learn it from years.
         text: "Il ragù non si discute. Si mangia. Non lo impari a forza di domande. Lo impari con gli anni.",
+        en: "Ragù is not discussed. It's eaten. You can't learn it from questions. You learn it from years of experience.",
         choices: [
           {
             text: "Capisco. Ma quanto tempo ci vuole, esattamente?",
@@ -252,9 +241,8 @@ export const DIALOGUES = {
       },
       time_reveal: {
         speaker: "Giorgio",
-        // Six hours minimum. On the lowest flame you have.
-        // Anyone who tells you less has never made a real ragù in their life.
         text: "Sei ore minimo. Sul fuoco più basso che hai. Chi ti dice meno non ha mai fatto un ragù vero in vita sua.",
+        en: "Six hours minimum. On the lowest flame you have. Anyone who tells you less has never made a real ragù in their life.",
         choices: [
           {
             text: "Sei sicuro? Ho sentito tre ore da qualcuno.",
@@ -270,9 +258,8 @@ export const DIALOGUES = {
       },
       three_hours_challenge: {
         speaker: "Giorgio",
-        // Three hours? (He laughs.) That's soup, not ragù.
-        // Tell me who said that and I'll tell you why they're wrong.
         text: "Tre ore? (ride) Quello è brodo, non ragù. Dimmi chi te l'ha detto e ti spiego perché sbaglia.",
+        en: "Three hours? (laughs) That's soup, not ragù. Tell me who said that and I'll tell you why they're wrong.",
         choices: [
           {
             text: "Donna Rosa, in piazza.",
@@ -288,10 +275,8 @@ export const DIALOGUES = {
       },
       on_donna_rosa: {
         speaker: "Giorgio",
-        // (His expression closes off.)
-        // Donna Rosa means well. But she learned from a different tradition.
-        // Not everything passed down is correct.
         text: "(La sua espressione si chiude.) Donna Rosa vuole bene a tutti. Ma ha imparato da una tradizione diversa. Non tutto quello che passa di mano in mano è ancora giusto.",
+        en: "(His expression closes off.) Donna Rosa means well. But she learned from a different tradition. Not everything passed down is still correct.",
         choices: [
           {
             text: "Una tradizione diversa... da dove?",
@@ -310,9 +295,8 @@ export const DIALOGUES = {
     nodes: {
       start: {
         speaker: "Prof. Conti",
-        // Ah, you must be the new culinary investigator everyone is talking about.
-        // Ancient recipes often hide regional dialectical variations you won't find in modern books.
         text: "Ah, sei il nuovo investigatore culinario di cui tutti parlano. Le ricette antiche spesso nascondono varianti dialettali locali che i libri moderni non riportano.",
+        en: "Ah, you must be the new culinary investigator everyone is talking about. Ancient recipes often hide regional dialectical variations you won't find in modern books.",
         choices: [
           {
             text: "Esiste davvero una ricetta originale scritta?",
@@ -328,10 +312,8 @@ export const DIALOGUES = {
       },
       document_exists: {
         speaker: "Prof. Conti",
-        // I can confirm it exists. A written record from the late 1800s,
-        // in the historical archive of the Biblioteca Salaborsa.
-        // But the archive is closed to the public. Special access required.
         text: "Posso confermarlo. Un documento scritto, fine Ottocento, nell'archivio storico della Biblioteca Salaborsa. Però l'archivio è chiuso al pubblico. Ci vuole un accesso speciale.",
+        en: "I can confirm it. A written document from the late 1800s, in the historical archive of the Biblioteca Salaborsa. But the archive is closed to the public. Special access is needed.",
         choices: [
           {
             text: "Come si ottiene l'accesso?",
@@ -347,9 +329,8 @@ export const DIALOGUES = {
       },
       archive_hint: {
         speaker: "Prof. Conti",
-        // The Biblioteca Salaborsa has a historical archive that most people don't know exists.
-        // That's where I'd start.
         text: "La Biblioteca Salaborsa ha un archivio storico che la maggior parte delle persone non sa nemmeno che esiste. Io partirei da lì.",
+        en: "The Biblioteca Salaborsa has a historical archive that most people don't even know exists. That's where I'd start.",
         choices: [
           {
             text: "Posso accedervi?",
@@ -360,10 +341,8 @@ export const DIALOGUES = {
       },
       access_mystery: {
         speaker: "Prof. Conti",
-        // I had access once. Things have changed.
-        // Someone at the library might still be able to help you in.
-        // Have you spoken with Elena Bianchi?
         text: "Io avevo l'accesso una volta. Le cose sono cambiate. Forse qualcuno alla biblioteca può ancora farti entrare. Hai parlato con Elena Bianchi?",
+        en: "I had access once. Things have changed. Maybe someone at the library can still get you in. Have you spoken with Elena Bianchi?",
         choices: [
           {
             text: "No — chi è Elena Bianchi?",
@@ -374,9 +353,8 @@ export const DIALOGUES = {
       },
       who_saw_it: {
         speaker: "Prof. Conti",
-        // Very few people. I saw it once, years ago.
-        // And Giorgio Neri — he was there too. Though he's never admitted it publicly.
         text: "Pochissimi. Io l'ho visto una volta, anni fa. E Giorgio Neri — anche lui era presente. Anche se non l'ha mai ammesso pubblicamente.",
+        en: "Very few people. I saw it once, years ago. And Giorgio Neri — he was there too. Though he's never admitted it publicly.",
         choices: [
           {
             text: "Giorgio Neri... di nuovo lui.",
@@ -394,9 +372,8 @@ export const DIALOGUES = {
     nodes: {
       start: {
         speaker: "Elena",
-        // Have you tried looking at the old documents in the library?
-        // There are things in that archive that would change your investigation completely.
         text: "Hai già provato a cercare vecchi appunti in biblioteca? Ci sono cose in quell'archivio che cambierebbero la tua indagine completamente.",
+        en: "Have you tried looking at old documents in the library? There are things in that archive that would change your investigation completely.",
         choices: [
           {
             text: "Il Prof. Conti mi ha detto che serve un accesso speciale.",
@@ -412,10 +389,8 @@ export const DIALOGUES = {
       },
       access_offer: {
         speaker: "Elena",
-        // Conti told you? Then you're further along than I thought.
-        // Come back when you know exactly what you're looking for.
-        // The archive doesn't give up its secrets to the unprepared.
         text: "Conti ti ha parlato? Allora sei più avanti di quanto pensassi. Torna da me quando sai esattamente cosa cerchi. L'archivio non rivela i suoi segreti a chi non è pronto.",
+        en: "Conti told you? Then you're further along than I thought. Come back when you know exactly what you're looking for. The archive doesn't give up its secrets to the unprepared.",
         choices: [
           {
             text: "Cerco la ricetta originale del ragù bolognese.",

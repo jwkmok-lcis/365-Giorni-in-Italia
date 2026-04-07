@@ -41,10 +41,14 @@ export class LessonScene extends Scene {
 
   handleInput(event) {
     if (this._cooldownFrames > 0) return;
-    if (event.type !== "keydown") return;
+    const isKey = event.type === "keydown";
+    const isTap = event.type === "pointerdown" || event.type === "touchstart" || event.type === "click";
+    const isConfirm = (isKey && (event.key === "Enter" || event.key === " ")) || isTap;
+
+    if (!isKey && !isTap) return;
 
     if (this._phase === "intro") {
-      if (event.key === "Enter" || event.key === " ") {
+      if (isConfirm) {
         this._phase = "quiz";
         this._updatePanels();
       }
@@ -59,7 +63,27 @@ export class LessonScene extends Scene {
       if (event.key === "ArrowDown") {
         this._choiceIndex = (this._choiceIndex + 1) % q.choices.length;
       }
-      if (event.key === "Enter") {
+
+      // Tap directly on a quiz choice to select + confirm
+      if (isTap && event.canvasY !== undefined) {
+        const baseY = 270;
+        let tapped = false;
+        for (let i = 0; i < q.choices.length; i++) {
+          const top = baseY + i * 44 - 22;
+          const bottom = top + 44;
+          if (event.canvasY >= top && event.canvasY < bottom) {
+            this._choiceIndex = i;
+            tapped = true;
+            break;
+          }
+        }
+        if (!tapped) {
+          this._updatePanels();
+          return; // tap missed all choices; don't confirm
+        }
+      }
+
+      if (isConfirm) {
         this._answers[this._qIndex] = this._choiceIndex;
         this._qIndex += 1;
         this._choiceIndex = 0;
@@ -78,7 +102,7 @@ export class LessonScene extends Scene {
     }
 
     if (this._phase === "result") {
-      if (event.key === "Enter") {
+      if (isConfirm) {
         if (this._result.passed) {
           this._game.context.scenes.go("map", this._game);
         } else {
@@ -120,24 +144,43 @@ export class LessonScene extends Scene {
   _renderIntro(ctx) {
     ctx.fillStyle = "#f2efe7";
     ctx.font = "600 28px Georgia";
-    ctx.fillText(this._lesson.title, 40, 130);
+    let y = this._drawWrappedText(ctx, this._lesson.title, 40, 130, 720, 34);
 
     ctx.font = "400 20px Georgia";
-    ctx.fillText("Vocabolario", 40, 180);
+    y += 18;
+    ctx.fillText("Vocabolario", 40, y);
 
     ctx.font = "400 18px Georgia";
-    let y = 215;
+    y += 35;
     this._lesson.vocab.forEach((v) => {
-      ctx.fillText(`- ${v.it} = ${v.en}`, 56, y);
-      y += 30;
+      y = this._drawWrappedText(ctx, `- ${v.it} = ${v.en}`, 56, y, 700, 28);
+      y += 4;
     });
 
+    y += 16;
     ctx.font = "400 20px Georgia";
-    ctx.fillText(`Frase: ${this._lesson.phrase.it}  (${this._lesson.phrase.en})`, 40, 340);
-    ctx.fillText(`Grammar: ${this._lesson.grammar.topic} - ${this._lesson.grammar.note}`, 40, 380);
+    y = this._drawWrappedText(
+      ctx,
+      `Frase: ${this._lesson.phrase.it} (${this._lesson.phrase.en})`,
+      40,
+      y,
+      720,
+      30
+    );
+    y += 10;
+    y = this._drawWrappedText(
+      ctx,
+      `Grammar: ${this._lesson.grammar.topic} - ${this._lesson.grammar.note}`,
+      40,
+      y,
+      720,
+      30
+    );
 
     ctx.fillStyle = "#9ec0cf";
-    ctx.fillText("Press Enter to begin quiz", 40, 470);
+    ctx.font = "600 20px Georgia";
+    const hintY = Math.min(ctx.canvas.height - 24, y + 46);
+    ctx.fillText("Press Enter or tap to begin quiz", 40, hintY);
   }
 
   _renderQuiz(ctx) {
@@ -161,7 +204,7 @@ export class LessonScene extends Scene {
 
     ctx.fillStyle = "#9ec0cf";
     ctx.font = "400 18px Georgia";
-    ctx.fillText("Arrow keys to select, Enter to confirm", 40, 500);
+    ctx.fillText("Arrow keys to select, Enter or tap to confirm", 40, 500);
   }
 
   _renderResult(ctx) {
@@ -177,12 +220,12 @@ export class LessonScene extends Scene {
       ctx.fillStyle = "#b7df8f";
       ctx.fillText("Passed. Map unlocked for today.", 40, 330);
       ctx.fillStyle = "#9ec0cf";
-      ctx.fillText("Press Enter to continue exploring.", 40, 390);
+      ctx.fillText("Press Enter or tap to continue exploring.", 40, 390);
     } else {
       ctx.fillStyle = "#f0b5a5";
       ctx.fillText("Not enough correct answers.", 40, 330);
       ctx.fillStyle = "#9ec0cf";
-      ctx.fillText("Press Enter to retry the lesson.", 40, 390);
+      ctx.fillText("Press Enter or tap to retry the lesson.", 40, 390);
     }
   }
 
@@ -209,15 +252,38 @@ export class LessonScene extends Scene {
 
     if (this._phase === "intro") {
       this._statusPanel.textContent = "Daily lesson briefing";
-      this._promptPanel.textContent = "Review vocab and phrase, then press Enter.";
+      this._promptPanel.textContent = "Review vocab and phrase, then press Enter or tap.";
     } else if (this._phase === "quiz") {
       this._statusPanel.textContent = `Lesson quiz: question ${this._qIndex + 1}/${this._lesson.quiz.length}`;
-      this._promptPanel.textContent = "Arrow keys to pick an answer, Enter to lock it in.";
+      this._promptPanel.textContent = "Arrow keys to pick an answer, Enter or tap to lock it in.";
     } else {
       this._statusPanel.textContent = this._result.passed ? "Lesson passed" : "Lesson retry required";
       this._promptPanel.textContent = this._result.passed
-        ? "Press Enter to return to the map."
-        : "Press Enter to retake the quiz.";
+        ? "Press Enter or tap to return to the map."
+        : "Press Enter or tap to retake the quiz.";
     }
+  }
+
+  _drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(/\s+/);
+    let line = "";
+
+    words.forEach((word) => {
+      const testLine = line ? `${line} ${word}` : word;
+      if (ctx.measureText(testLine).width > maxWidth && line) {
+        ctx.fillText(line, x, y);
+        line = word;
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    });
+
+    if (line) {
+      ctx.fillText(line, x, y);
+      y += lineHeight;
+    }
+
+    return y;
   }
 }

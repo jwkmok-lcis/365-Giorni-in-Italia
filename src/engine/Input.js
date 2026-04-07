@@ -13,9 +13,12 @@ export class Input {
     this._held = new Set();    // keys currently held down
     this._pressed = new Set(); // keys pressed this frame (cleared each update)
     this._game = null;
+    this._canvas = null;
 
     this._onKeyDown = this._onKeyDown.bind(this);
     this._onKeyUp = this._onKeyUp.bind(this);
+    this._onPointerDown = this._onPointerDown.bind(this);
+    this._onTouchStart = this._onTouchStart.bind(this);
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
@@ -23,14 +26,27 @@ export class Input {
   /** Attach listeners to window and hold a reference to the running Game. */
   init(game) {
     this._game = game;
+    this._canvas = game?.canvas ?? null;
     window.addEventListener("keydown", this._onKeyDown);
     window.addEventListener("keyup", this._onKeyUp);
+
+    if (this._canvas) {
+      this._canvas.addEventListener("pointerdown", this._onPointerDown);
+      this._canvas.addEventListener("touchstart", this._onTouchStart, { passive: false });
+    }
   }
 
   /** Remove all listeners. */
   destroy() {
     window.removeEventListener("keydown", this._onKeyDown);
     window.removeEventListener("keyup", this._onKeyUp);
+
+    if (this._canvas) {
+      this._canvas.removeEventListener("pointerdown", this._onPointerDown);
+      this._canvas.removeEventListener("touchstart", this._onTouchStart);
+    }
+
+    this._canvas = null;
     this._game = null;
   }
 
@@ -75,5 +91,31 @@ export class Input {
 
   _onKeyUp(event) {
     this._held.delete(event.key);
+  }
+
+  _addCanvasCoords(event) {
+    if (!this._canvas) return;
+    const rect = this._canvas.getBoundingClientRect();
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    const scaleX = this._canvas.width / rect.width;
+    const scaleY = this._canvas.height / rect.height;
+    event.canvasX = (clientX - rect.left) * scaleX;
+    event.canvasY = (clientY - rect.top) * scaleY;
+  }
+
+  _onPointerDown(event) {
+    this._addCanvasCoords(event);
+    if (this._game?._scene) {
+      this._game._scene.handleInput(event);
+    }
+  }
+
+  _onTouchStart(event) {
+    event.preventDefault();
+    this._addCanvasCoords(event);
+    if (this._game?._scene) {
+      this._game._scene.handleInput(event);
+    }
   }
 }

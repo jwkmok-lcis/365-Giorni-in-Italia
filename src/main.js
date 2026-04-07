@@ -13,6 +13,7 @@ import { DialogueSystem } from "./systems/DialogueSystem.js";
 import { QuestSystem } from "./systems/QuestSystem.js";
 import { EventFeedSystem } from "./systems/EventFeedSystem.js";
 import { SaveSystem } from "./systems/SaveSystem.js";
+import { VoiceOver } from "./utils/VoiceOver.js";
 
 // ── DOM guards ────────────────────────────────────────────────────────────────
 const canvas = document.getElementById("gameCanvas");
@@ -34,6 +35,7 @@ const dialogue = new DialogueSystem();
 const quest = new QuestSystem();
 const eventFeed = new EventFeedSystem();
 const save = new SaveSystem();
+const voice = new VoiceOver();
 
 eventFeed.attach(bus);
 eventFeed.push("Welcome to Bologna. Start your daily lesson.");
@@ -44,7 +46,7 @@ scenes.register("dialogue", new DialogueScene());
 scenes.register("location", new LocationScene());
 
 // context is passed through to every scene via game.context.*
-const game = new Game(canvas, { bus, input, scenes, day, lesson, player, dialogue, quest, eventFeed, save });
+const game = new Game(canvas, { bus, input, scenes, day, lesson, player, dialogue, quest, eventFeed, save, voice });
 
 const loaded = save.loadIntoContext(game.context);
 if (loaded) {

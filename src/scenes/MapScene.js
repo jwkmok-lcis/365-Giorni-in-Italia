@@ -137,14 +137,20 @@ export class MapScene extends Scene {
   }
 
   handleInput(event) {
-    if (!this._game || event.type !== "keydown") return;
+    if (!this._game) return;
 
-    if (!this._game.context.day.canExplore() && event.key === "Enter") {
+    const isKey = event.type === "keydown";
+    const isTap = event.type === "pointerdown" || event.type === "touchstart";
+    const isConfirm = (isKey && event.key === "Enter") || isTap;
+
+    if (!isKey && !isTap) return;
+
+    if (!this._game.context.day.canExplore() && isConfirm) {
       this._game.context.scenes.go("lesson", this._game);
       return;
     }
 
-    if (this._game.context.day.canExplore() && event.key === "Enter") {
+    if (this._game.context.day.canExplore() && isConfirm) {
       const loc = this._player.nearEntrance(LOCATIONS);
       if (loc) {
         if (loc.style === "piazza" && loc.npcSlots?.length) {
@@ -161,7 +167,7 @@ export class MapScene extends Scene {
       return;
     }
 
-    if (this._game.context.day.canExplore() && (event.key === "n" || event.key === "N")) {
+    if (this._game.context.day.canExplore() && isKey && (event.key === "n" || event.key === "N")) {
       this._game.context.day.endDay(this._game.context.bus);
       if (!this._game.context.day.gameComplete) {
         this._game.context.scenes.go("lesson", this._game);
