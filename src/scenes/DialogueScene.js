@@ -25,9 +25,6 @@ export class DialogueScene extends Scene {
     this._returnParams = undefined;
     this._showTranslation = false;
     this._btnRects = { voice: null, translate: null, choices: [] };
-    this._voiceFlash = 0;
-    this._transFlash = 0;
-    this._isSpeaking = false;
   }
 
   enter(game, params = {}) {
@@ -43,7 +40,6 @@ export class DialogueScene extends Scene {
     this._showTranslation = false;
     this._voiceFlash = 0;
     this._transFlash = 0;
-    this._isSpeaking = false;
 
     this._updatePanels();
   }
@@ -128,15 +124,9 @@ export class DialogueScene extends Scene {
   _speakCurrentNode() {
     const voice = this._game.context.voice;
     if (!voice) return;
-    // Unlock TTS from the current user gesture (required by browsers)
     voice.unlockFromGesture();
     const node = this._game.context.dialogue.getCurrentNode(this._session);
-    const result = voice.speak(node.text, { requireUnlock: false });
-    this._isSpeaking = result?.ok ?? false;
-    // Clear speaking state when utterance finishes (fallback timeout)
-    if (this._isSpeaking) {
-      setTimeout(() => { this._isSpeaking = false; }, 8000);
-    }
+    voice.speak(node.text, { requireUnlock: false });
   }
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -206,8 +196,9 @@ export class DialogueScene extends Scene {
     const btnStartX = portraitX + portraitSize + 16;
 
     // Voice button — flash bright when tapped, show speaking state
-    const voiceLabel = this._isSpeaking ? "🔊 Playing…" : "🔊 Voice";
-    const voiceBg = this._voiceFlash > 0 ? "#4a8ac0" : (this._isSpeaking ? "#2a5a70" : "#2a4a60");
+    const speaking = this._game.context.voice?.isSpeaking() ?? false;
+    const voiceLabel = speaking ? "🔊 Playing…" : "🔊 Voice";
+    const voiceBg = this._voiceFlash > 0 ? "#4a8ac0" : (speaking ? "#2a5a70" : "#2a4a60");
     const voiceFg = this._voiceFlash > 0 ? "#ffffff" : "#7ec8e3";
     this._btnRects.voice = this._drawPill(ctx, voiceLabel, btnStartX, btnY, voiceBg, voiceFg);
 

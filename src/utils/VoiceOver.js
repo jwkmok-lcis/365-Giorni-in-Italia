@@ -34,7 +34,6 @@ export class VoiceOver {
       return { ok: false, reason: "locked" };
     }
 
-    const utterance = new SpeechSynthesisUtterance(String(text));
     const lang = options.lang ?? this.defaultLang;
     const preferredVoice = this._selectBestVoice(lang);
 
@@ -42,22 +41,28 @@ export class VoiceOver {
       return { ok: false, reason: "no-italian-voice" };
     }
 
-    utterance.lang = preferredVoice?.lang ?? lang;
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    }
-    utterance.rate = options.rate ?? this.defaultRate;
-    utterance.pitch = options.pitch ?? this.defaultPitch;
-    utterance.volume = options.volume ?? this.defaultVolume;
-    utterance.onstart = () => {
-      this._unlocked = true;
+    // Stop any current speech first
+    window.speechSynthesis.cancel();
+
+    // Chrome bug workaround: cancel() + speak() in the same tick silently
+    // fails. Deferring speak() to the next microtask fixes it reliably.
+    const doSpeak = () => {
+      const utterance = new SpeechSynthesisUtterance(String(text));
+      utterance.lang = preferredVoice?.lang ?? lang;
+      if (preferredVoice) utterance.voice = preferredVoice;
+      utterance.rate = options.rate ?? this.defaultRate;
+      utterance.pitch = options.pitch ?? this.defaultPitch;
+      utterance.volume = options.volume ?? this.defaultVolume;
+      utterance.onstart = () => { this._unlocked = true; };
+      utterance.onerror = () => { this._speaking = false; };
+      utterance.onend = () => { this._speaking = false; };
+      this._speaking = true;
+      window.speechSynthesis.speak(utterance);
     };
 
-    if (options.interrupt !== false) {
-      window.speechSynthesis.cancel();
-    }
+    // Use setTimeout(0) so the cancel() fully completes first
+    setTimeout(doSpeak, 50);
 
-    window.speechSynthesis.speak(utterance);
     return {
       ok: true,
       voiceName: preferredVoice?.name ?? "browser-default",
@@ -65,23 +70,17 @@ export class VoiceOver {
     };
   }
 
+  /** Whether speech is currently playing. */
+  isSpeaking() {
+    return this._speaking || window.speechSynthesis.speaking;
+  }
+
   unlockFromGesture() {
     if (!this.isSupported()) return { ok: false, reason: "unsupported" };
-    if (this._unlocked) return { ok: true, unlocked: true };
-
-    // Prime speech synthesis from a user gesture to satisfy mobile autoplay policies.
-    const utterance = new SpeechSynthesisUtterance(" ");
-    utterance.lang = this.defaultLang;
-    utterance.volume = 0;
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.onstart = () => {
-      this._unlocked = true;
-      window.speechSynthesis.cancel();
-    };
-
-    window.speechSynthesis.speak(utterance);
-    return { ok: true, unlocked: this._unlocked };
+    // Just mark as unlocked — the actual speak() call will work from the
+    // same gesture context since browsers track the gesture chain.
+    this._unlocked = true;
+    return { ok: true, unlocked: true };
   }
 
   isUnlocked() {
