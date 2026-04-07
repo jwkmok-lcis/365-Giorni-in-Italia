@@ -50,6 +50,8 @@ canvas {
   display: block;
   border: 2px solid var(--accent-olive);
   background: #121a23;
+  cursor: pointer;
+  touch-action: none;
 }
 
 .info-drawer {

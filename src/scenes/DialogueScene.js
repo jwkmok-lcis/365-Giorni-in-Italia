@@ -25,6 +25,9 @@ export class DialogueScene extends Scene {
     this._returnParams = undefined;
     this._showTranslation = false;
     this._btnRects = { voice: null, translate: null, choices: [] };
+    this._voiceFlash = 0;
+    this._transFlash = 0;
+    this._isSpeaking = false;
   }
 
   enter(game, params = {}) {
@@ -38,15 +41,17 @@ export class DialogueScene extends Scene {
     this._choiceIndex = 0;
     this._cooldownFrames = 8;
     this._showTranslation = false;
+    this._voiceFlash = 0;
+    this._transFlash = 0;
+    this._isSpeaking = false;
 
-    // Unlock TTS from the user gesture that entered this scene
-    game.context.voice?.unlockFromGesture();
-    this._speakCurrentNode();
     this._updatePanels();
   }
 
   update() {
     if (this._cooldownFrames > 0) this._cooldownFrames -= 1;
+    if (this._voiceFlash > 0) this._voiceFlash -= 1;
+    if (this._transFlash > 0) this._transFlash -= 1;
   }
 
   // ── Input ──────────────────────────────────────────────────────────────
@@ -62,11 +67,13 @@ export class DialogueScene extends Scene {
     if (isTap && event.canvasY !== undefined) {
       // Voice button
       if (this._hitTest(event, this._btnRects.voice)) {
+        this._voiceFlash = 12;
         this._speakCurrentNode();
         return;
       }
       // Translate button
       if (this._hitTest(event, this._btnRects.translate)) {
+        this._transFlash = 12;
         this._showTranslation = !this._showTranslation;
         return;
       }
@@ -119,8 +126,17 @@ export class DialogueScene extends Scene {
   }
 
   _speakCurrentNode() {
+    const voice = this._game.context.voice;
+    if (!voice) return;
+    // Unlock TTS from the current user gesture (required by browsers)
+    voice.unlockFromGesture();
     const node = this._game.context.dialogue.getCurrentNode(this._session);
-    this._game.context.voice?.speak(node.text, { requireUnlock: false });
+    const result = voice.speak(node.text, { requireUnlock: false });
+    this._isSpeaking = result?.ok ?? false;
+    // Clear speaking state when utterance finishes (fallback timeout)
+    if (this._isSpeaking) {
+      setTimeout(() => { this._isSpeaking = false; }, 8000);
+    }
   }
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -189,12 +205,17 @@ export class DialogueScene extends Scene {
     const btnY = portraitY + 46;
     const btnStartX = portraitX + portraitSize + 16;
 
-    // Voice button
-    this._btnRects.voice = this._drawPill(ctx, "🔊 Voice", btnStartX, btnY, "#2a4a60", "#7ec8e3");
-    // Translate button
+    // Voice button — flash bright when tapped, show speaking state
+    const voiceLabel = this._isSpeaking ? "🔊 Playing…" : "🔊 Voice";
+    const voiceBg = this._voiceFlash > 0 ? "#4a8ac0" : (this._isSpeaking ? "#2a5a70" : "#2a4a60");
+    const voiceFg = this._voiceFlash > 0 ? "#ffffff" : "#7ec8e3";
+    this._btnRects.voice = this._drawPill(ctx, voiceLabel, btnStartX, btnY, voiceBg, voiceFg);
+
+    // Translate button — flash bright when tapped
     const transLabel = this._showTranslation ? "🌐 EN ✓" : "🌐 EN";
-    const transColor = this._showTranslation ? "#2a5a3a" : "#2a4a60";
-    this._btnRects.translate = this._drawPill(ctx, transLabel, btnStartX + 110, btnY, transColor, this._showTranslation ? "#7ee3a0" : "#7ec8e3");
+    const transBg = this._transFlash > 0 ? "#4ac060" : (this._showTranslation ? "#2a5a3a" : "#2a4a60");
+    const transFg = this._transFlash > 0 ? "#ffffff" : (this._showTranslation ? "#7ee3a0" : "#7ec8e3");
+    this._btnRects.translate = this._drawPill(ctx, transLabel, btnStartX + 130, btnY, transBg, transFg);
 
     // ── Speech bubble ────────────────────────────────────────────────
     const bubbleX = 20;
@@ -305,12 +326,23 @@ export class DialogueScene extends Scene {
   // ── Drawing helpers ────────────────────────────────────────────────────
 
   _drawPill(ctx, label, x, y, bg, fg) {
-    ctx.font = "500 14px 'Segoe UI', sans-serif";
-    const w = ctx.measureText(label).width + 24;
-    const h = 28;
+    ctx.font = "600 15px 'Segoe UI', sans-serif";
+    const w = ctx.measureText(label).width + 32;
+    const h = 34;
+    // Pill background
     this._drawRoundedRect(ctx, x, y, w, h, h / 2, bg);
+    // Subtle border to make it look clickable
+    ctx.save();
+    ctx.strokeStyle = fg;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    this._roundRectPath(ctx, x, y, w, h, h / 2);
+    ctx.stroke();
+    ctx.restore();
+    // Label
     ctx.fillStyle = fg;
-    ctx.fillText(label, x + 12, y + 19);
+    ctx.fillText(label, x + 16, y + 22);
     return { x, y, w, h };
   }
 

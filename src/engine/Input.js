@@ -98,13 +98,18 @@ export class Input {
     const rect = this._canvas.getBoundingClientRect();
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-    const scaleX = this._canvas.width / rect.width;
-    const scaleY = this._canvas.height / rect.height;
-    event.canvasX = (clientX - rect.left) * scaleX;
-    event.canvasY = (clientY - rect.top) * scaleY;
+    // Account for CSS border by using clientWidth/clientHeight (content only)
+    const scaleX = this._canvas.width / this._canvas.clientWidth;
+    const scaleY = this._canvas.height / this._canvas.clientHeight;
+    const borderLeft = parseFloat(getComputedStyle(this._canvas).borderLeftWidth) || 0;
+    const borderTop = parseFloat(getComputedStyle(this._canvas).borderTopWidth) || 0;
+    event.canvasX = (clientX - rect.left - borderLeft) * scaleX;
+    event.canvasY = (clientY - rect.top - borderTop) * scaleY;
   }
 
   _onPointerDown(event) {
+    // Skip if a touchstart already handled this gesture
+    if (this._touchHandled) return;
     this._addCanvasCoords(event);
     if (this._game?._scene) {
       this._game._scene.handleInput(event);
@@ -113,6 +118,9 @@ export class Input {
 
   _onTouchStart(event) {
     event.preventDefault();
+    this._touchHandled = true;
+    // Clear flag after this event cycle so future pointer-only events work
+    setTimeout(() => { this._touchHandled = false; }, 60);
     this._addCanvasCoords(event);
     if (this._game?._scene) {
       this._game._scene.handleInput(event);
