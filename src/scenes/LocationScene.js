@@ -26,14 +26,20 @@ const INTERIOR_THEMES = {
 
 const ORDER_VARIATIONS = {
   caffe_bologna: [
-    { template: ["Vorrei", "un", "espresso"], en: "I would like an espresso." },
-    { template: ["Un", "cappuccino", "per", "favore"], en: "A cappuccino, please." },
-    { template: ["Posso", "avere", "un", "cornetto"], en: "Can I have a croissant?" },
+    { template: ["Vorrei", "un", "espresso"], en: "I would like an espresso.", distractors: ["molto", "oggi"] },
+    { template: ["Un", "cappuccino", "per", "favore"], en: "A cappuccino, please.", distractors: ["molto", "subito"] },
+    { template: ["Posso", "avere", "un", "cornetto"], en: "Can I have a croissant?", distractors: ["grazie", "oggi"] },
+    { template: ["Un", "espresso", "grazie"], en: "An espresso, thanks.", distractors: ["molto", "per"] },
+    { template: ["Vorrei", "un", "cornetto", "per", "favore"], en: "I would like a croissant, please.", distractors: ["subito"] },
+    { template: ["Un", "cappuccino", "grazie"], en: "A cappuccino, thanks.", distractors: ["molto", "oggi"] },
   ],
   panetteria_rossi: [
-    { template: ["Vorrei", "del", "pane"], en: "I would like some bread." },
-    { template: ["Una", "focaccia", "per", "favore"], en: "A focaccia, please." },
-    { template: ["Posso", "avere", "un", "panino"], en: "Can I have a sandwich?" },
+    { template: ["Vorrei", "del", "pane"], en: "I would like some bread.", distractors: ["molto", "oggi"] },
+    { template: ["Una", "focaccia", "per", "favore"], en: "A focaccia, please.", distractors: ["subito", "molto"] },
+    { template: ["Posso", "avere", "un", "panino"], en: "Can I have a sandwich?", distractors: ["grazie", "oggi"] },
+    { template: ["Del", "pane", "grazie"], en: "Some bread, thanks.", distractors: ["molto", "per"] },
+    { template: ["Un", "panino", "per", "favore"], en: "A sandwich, please.", distractors: ["subito"] },
+    { template: ["Vorrei", "una", "focaccia"], en: "I would like a focaccia.", distractors: ["molto", "oggi"] },
   ],
 };
 
@@ -477,14 +483,23 @@ export class LocationScene extends Scene {
     this._shopGreeting = greetings[idx] ?? { it: "Buongiorno!", en: "Good morning!" };
     this._shopGreetingIndex[npcId] = idx + 1;
 
-    // Cafe/bakery start with a repeatable sentence-order mini game.
+    // Cafe/bakery start with a greeting, then sentence-order mini game.
     if (ORDER_VARIATIONS[this._location.id]?.length) {
-      this._startOrderGame();
-      this._shopPhase = "order_build";
+      this._shopPhase = "greeting";
     }
   }
 
   _handleShopInput(event) {
+    if (this._shopPhase === "greeting") {
+      if (event.key === "Enter" || event.key === " ") {
+        this._startOrderGame();
+        this._shopPhase = "order_build";
+      } else if (event.key === "Escape") {
+        this._shopOpen = false;
+      }
+      return;
+    }
+
     if (this._shopPhase === "order_build") {
       this._handleOrderBuildInput(event);
       return;
@@ -539,7 +554,25 @@ export class LocationScene extends Scene {
   }
 
   _handleShopPointer(evt) {
-    if (this._shopPhase === "order_build" || this._shopPhase === "order_result_ok" || this._shopPhase === "order_result_retry") {
+    if (this._shopPhase === "greeting") {
+      this._startOrderGame();
+      this._shopPhase = "order_build";
+      return;
+    }
+
+    if (this._shopPhase === "order_build") {
+      this._handleOrderBuildPointer(evt);
+      return;
+    }
+
+    if (this._shopPhase === "order_result_ok") {
+      this._shopPhase = "menu";
+      return;
+    }
+
+    if (this._shopPhase === "order_result_retry") {
+      this._startOrderGame();
+      this._shopPhase = "order_build";
       return;
     }
 
@@ -601,7 +634,7 @@ export class LocationScene extends Scene {
     const npcId = this._nearestNpc?.id;
     const npcName = this._nearestNpc?.name ?? "Shop";
 
-    if (this._shopPhase === "order_build" || this._shopPhase === "order_result_ok" || this._shopPhase === "order_result_retry") {
+    if (this._shopPhase === "greeting" || this._shopPhase === "order_build" || this._shopPhase === "order_result_ok" || this._shopPhase === "order_result_retry") {
       this._renderOrderGameOverlay(ctx, npcName);
       return;
     }
@@ -710,8 +743,9 @@ export class LocationScene extends Scene {
     }
 
     const pick = variants[Math.floor(Math.random() * variants.length)];
-    const distractors = ["oggi", "grazie", "molto", "subito"];
-    const pool = [...pick.template, distractors[Math.floor(Math.random() * distractors.length)]];
+    const extras = pick.distractors ?? ["oggi", "grazie", "molto", "subito"];
+    const distractor = extras[Math.floor(Math.random() * extras.length)];
+    const pool = [...pick.template, distractor];
 
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -741,12 +775,14 @@ export class LocationScene extends Scene {
     }
 
     if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      if (game.pool.length) game.selected = (game.selected - 1 + game.pool.length) % game.pool.length;
+      const totalSlots = game.pool.length + (game.built.length ? 1 : 0);
+      if (totalSlots) game.selected = (game.selected - 1 + totalSlots) % totalSlots;
       return;
     }
 
     if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-      if (game.pool.length) game.selected = (game.selected + 1) % game.pool.length;
+      const totalSlots = game.pool.length + (game.built.length ? 1 : 0);
+      if (totalSlots) game.selected = (game.selected + 1) % totalSlots;
       return;
     }
 
@@ -760,16 +796,63 @@ export class LocationScene extends Scene {
     }
 
     if (event.key !== "Enter" && event.key !== " ") return;
+
+    // Enter with no words in pool OR Enter when at least one word built → submit
     if (!game.pool.length) {
       this._evaluateOrderGame();
+      return;
+    }
+
+    // If the selected index is the submit button (past the last pool word), submit
+    if (game.selected >= game.pool.length) {
+      if (game.built.length) this._evaluateOrderGame();
       return;
     }
 
     const word = game.pool.splice(game.selected, 1)[0];
     game.built.push(word);
     if (game.selected >= game.pool.length) game.selected = Math.max(0, game.pool.length - 1);
+  }
 
-    if (!game.pool.length) this._evaluateOrderGame();
+  _handleOrderBuildPointer(evt) {
+    const g = this._orderGame;
+    if (!g) return;
+
+    // Check word chip clicks
+    if (g._chipRects) {
+      for (let i = 0; i < g._chipRects.length; i++) {
+        const r = g._chipRects[i];
+        if (evt.canvasX >= r.x && evt.canvasX <= r.x + r.w &&
+            evt.canvasY >= r.y && evt.canvasY <= r.y + r.h) {
+          const word = g.pool.splice(i, 1)[0];
+          g.built.push(word);
+          if (g.selected >= g.pool.length) g.selected = Math.max(0, g.pool.length - 1);
+          return;
+        }
+      }
+    }
+
+    // Check submit button click
+    if (g._submitRect && g.built.length) {
+      const r = g._submitRect;
+      if (evt.canvasX >= r.x && evt.canvasX <= r.x + r.w &&
+          evt.canvasY >= r.y && evt.canvasY <= r.y + r.h) {
+        this._evaluateOrderGame();
+        return;
+      }
+    }
+
+    // Check built-word area click (undo last word)
+    if (g._builtRect && g.built.length) {
+      const r = g._builtRect;
+      if (evt.canvasX >= r.x && evt.canvasX <= r.x + r.w &&
+          evt.canvasY >= r.y && evt.canvasY <= r.y + r.h) {
+        const popped = g.built.pop();
+        g.pool.push(popped);
+        g.selected = Math.max(0, g.pool.length - 1);
+        return;
+      }
+    }
   }
 
   _evaluateOrderGame() {
@@ -795,7 +878,7 @@ export class LocationScene extends Scene {
     ctx.fillRect(0, 0, width, height);
 
     const panelW = 560;
-    const panelH = 320;
+    const panelH = 340;
     const panelX = (width - panelW) / 2;
     const panelY = (height - panelH) / 2;
 
@@ -807,41 +890,117 @@ export class LocationScene extends Scene {
     this._roundedRect(ctx, panelX, panelY, panelW, panelH, 10);
     ctx.stroke();
 
+    // ── Greeting phase ──────────────────────────────────────────────
+    if (this._shopPhase === "greeting") {
+      ctx.fillStyle = "#f4d03f";
+      ctx.font = "700 17px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText(npcName, width / 2, panelY + 34);
+
+      if (this._shopGreeting) {
+        ctx.fillStyle = "#e8d8b0";
+        ctx.font = "italic 16px Georgia";
+        ctx.fillText(`"${this._shopGreeting.it}"`, width / 2, panelY + 80);
+        ctx.fillStyle = "#9ec0cf";
+        ctx.font = "400 13px Georgia";
+        ctx.fillText(this._shopGreeting.en, width / 2, panelY + 104);
+      }
+
+      // Draw a continue button
+      const btnW = 200;
+      const btnH = 40;
+      const btnX = (width - btnW) / 2;
+      const btnY = panelY + panelH - 80;
+      this._roundedRect(ctx, btnX, btnY, btnW, btnH, 8);
+      ctx.fillStyle = "rgba(198,216,138,0.25)";
+      ctx.fill();
+      ctx.strokeStyle = "#c6d88a";
+      ctx.lineWidth = 1.5;
+      this._roundedRect(ctx, btnX, btnY, btnW, btnH, 8);
+      ctx.stroke();
+      ctx.fillStyle = "#eef5db";
+      ctx.font = "600 14px Georgia";
+      ctx.fillText("Ordinare → Order", width / 2, btnY + 26);
+
+      ctx.fillStyle = "#9ec0cf";
+      ctx.font = "400 12px Georgia";
+      ctx.fillText("Tap or press Enter to order", width / 2, panelY + panelH - 20);
+      ctx.textAlign = "left";
+      return;
+    }
+
+    // ── Title ───────────────────────────────────────────────────────
     ctx.fillStyle = "#f4d03f";
     ctx.font = "700 17px Georgia";
     ctx.textAlign = "center";
     ctx.fillText(`${npcName} · Ordina in italiano`, width / 2, panelY + 30);
 
+    // ── Result screens ──────────────────────────────────────────────
     if (this._shopPhase !== "order_build") {
       ctx.fillStyle = "#e8d8b0";
       ctx.font = "400 14px Georgia";
       (this._shopMessage ?? "").split("\n").forEach((line, i) => {
         ctx.fillText(line, width / 2, panelY + 72 + i * 22);
       });
+
+      // Continue button
+      const btnW = 160;
+      const btnH = 36;
+      const btnX = (width - btnW) / 2;
+      const btnY = panelY + panelH - 56;
+      this._roundedRect(ctx, btnX, btnY, btnW, btnH, 8);
+      ctx.fillStyle = "rgba(198,216,138,0.2)";
+      ctx.fill();
+      ctx.strokeStyle = "#c6d88a";
+      ctx.lineWidth = 1;
+      this._roundedRect(ctx, btnX, btnY, btnW, btnH, 8);
+      ctx.stroke();
+      ctx.fillStyle = "#eef5db";
+      ctx.font = "600 13px Georgia";
+      ctx.fillText("Continue", width / 2, btnY + 24);
+
       ctx.fillStyle = "#9ec0cf";
-      ctx.font = "400 12px Georgia";
-      ctx.fillText("Enter continue · Esc close", width / 2, panelY + panelH - 16);
+      ctx.font = "400 11px Georgia";
+      ctx.fillText("Tap or Enter · Esc close", width / 2, panelY + panelH - 12);
       ctx.textAlign = "left";
       return;
     }
 
+    // ── Build phase ─────────────────────────────────────────────────
     const builtLine = g?.built?.length ? g.built.join(" ") : "...";
     ctx.fillStyle = "#dbe8ee";
     ctx.font = "400 13px Georgia";
-    ctx.fillText("Build the sentence by selecting words in order:", width / 2, panelY + 58);
+    ctx.fillText("Tap words to build your sentence:", width / 2, panelY + 58);
 
-    this._roundedRect(ctx, panelX + 24, panelY + 72, panelW - 48, 44, 8);
+    // Built sentence area (tap to undo last word)
+    const builtRectX = panelX + 24;
+    const builtRectY = panelY + 72;
+    const builtRectW = panelW - 48;
+    const builtRectH = 44;
+    this._roundedRect(ctx, builtRectX, builtRectY, builtRectW, builtRectH, 8);
     ctx.fillStyle = "rgba(255,255,255,0.06)";
     ctx.fill();
+
+    if (g) g._builtRect = { x: builtRectX, y: builtRectY, w: builtRectW, h: builtRectH };
+
     ctx.fillStyle = "#eef5db";
     ctx.font = "700 16px Georgia";
     ctx.fillText(builtLine, width / 2, panelY + 101);
 
+    // Undo hint when words are built
+    if (g?.built?.length) {
+      ctx.fillStyle = "rgba(158,192,207,0.5)";
+      ctx.font = "400 11px Georgia";
+      ctx.fillText("tap sentence to undo last word", width / 2, panelY + 68);
+    }
+
+    // Word chips
     let chipX = panelX + 26;
     let chipY = panelY + 136;
     ctx.textAlign = "left";
     ctx.font = "600 14px Georgia";
 
+    const chipRects = [];
     (g?.pool ?? []).forEach((word, i) => {
       const chipW = Math.max(54, ctx.measureText(word).width + 26);
       if (chipX + chipW > panelX + panelW - 24) {
@@ -858,13 +1017,39 @@ export class LocationScene extends Scene {
       ctx.stroke();
       ctx.fillStyle = selected ? "#f2f8e4" : "#d7e5ea";
       ctx.fillText(word, chipX + 13, chipY + 20);
+      chipRects.push({ x: chipX, y: chipY, w: chipW, h: 30 });
       chipX += chipW + 10;
     });
+    if (g) g._chipRects = chipRects;
+
+    // Submit button (always visible when built has words)
+    if (g?.built?.length) {
+      const isSubmitSelected = g.selected >= g.pool.length;
+      const submitW = 120;
+      const submitH = 34;
+      const submitX = (width - submitW) / 2;
+      const submitY = panelY + panelH - 72;
+      this._roundedRect(ctx, submitX, submitY, submitW, submitH, 8);
+      ctx.fillStyle = isSubmitSelected ? "rgba(100,200,120,0.35)" : "rgba(60,120,80,0.3)";
+      ctx.fill();
+      ctx.strokeStyle = isSubmitSelected ? "#8fd89a" : "#5fa070";
+      ctx.lineWidth = 1.5;
+      this._roundedRect(ctx, submitX, submitY, submitW, submitH, 8);
+      ctx.stroke();
+      ctx.fillStyle = isSubmitSelected ? "#e8fde8" : "#c0e8c8";
+      ctx.font = "700 14px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText("Ordina! ✓", width / 2, submitY + 23);
+      ctx.textAlign = "left";
+      if (g) g._submitRect = { x: submitX, y: submitY, w: submitW, h: submitH };
+    } else {
+      if (g) g._submitRect = null;
+    }
 
     ctx.fillStyle = "#9ec0cf";
     ctx.font = "400 12px Georgia";
     ctx.textAlign = "center";
-    ctx.fillText("Arrows select · Enter pick · Backspace undo · Esc close", width / 2, panelY + panelH - 16);
+    ctx.fillText("Tap words · Backspace undo · Esc close", width / 2, panelY + panelH - 16);
     ctx.textAlign = "left";
   }
 

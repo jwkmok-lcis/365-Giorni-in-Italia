@@ -23,6 +23,10 @@ export const SHOP_GREETINGS = {
     { it: "Ehilà! Serve qualcosa di caldo?",              en: "Hey there! Need something warm?" },
     { it: "Ah, sei tu! Come stai oggi?",                  en: "Ah, it's you! How are you today?" },
     { it: "Buon pomeriggio! Vuoi un cappuccino?",         en: "Good afternoon! Want a cappuccino?" },
+    { it: "Eccoti! Pronto per un caffè?",                 en: "There you are! Ready for a coffee?" },
+    { it: "Ciao caro! Cosa ti preparo?",                  en: "Hi dear! What can I make you?" },
+    { it: "Buonasera! Un cornetto fresco?",               en: "Good evening! A fresh croissant?" },
+    { it: "Ciao! C'è qualcosa che ti tenta?",             en: "Hi! Is there something that tempts you?" },
   ],
   panettiere_paolo: [
     { it: "Buongiorno! Il pane è freschissimo oggi.",     en: "Good morning! The bread is super fresh today." },
@@ -31,6 +35,10 @@ export const SHOP_GREETINGS = {
     { it: "Bentornato! La panetteria è il posto giusto.",  en: "Welcome back! The bakery's the right place." },
     { it: "Oggi ho fatto il pane con le olive.",           en: "Today I made olive bread." },
     { it: "Buon pomeriggio! Serve qualcosa?",              en: "Good afternoon! Need anything?" },
+    { it: "Ciao amico! Il forno è ancora caldo!",          en: "Hi friend! The oven is still warm!" },
+    { it: "Eccoti! Ho appena sfornato la focaccia.",       en: "There you are! I just baked the focaccia." },
+    { it: "Buonasera! Un panino per la strada?",           en: "Good evening! A sandwich for the road?" },
+    { it: "Ciao! Senti che profumo di pane?",              en: "Hi! Can you smell the bread?" },
   ],
 };
 
