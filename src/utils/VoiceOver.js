@@ -12,6 +12,7 @@ export class VoiceOver {
     this._voices = [];
     this._unlocked = false;
     this._speaking = false;
+    this._lastStatus = { ok: false, reason: "idle" };
 
     if (this.isSupported()) {
       this._voices = window.speechSynthesis.getVoices();
@@ -50,24 +51,53 @@ export class VoiceOver {
     synthesis.resume();
 
     const doSpeak = () => {
+      let started = false;
       const utterance = new SpeechSynthesisUtterance(String(text));
-      utterance.lang = preferredVoice?.lang ?? lang;
-      if (preferredVoice) utterance.voice = preferredVoice;
+      // Fallback mode: use browser defaults only.
+      if (!options.forceSimple) {
+        utterance.lang = preferredVoice?.lang ?? lang;
+        if (preferredVoice) utterance.voice = preferredVoice;
+      }
       utterance.rate = options.rate ?? this.defaultRate;
       utterance.pitch = options.pitch ?? this.defaultPitch;
       utterance.volume = options.volume ?? this.defaultVolume;
       utterance.onstart = () => {
+        started = true;
         this._unlocked = true;
         this._speaking = true;
+        this._lastStatus = { ok: true, reason: "playing" };
       };
-      utterance.onerror = () => {
+      utterance.onerror = (e) => {
         this._speaking = false;
+        this._lastStatus = { ok: false, reason: `error:${e?.error ?? "unknown"}` };
       };
       utterance.onend = () => {
         this._speaking = false;
+        if (!started) {
+          this._lastStatus = { ok: false, reason: "no-start" };
+        } else {
+          this._lastStatus = { ok: true, reason: "ended" };
+        }
       };
 
       synthesis.speak(utterance);
+
+      // If speech did not actually start, retry once with simpler settings.
+      setTimeout(() => {
+        if (started || synthesis.speaking || synthesis.pending) return;
+        if (options._retried) {
+          this._lastStatus = { ok: false, reason: "no-start" };
+          return;
+        }
+        this.speak(text, {
+          ...options,
+          _retried: true,
+          forceSimple: true,
+          requireUnlock: false,
+          interrupt: false,
+          rate: 1,
+        });
+      }, 600);
     };
 
     if (shouldInterrupt && hasActiveSpeech) {
@@ -88,6 +118,10 @@ export class VoiceOver {
       voiceName: preferredVoice?.name ?? "browser-default",
       voiceLang: preferredVoice?.lang ?? lang
     };
+  }
+
+  getLastStatus() {
+    return this._lastStatus;
   }
 
   /** Whether speech is currently playing. */

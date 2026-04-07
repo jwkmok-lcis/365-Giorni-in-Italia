@@ -126,7 +126,17 @@ export class DialogueScene extends Scene {
     if (!voice) return;
     voice.unlockFromGesture();
     const node = this._game.context.dialogue.getCurrentNode(this._session);
-    voice.speak(node.text, { requireUnlock: false });
+    const result = voice.speak(node.text, { requireUnlock: false });
+    if (!result?.ok) {
+      this._promptPanel.textContent = `Voice unavailable: ${result.reason}. Try keyboard V or check browser speech settings.`;
+      return;
+    }
+    // Post-check real runtime status (some browsers fail silently).
+    setTimeout(() => {
+      const status = voice.getLastStatus?.();
+      if (!status || status.ok) return;
+      this._promptPanel.textContent = `Voice failed (${status.reason}). Check browser/site audio + speech settings.`;
+    }, 900);
   }
 
   // ── Render ─────────────────────────────────────────────────────────────
