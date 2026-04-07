@@ -123,7 +123,8 @@ export class LessonScene extends Scene {
       return;
     }
 
-    const { width, height } = ctx.canvas;
+    const width = 800;
+    const height = 512;
     ctx.fillStyle = "#141f2b";
     ctx.fillRect(0, 0, width, height);
 
@@ -179,7 +180,7 @@ export class LessonScene extends Scene {
 
     ctx.fillStyle = "#9ec0cf";
     ctx.font = "600 20px Georgia";
-    const hintY = Math.min(ctx.canvas.height - 24, y + 46);
+    const hintY = Math.min(512 - 24, y + 46);
     ctx.fillText("Press Enter or tap to begin quiz", 40, hintY);
   }
 
@@ -230,7 +231,8 @@ export class LessonScene extends Scene {
   }
 
   _renderCampaignComplete(ctx, day) {
-    const { width, height } = ctx.canvas;
+    const width = 800;
+    const height = 512;
     ctx.fillStyle = "#121a22";
     ctx.fillRect(0, 0, width, height);
 

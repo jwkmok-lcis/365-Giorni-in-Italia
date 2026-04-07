@@ -246,7 +246,8 @@ export class LocationScene extends Scene {
   }
 
   render(ctx) {
-    const { width, height } = ctx.canvas;
+    const width = CANVAS_W;
+    const height = CANVAS_H;
     const theme = INTERIOR_THEMES[this._location.id] ?? INTERIOR_THEMES.piazza_maggiore;
 
     // ── Interior background ───────────────────────────────────────────
@@ -451,7 +452,7 @@ export class LocationScene extends Scene {
   // ── Toast ───────────────────────────────────────────────────────────
 
   _renderToast(ctx, message) {
-    const { width } = ctx.canvas;
+    const width = CANVAS_W;
     ctx.save();
     const maxW = 680;
     ctx.font = "500 13px Georgia";
@@ -639,7 +640,8 @@ export class LocationScene extends Scene {
   }
 
   _renderShopOverlay(ctx) {
-    const { width, height } = ctx.canvas;
+    const width = CANVAS_W;
+    const height = CANVAS_H;
     const npcId = this._nearestNpc?.id;
     const npcName = this._nearestNpc?.name ?? "Shop";
 
@@ -880,7 +882,8 @@ export class LocationScene extends Scene {
   }
 
   _renderOrderGameOverlay(ctx, npcName) {
-    const { width, height } = ctx.canvas;
+    const width = CANVAS_W;
+    const height = CANVAS_H;
     const g = this._orderGame;
 
     ctx.fillStyle = "rgba(10, 18, 28, 0.75)";

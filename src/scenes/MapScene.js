@@ -100,7 +100,8 @@ export class MapScene extends Scene {
   }
 
   render(ctx) {
-    const { width, height } = ctx.canvas;
+    const width = COLS * TS;
+    const height = ROWS * TS;
     ctx.fillStyle = "#111922";
     ctx.fillRect(0, 0, width, height);
 
@@ -1188,7 +1189,7 @@ export class MapScene extends Scene {
 
   _renderHudOverlay(ctx) {
     const p = this._player;
-    const W = ctx.canvas.width;
+    const W = COLS * TS;
     const clueCount = this._game.context.quest?.getUnlockedClues()?.length ?? 0;
     const questText = this._game.context.quest?.getQuestSummary?.() ?? "No quest";
 
@@ -1239,7 +1240,8 @@ export class MapScene extends Scene {
   }
 
   _renderLessonGate(ctx) {
-    const { width, height } = ctx.canvas;
+    const width = COLS * TS;
+    const height = ROWS * TS;
     ctx.fillStyle = "rgba(10, 18, 28, 0.82)";
     ctx.fillRect(0, HUD, width, height - HUD);
     ctx.fillStyle = "#e8d8b0";

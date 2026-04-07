@@ -142,8 +142,8 @@ export class DialogueScene extends Scene {
   // ── Render ─────────────────────────────────────────────────────────────
 
   render(ctx) {
-    const W = ctx.canvas.width;
-    const H = ctx.canvas.height;
+    const W = 800;
+    const H = 512;
     const node = this._game.context.dialogue.getCurrentNode(this._session);
     const style = NPC_STYLE[node.speaker] ?? DEFAULT_STYLE;
 

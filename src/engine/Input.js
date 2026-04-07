@@ -19,6 +19,14 @@ export class Input {
     this._onKeyUp = this._onKeyUp.bind(this);
     this._onPointerDown = this._onPointerDown.bind(this);
     this._onTouchStart = this._onTouchStart.bind(this);
+    this._onTouchMove = this._onTouchMove.bind(this);
+    this._onTouchEnd = this._onTouchEnd.bind(this);
+
+    // Virtual joystick state (touch drag → arrow keys)
+    this._joyOrigin = null;
+    this._joyActive = false;
+    this._joyKeys = new Set();
+    this._pendingTapEvent = null;
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
@@ -33,6 +41,8 @@ export class Input {
     if (this._canvas) {
       this._canvas.addEventListener("pointerdown", this._onPointerDown);
       this._canvas.addEventListener("touchstart", this._onTouchStart, { passive: false });
+      this._canvas.addEventListener("touchmove", this._onTouchMove, { passive: false });
+      this._canvas.addEventListener("touchend", this._onTouchEnd);
     }
   }
 
@@ -44,6 +54,8 @@ export class Input {
     if (this._canvas) {
       this._canvas.removeEventListener("pointerdown", this._onPointerDown);
       this._canvas.removeEventListener("touchstart", this._onTouchStart);
+      this._canvas.removeEventListener("touchmove", this._onTouchMove);
+      this._canvas.removeEventListener("touchend", this._onTouchEnd);
     }
 
     this._canvas = null;
@@ -130,7 +142,7 @@ export class Input {
 
     const localX = clientX - rect.left - borderLeft - offsetX;
     const localY = clientY - rect.top - borderTop - offsetY;
-    event.canvasX = (localX / renderW) * cw;
+    event.canvasX = (localX / renderW) * cw - (this._game?.context?._viewPadX || 0);
     event.canvasY = (localY / renderH) * ch;
   }
 
@@ -146,11 +158,61 @@ export class Input {
   _onTouchStart(event) {
     event.preventDefault();
     this._touchHandled = true;
-    // Clear flag after this event cycle so future pointer-only events work
-    setTimeout(() => { this._touchHandled = false; }, 60);
+
+    const touch = event.touches[0];
+    this._joyOrigin = { x: touch.clientX, y: touch.clientY };
+    this._joyActive = false;
+
+    // Compute canvas coords now (for potential tap on touchend)
     this._addCanvasCoords(event);
-    if (this._game?._scene) {
-      this._game._scene.handleInput(event);
+    this._pendingTapEvent = event;
+  }
+
+  _onTouchMove(event) {
+    event.preventDefault();
+    if (!this._joyOrigin || !event.touches.length) return;
+
+    const touch = event.touches[0];
+    const dx = touch.clientX - this._joyOrigin.x;
+    const dy = touch.clientY - this._joyOrigin.y;
+    const dist = Math.hypot(dx, dy);
+
+    const DEAD_ZONE = 15;
+    if (dist < DEAD_ZONE) return;
+
+    this._joyActive = true;
+    this._pendingTapEvent = null;
+
+    // Clear previous joystick directional keys
+    for (const k of this._joyKeys) this._held.delete(k);
+    this._joyKeys.clear();
+
+    // Set direction keys based on drag angle
+    const nx = dx / dist;
+    const ny = dy / dist;
+    if (nx < -0.38) { this._held.add("ArrowLeft");  this._joyKeys.add("ArrowLeft");  }
+    if (nx >  0.38) { this._held.add("ArrowRight"); this._joyKeys.add("ArrowRight"); }
+    if (ny < -0.38) { this._held.add("ArrowUp");    this._joyKeys.add("ArrowUp");    }
+    if (ny >  0.38) { this._held.add("ArrowDown");  this._joyKeys.add("ArrowDown");  }
+  }
+
+  _onTouchEnd() {
+    // Clear joystick keys
+    for (const k of this._joyKeys) this._held.delete(k);
+    this._joyKeys.clear();
+
+    // If it was a tap (no drag), route to the active scene
+    if (!this._joyActive && this._pendingTapEvent) {
+      if (this._game?._scene) {
+        this._game._scene.handleInput(this._pendingTapEvent);
+      }
     }
+
+    this._joyOrigin = null;
+    this._joyActive = false;
+    this._pendingTapEvent = null;
+
+    // Clear touch-handled flag after this event cycle
+    setTimeout(() => { this._touchHandled = false; }, 60);
   }
 }

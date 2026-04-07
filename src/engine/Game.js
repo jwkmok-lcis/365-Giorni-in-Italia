@@ -77,13 +77,21 @@ export class Game {
     // Render with alpha = fraction of step remaining (future: interpolation)
     const alpha = this._accumulator / FIXED_STEP;
     this._clearCanvas();
+
+    // Centre the 800-wide game world in the (possibly wider) landscape buffer
+    const padX = this.context._viewPadX || 0;
+    if (padX) {
+      this.ctx.save();
+      this.ctx.translate(padX, 0);
+    }
     if (this._scene) this._scene.render(this.ctx, alpha, this);
+    if (padX) this.ctx.restore();
 
     this._rafId = requestAnimationFrame((ts) => this._frame(ts));
   }
 
   _clearCanvas() {
-    this.ctx.fillStyle = "#121a23";
+    this.ctx.fillStyle = "#111922";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }

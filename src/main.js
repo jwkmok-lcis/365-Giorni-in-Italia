@@ -69,6 +69,49 @@ autosaveEvents.forEach((eventName) => {
 // Wire the input system so keydown events flow into the active scene
 input.init(game);
 
+// ── Landscape canvas resize ───────────────────────────────────────────────────
+const GAME_W = 800;
+const GAME_H = 512;
+
+function fitCanvas() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const isMobile = vw <= 840;
+
+  if (!isMobile) {
+    if (canvas.width !== GAME_W || canvas.height !== GAME_H) {
+      canvas.width = GAME_W;
+      canvas.height = GAME_H;
+    }
+    game.context._viewPadX = 0;
+    return;
+  }
+
+  const viewAspect = vw / vh;
+  const gameAspect = GAME_W / GAME_H;
+
+  if (viewAspect > gameAspect) {
+    // Landscape: widen buffer to match screen aspect (eliminates pillar-boxing)
+    const newW = Math.round(GAME_H * viewAspect);
+    if (canvas.width !== newW || canvas.height !== GAME_H) {
+      canvas.width = newW;
+      canvas.height = GAME_H;
+    }
+    game.context._viewPadX = Math.round((canvas.width - GAME_W) / 2);
+  } else {
+    // Portrait or near-square: standard size
+    if (canvas.width !== GAME_W || canvas.height !== GAME_H) {
+      canvas.width = GAME_W;
+      canvas.height = GAME_H;
+    }
+    game.context._viewPadX = 0;
+  }
+}
+
+fitCanvas();
+window.addEventListener("resize", fitCanvas);
+window.addEventListener("orientationchange", () => setTimeout(fitCanvas, 200));
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 scenes.go(day.canExplore() ? "map" : "lesson", game);
 game.start();
