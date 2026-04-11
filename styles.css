@@ -6,6 +6,10 @@
   --accent-olive: #5d6b3f;
   --text-dark: #1d232b;
   --text-light: #f2efe7;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 * {
@@ -15,6 +19,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   color: var(--text-light);
   background: radial-gradient(circle at 15% 10%, #324558, var(--bg-night) 45%),
@@ -22,10 +27,35 @@ body {
 }
 
 .app {
-  width: min(920px, 100%);
+  width: min(1040px, 100%);
   margin: 0 auto;
   padding: 1.25rem;
   position: relative;
+}
+
+.hard-reset-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 30;
+  border: 1px solid #e3b86f;
+  background: rgba(14, 24, 34, 0.9);
+  color: #f7e8c8;
+  font: 700 0.72rem/1 "Trebuchet MS", "Segoe UI", sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+.hard-reset-btn:active {
+  transform: scale(0.98);
+}
+
+.hard-reset-btn[disabled] {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .hud h1 {
@@ -44,10 +74,12 @@ body {
 }
 
 canvas {
-  width: 800px;
+  width: min(1000px, 100%);
   max-width: 100%;
+  aspect-ratio: 20 / 9;
   height: auto;
   display: block;
+  margin: 0 auto;
   border: 2px solid var(--accent-olive);
   background: #121a23;
   cursor: pointer;
@@ -78,8 +110,22 @@ canvas {
 
   .app {
     width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     padding: 0;
     margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hard-reset-btn {
+    position: fixed;
+    top: calc(var(--safe-top) + 0.65rem);
+    right: calc(var(--safe-right) + 0.65rem);
+    font-size: 0.7rem;
+    padding: 0.5rem 0.8rem;
+    backdrop-filter: blur(2px);
   }
 
   .hud {
@@ -92,10 +138,13 @@ canvas {
 
   canvas {
     width: 100vw;
-    height: 100vh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    height: auto;
+    aspect-ratio: 20 / 9;
     max-width: none;
     border: none;
-    object-fit: contain;
+    object-fit: fill;
   }
 
   .panel {

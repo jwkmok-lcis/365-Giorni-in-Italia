@@ -78,14 +78,16 @@ export class Game {
     const alpha = this._accumulator / FIXED_STEP;
     this._clearCanvas();
 
-    // Centre the 800-wide game world in the (possibly wider) landscape buffer
     const padX = this.context._viewPadX || 0;
-    if (padX) {
-      this.ctx.save();
-      this.ctx.translate(padX, 0);
-    }
+    const padY = this.context._viewPadY || 0;
+    const scaleX = this.context._viewScaleX || 1;
+    const scaleY = this.context._viewScaleY || 1;
+
+    this.ctx.save();
+    this.ctx.translate(padX, padY);
+    this.ctx.scale(scaleX, scaleY);
     if (this._scene) this._scene.render(this.ctx, alpha, this);
-    if (padX) this.ctx.restore();
+    this.ctx.restore();
 
     this._rafId = requestAnimationFrame((ts) => this._frame(ts));
   }

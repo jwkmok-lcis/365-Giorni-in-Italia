@@ -61,6 +61,7 @@ export class MapScene extends Scene {
     this._promptPanel = null;
     this._tileCanvas = null;
     this._time = 0;
+    this._touchLayoutTapCooldown = 0;
     this._hudFlash = { quest: 0, clues: 0 };
     this._busHandlers = [];
   }
@@ -85,6 +86,7 @@ export class MapScene extends Scene {
 
   update(dt, game) {
     this._time += dt;
+    this._touchLayoutTapCooldown = Math.max(0, this._touchLayoutTapCooldown - dt);
     this._hudFlash.quest = Math.max(0, this._hudFlash.quest - dt * 2.2);
     this._hudFlash.clues = Math.max(0, this._hudFlash.clues - dt * 2.2);
     if (!game.context.day.canExplore()) return;
@@ -131,6 +133,8 @@ export class MapScene extends Scene {
     this._renderRoofOcclusion(ctx, occLoc);
 
     this._renderHudOverlay(ctx);
+    this._renderLanguageCoach(ctx, nearLoc, nearPiazzaNpc);
+    this._renderTouchControls(ctx, nearLoc, nearPiazzaNpc);
 
     if (!this._game.context.day?.canExplore()) {
       this._renderLessonGate(ctx);
@@ -149,6 +153,19 @@ export class MapScene extends Scene {
     if (!this._game.context.day.canExplore() && isConfirm) {
       this._game.context.scenes.go("lesson", this._game);
       return;
+    }
+
+    if (isTap) {
+      const selectedLayout = this._hitTouchLayoutSelector(event);
+      if (selectedLayout) {
+        const currentLayout = this._game.context.input?.getTouchLayout?.() ?? "right-action";
+        if (selectedLayout !== currentLayout && this._touchLayoutTapCooldown <= 0) {
+          this._game.context.input?.setTouchLayout?.(selectedLayout);
+          this._touchLayoutTapCooldown = 0.25;
+          this._updatePanels();
+        }
+        return;
+      }
     }
 
     if (this._game.context.day.canExplore() && isConfirm) {
@@ -1254,22 +1271,297 @@ export class MapScene extends Scene {
     ctx.textAlign = "left";
   }
 
+  _renderTouchControls(ctx, nearLoc, nearPiazzaNpc) {
+    const touch = this._game?.context?.input?.getTouchControlsState?.();
+    if (!touch?.enabled) return;
+
+    const width  = COLS * TS;
+    const height = ROWS * TS;
+    const canExplore = this._game.context.day.canExplore();
+    const actionOnLeft = touch.layout === "left-action";
+    const safe = this._getSafeInsets();
+    const profile = this._getTouchProfile();
+
+    // Joystick — floats at touch start point, falls back to rest corner
+    const joyRadius = touch.joyRadiusWorld ?? 43;
+    const edgeInsetX = profile.joyEdgeX;
+    const edgeInsetBottom = profile.joyEdgeBottom;
+    const JOY_REST_X = actionOnLeft
+      ? width - (safe.right + edgeInsetX + joyRadius)
+      : safe.left + edgeInsetX + joyRadius;
+    const JOY_REST_Y = height - (safe.bottom + edgeInsetBottom + joyRadius);
+    const leftX     = touch.joyWorldX ?? JOY_REST_X;
+    const leftY     = touch.joyWorldY ?? JOY_REST_Y;
+    const knobTravel = joyRadius * 0.82; // matches MAX_RADIUS in Input
+    const isFloating = touch.joyWorldX !== null;
+
+    ctx.save();
+
+    // ── Outer ring ──
+    ctx.fillStyle = isFloating ? "rgba(16, 24, 34, 0.52)" : "rgba(16, 24, 34, 0.30)";
+    ctx.beginPath();
+    ctx.arc(leftX, leftY, joyRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = isFloating ? "rgba(188, 220, 208, 0.65)" : "rgba(188, 208, 226, 0.30)";
+    ctx.lineWidth = isFloating ? 2 : 1.5;
+    ctx.beginPath();
+    ctx.arc(leftX, leftY, joyRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ── Directional pips (N/S/E/W triangles inside the ring) ──
+    const pipSize = 5;
+    const pipDist = joyRadius - pipSize - 3;
+    ctx.fillStyle = isFloating ? "rgba(154, 210, 182, 0.55)" : "rgba(188, 210, 200, 0.25)";
+    for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+      ctx.save();
+      ctx.translate(leftX + dx * pipDist, leftY + dy * pipDist);
+      ctx.rotate(Math.atan2(dy, dx) + Math.PI / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, -pipSize);
+      ctx.lineTo(pipSize * 0.65, pipSize * 0.45);
+      ctx.lineTo(-pipSize * 0.65, pipSize * 0.45);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ── Line from ring centre to knob (only when active) ──
+    const knobX = leftX + touch.joyX * knobTravel;
+    const knobY = leftY + touch.joyY * knobTravel;
+    if (touch.joyActive) {
+      ctx.strokeStyle = "rgba(154, 210, 182, 0.35)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(leftX, leftY);
+      ctx.lineTo(knobX, knobY);
+      ctx.stroke();
+    }
+
+    // ── Knob ──
+    if (touch.joyActive) {
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgba(154, 210, 182, 0.55)";
+    }
+    ctx.fillStyle = touch.joyActive ? "rgba(154, 210, 182, 0.88)" : "rgba(206, 220, 232, 0.55)";
+    ctx.beginPath();
+    ctx.arc(knobX, knobY, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── Action button ──
+    const actionR = Math.max(50, Math.min(58, joyRadius * 1.24 * profile.actionScale));
+    const actionEdgeX = profile.actionEdgeX;
+    const actionEdgeBottom = profile.actionEdgeBottom;
+    const rightX  = actionOnLeft
+      ? safe.left + actionEdgeX + actionR
+      : width - (safe.right + actionEdgeX + actionR);
+    const rightY  = height - (safe.bottom + actionEdgeBottom + actionR);
+    const flash    = touch.actionFlash > 0;
+    const hasTarget = !canExplore || Boolean(nearLoc);
+    const labelIt = !canExplore ? "Lezione"
+      : nearLoc?.style === "piazza" && nearPiazzaNpc ? "Parla"
+      : nearLoc ? "Entra" : "Azione";
+    const labelEn = !canExplore ? "Lesson"
+      : nearLoc?.style === "piazza" && nearPiazzaNpc ? "Talk"
+      : nearLoc ? "Enter" : "Action";
+
+    if (flash) { ctx.shadowBlur = 12; ctx.shadowColor = "rgba(138, 220, 156, 0.6)"; }
+    ctx.fillStyle = flash ? "rgba(138, 220, 156, 0.55)" : "rgba(16, 24, 34, 0.50)";
+    ctx.beginPath();
+    ctx.arc(rightX, rightY, actionR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = hasTarget
+      ? (flash ? "rgba(196, 245, 208, 0.95)" : "rgba(176, 225, 190, 0.75)")
+      : "rgba(188, 208, 226, 0.30)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(rightX, rightY, actionR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = hasTarget ? "#eef8f0" : "#9aaab8";
+    ctx.font = "700 14px Georgia";
+    ctx.textAlign = "center";
+    ctx.fillText(labelIt, rightX, rightY + 1);
+    ctx.fillStyle = hasTarget ? "#cfe5d6" : "#8fa0b0";
+    ctx.font = "500 10px Georgia";
+    ctx.fillText(labelEn, rightX, rightY + 16);
+
+    this._renderTouchLayoutToggle(ctx, touch.layout, width, safe);
+    ctx.textAlign = "left";
+    ctx.restore();
+  }
+
   _updatePanels() {
     if (!this._statusPanel) return;
     const loc = this._player.nearEntrance(LOCATIONS) ?? this._player.currentLocation(LOCATIONS);
     const nearPiazzaNpc = this._getNearestPiazzaNpc(loc);
     const questLine = this._game.context.quest.getQuestSummary();
     const clueCount = this._game.context.quest.getUnlockedClues().length;
+    const lesson = this._game.context.lesson?.getLessonForDay?.(this._game.context.day.currentDay);
+    const phraseSuffix = lesson?.phrase?.it ? ` | Frase: ${lesson.phrase.it}` : "";
+    const touchEnabled = this._game.context.input?.getTouchControlsState?.()?.enabled;
     this._statusPanel.textContent = loc
-      ? `${loc.label} — ${loc.description}${loc.style === "piazza" ? (nearPiazzaNpc ? ` (Enter to talk to ${nearPiazzaNpc.id.replace("_", " ")})` : " (Move closer to an NPC)") : " (Enter to go inside)"} | Quest: ${questLine} | Clues: ${clueCount}`
-      : `Stai camminando per le strade di Bologna… | Quest: ${questLine} | Clues: ${clueCount}`;
+      ? `${loc.label} — ${loc.description}${loc.style === "piazza" ? (nearPiazzaNpc ? ` (Parla: ${nearPiazzaNpc.id.replace("_", " ")})` : " (Avvicinati a un NPC)") : " (Entra nell'edificio)"} | Quest: ${questLine} | Clues: ${clueCount}${phraseSuffix}`
+      : `Stai camminando per le strade di Bologna… | Quest: ${questLine} | Clues: ${clueCount}${phraseSuffix}`;
 
     if (this._promptPanel) {
       const latest = this._game.context.eventFeed.latest();
+      const controls = touchEnabled
+        ? "Touch: joystick = muovi, azione = pulsante grande, L/R in alto = mano"
+        : "Arrows/WASD move · Enter near doors/NPCs";
       this._promptPanel.textContent = latest
-        ? `Arrows/WASD move · Enter only near doors/NPCs · N end day | ${latest}`
-        : "Arrows/WASD move · Enter only near doors/NPCs · N end day";
+        ? `${controls} · N end day | ${latest}`
+        : `${controls} · N end day`;
     }
+  }
+
+  _renderLanguageCoach(ctx, nearLoc, nearPiazzaNpc) {
+    const touch = this._game?.context?.input?.getTouchControlsState?.();
+    if (!touch?.enabled) return;
+
+    const canExplore = this._game.context.day.canExplore();
+    const lesson = this._game.context.lesson?.getLessonForDay?.(this._game.context.day.currentDay);
+    const lessonVocab = lesson?.vocab ?? [];
+    const wordA = lessonVocab[0];
+    const wordB = lessonVocab[1];
+    const fallbackIt = [wordA?.it, wordB?.it].filter(Boolean).join(" - ");
+    const fallbackEn = [wordA?.en, wordB?.en].filter(Boolean).join(" - ");
+    const defaultIt = lesson?.phrase?.it ?? (fallbackIt || "Ripeti il vocabolario del giorno.");
+    const defaultEn = lesson?.phrase?.en ?? (fallbackEn || "Repeat today's vocabulary.");
+
+    let lineIt = defaultIt;
+    let lineEn = defaultEn;
+    if (!canExplore) {
+      lineIt = "Completa la lezione per sbloccare la mappa.";
+      lineEn = "Finish the lesson to unlock exploration.";
+    } else if (nearLoc?.style === "piazza" && nearPiazzaNpc) {
+      lineIt = lesson?.phrase?.it ?? defaultIt;
+      lineEn = lesson?.phrase?.en ?? defaultEn;
+    } else if (nearLoc) {
+      lineIt = `Parole: ${fallbackIt || defaultIt}`;
+      lineEn = `Words: ${fallbackEn || defaultEn}`;
+    }
+
+    const width = COLS * TS;
+    const panelW = 372;
+    const panelH = 52;
+    const panelX = Math.floor((width - panelW) / 2);
+    const safe = this._getSafeInsets();
+    const panelY = ROWS * TS - safe.bottom - 170 - profile.coachLift;
+
+    ctx.save();
+    const bg = ctx.createLinearGradient(0, panelY, 0, panelY + panelH);
+    bg.addColorStop(0, "rgba(12, 20, 30, 0.90)");
+    bg.addColorStop(1, "rgba(16, 26, 38, 0.88)");
+    this._roundedRect(ctx, panelX, panelY, panelW, panelH, 10);
+    ctx.fillStyle = bg;
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(170, 208, 188, 0.50)";
+    ctx.lineWidth = 1;
+    this._roundedRect(ctx, panelX, panelY, panelW, panelH, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = "#e8f0de";
+    ctx.font = "700 12px Georgia";
+    ctx.fillText(this._fitHudText(ctx, lineIt, panelW - 20), panelX + 10, panelY + 21);
+    ctx.fillStyle = "#9cc4d5";
+    ctx.font = "500 11px Georgia";
+    ctx.fillText(this._fitHudText(ctx, lineEn, panelW - 20), panelX + 10, panelY + 39);
+    ctx.restore();
+  }
+
+  _renderTouchLayoutToggle(ctx, layout, width, safe = this._getSafeInsets()) {
+    const rect = this._getTouchLayoutToggleRect(width, safe);
+    this._roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 8);
+    ctx.fillStyle = "rgba(12, 22, 32, 0.78)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(158, 198, 212, 0.55)";
+    ctx.lineWidth = 1;
+    this._roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 8);
+    ctx.stroke();
+
+    const half = rect.w / 2;
+    const leftSelected = layout === "left-action";
+    const pillInset = 2;
+
+    this._roundedRect(ctx, rect.x + pillInset, rect.y + pillInset, half - pillInset * 1.5, rect.h - pillInset * 2, 7);
+    ctx.fillStyle = leftSelected ? "rgba(154, 210, 182, 0.35)" : "rgba(108, 128, 144, 0.18)";
+    ctx.fill();
+
+    this._roundedRect(ctx, rect.x + half + pillInset * 0.5, rect.y + pillInset, half - pillInset * 1.5, rect.h - pillInset * 2, 7);
+    ctx.fillStyle = leftSelected ? "rgba(108, 128, 144, 0.18)" : "rgba(154, 210, 182, 0.35)";
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(158, 198, 212, 0.32)";
+    ctx.beginPath();
+    ctx.moveTo(rect.x + half, rect.y + 3);
+    ctx.lineTo(rect.x + half, rect.y + rect.h - 3);
+    ctx.stroke();
+
+    ctx.fillStyle = leftSelected ? "#e7f5ea" : "#c7d9e4";
+    ctx.font = "700 12px Georgia";
+    ctx.textAlign = "center";
+    ctx.fillText("L", rect.x + half * 0.5, rect.y + 16);
+    ctx.fillStyle = leftSelected ? "#c7d9e4" : "#e7f5ea";
+    ctx.fillText("R", rect.x + half * 1.5, rect.y + 16);
+
+    ctx.fillStyle = "#8fb1c0";
+    ctx.font = "500 9px Georgia";
+    ctx.fillText("action thumb", rect.x + rect.w / 2, rect.y + 29);
+  }
+
+  _getTouchLayoutToggleRect(width = COLS * TS, safe = this._getSafeInsets()) {
+    const profile = this._getTouchProfile();
+    return {
+      x: width - safe.right - profile.selectorRight,
+      y: safe.top + profile.selectorTop,
+      w: 138,
+      h: 36,
+    };
+  }
+
+  _hitTouchLayoutSelector(event) {
+    const touch = this._game?.context?.input?.getTouchControlsState?.();
+    if (!touch?.enabled || event.canvasX === undefined || event.canvasY === undefined) return null;
+    const rect = this._getTouchLayoutToggleRect();
+    const hitPad = 8;
+    const inside = event.canvasX >= rect.x - hitPad
+      && event.canvasX <= rect.x + rect.w + hitPad
+      && event.canvasY >= rect.y - hitPad
+      && event.canvasY <= rect.y + rect.h + hitPad;
+    if (!inside) return null;
+
+    const mid = rect.x + rect.w / 2;
+    return event.canvasX < mid ? "left-action" : "right-action";
+  }
+
+  _getSafeInsets() {
+    const safe = this._game?.context?._safeInsetsWorld;
+    if (!safe) return { top: 0, right: 0, bottom: 0, left: 0 };
+    return {
+      top: Math.max(0, safe.top || 0),
+      right: Math.max(0, safe.right || 0),
+      bottom: Math.max(0, safe.bottom || 0),
+      left: Math.max(0, safe.left || 0),
+    };
+  }
+
+  _getTouchProfile() {
+    return this._game?.context?._touchDeviceProfile ?? {
+      id: "default-mobile",
+      actionScale: 1,
+      actionEdgeX: 16,
+      actionEdgeBottom: 18,
+      joyEdgeX: 18,
+      joyEdgeBottom: 20,
+      selectorRight: 148,
+      selectorTop: 10,
+      coachLift: 0,
+    };
   }
 
   _fitHudText(ctx, text, maxW) {

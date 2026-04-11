@@ -59,6 +59,7 @@ export class LocationScene extends Scene {
     // Toast
     this._toast = null;
     this._toastTimer = 0;
+    this._touchLayoutTapCooldown = 0;
 
     // Shop state (for shop locations)
     this._shopOpen = false;
@@ -95,15 +96,21 @@ export class LocationScene extends Scene {
     this._moveTarget = null;
 
     const panel = document.getElementById("statusPanel");
-    if (panel) panel.textContent = `Inside: ${this._location.label} — Walk to an NPC and press Enter`;
+    if (panel) panel.textContent = `Inside: ${this._location.label} — Avvicinati a un NPC e parla`;
     const prompt = document.getElementById("promptPanel");
-    if (prompt) prompt.textContent = "Arrows/WASD move · Enter talk · Escape leave";
+    const touchEnabled = game.context.input?.getTouchControlsState?.()?.enabled;
+    if (prompt) {
+      prompt.textContent = touchEnabled
+        ? "Touch: joystick = muovi · pulsante = parla/esci · L/R in alto = mano"
+        : "Arrows/WASD move · Enter talk · Escape leave";
+    }
   }
 
   exit() {}
 
   update(dt, game) {
     this._time += dt;
+    this._touchLayoutTapCooldown = Math.max(0, this._touchLayoutTapCooldown - dt);
     const { input } = game.context;
 
     if (this._shopOpen) return;
@@ -145,6 +152,18 @@ export class LocationScene extends Scene {
 
     if (!isKey && !isTap) return;
 
+    if (isTap) {
+      const selectedLayout = this._hitTouchLayoutSelector(event);
+      if (selectedLayout) {
+        const currentLayout = this._game.context.input?.getTouchLayout?.() ?? 'right-action';
+        if (selectedLayout !== currentLayout && this._touchLayoutTapCooldown <= 0) {
+          this._game.context.input?.setTouchLayout?.(selectedLayout);
+          this._touchLayoutTapCooldown = 0.25;
+        }
+        return;
+      }
+    }
+
     if (this._shopOpen) {
       if (isKey) this._handleShopInput(event);
       return;
@@ -162,6 +181,10 @@ export class LocationScene extends Scene {
     }
 
     if (event.key === "Enter") {
+      if (!this._nearestNpc && event.isTouchAction) {
+        this._game.context.scenes.go("map", this._game);
+        return;
+      }
       this._triggerInteract();
     }
   }
@@ -249,6 +272,7 @@ export class LocationScene extends Scene {
     const width = CANVAS_W;
     const height = CANVAS_H;
     const theme = INTERIOR_THEMES[this._location.id] ?? INTERIOR_THEMES.piazza_maggiore;
+    const safe = this._getSafeInsets();
 
     // ── Interior background ───────────────────────────────────────────
     // Wall (top third)
@@ -274,15 +298,20 @@ export class LocationScene extends Scene {
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(0, 120); ctx.lineTo(width, 120); ctx.stroke();
 
+    this._renderRoomAtmosphere(ctx, theme);
+    this._renderArchitecture(ctx, theme);
+
     // ── Location title ────────────────────────────────────────────────
+    const titleY = Math.max(36, safe.top + 28);
+    const descY = titleY + 20;
     ctx.fillStyle = theme.accent;
     ctx.font = "700 22px Georgia";
     ctx.textAlign = "center";
-    ctx.fillText(this._location.label, width / 2, 36);
+    ctx.fillText(this._location.label, width / 2, titleY);
 
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.font = "400 13px Georgia";
-    ctx.fillText(this._location.description, width / 2, 56);
+    ctx.fillText(this._location.description, width / 2, descY);
 
     this._renderInteriorDecor(ctx, this._location.style ?? this._location.id, theme);
 
@@ -350,7 +379,7 @@ export class LocationScene extends Scene {
       if (isNearest) {
         ctx.fillStyle = "#c6d88a";
         ctx.font = "400 12px Georgia";
-        ctx.fillText("Press Enter to talk", npc.x, npc.y + NPC_RADIUS + 22);
+        ctx.fillText("Enter / Touch action: parla", npc.x, npc.y + NPC_RADIUS + 22);
       }
     }
 
@@ -395,6 +424,8 @@ export class LocationScene extends Scene {
     if (this._shopOpen) {
       this._renderShopOverlay(ctx);
     }
+
+    this._renderTouchControls(ctx);
   }
 
   // ── Movement helpers ────────────────────────────────────────────────
@@ -1309,6 +1340,72 @@ export class LocationScene extends Scene {
     ctx.fillRect(70, floorTop + 44, 500, 10);
   }
 
+  _renderRoomAtmosphere(ctx, theme) {
+    const ceilingGlow = ctx.createRadialGradient(CANVAS_W * 0.5, 78, 40, CANVAS_W * 0.5, 78, 360);
+    ceilingGlow.addColorStop(0, `${theme.accent}33`);
+    ceilingGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = ceilingGlow;
+    ctx.fillRect(0, 0, CANVAS_W, 180);
+
+    const floorShade = ctx.createLinearGradient(0, 120, 0, CANVAS_H);
+    floorShade.addColorStop(0, "rgba(255,255,255,0.03)");
+    floorShade.addColorStop(1, "rgba(0,0,0,0.20)");
+    ctx.fillStyle = floorShade;
+    ctx.fillRect(0, 120, CANVAS_W, CANVAS_H - 120);
+
+    const vignette = ctx.createRadialGradient(CANVAS_W * 0.5, CANVAS_H * 0.48, 200, CANVAS_W * 0.5, CANVAS_H * 0.48, 480);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.26)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  }
+
+  _renderArchitecture(ctx, theme) {
+    ctx.save();
+    const colW = 34;
+    const positions = [62, 256, 450, 644];
+
+    for (const x of positions) {
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillRect(x, 118, colW, 132);
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.fillRect(x + 3, 120, 3, 126);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.14)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x + colW / 2, 120, 18, Math.PI, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = `${theme.accent}2b`;
+      ctx.fillRect(x - 2, 248, colW + 4, 4);
+    }
+
+    // Hanging lamps with slight sway to make the room feel alive.
+    for (let i = 0; i < 3; i++) {
+      const lx = 168 + i * 232;
+      const swing = Math.sin(this._time * 1.6 + i * 0.8) * 1.8;
+      ctx.strokeStyle = "rgba(230, 220, 180, 0.45)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(lx, 0);
+      ctx.lineTo(lx + swing, 56);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(236, 208, 142, 0.9)";
+      ctx.beginPath();
+      ctx.ellipse(lx + swing, 62, 9, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const lampGlow = ctx.createRadialGradient(lx + swing, 68, 8, lx + swing, 68, 72);
+      lampGlow.addColorStop(0, "rgba(248, 220, 156, 0.34)");
+      lampGlow.addColorStop(1, "rgba(248, 220, 156, 0)");
+      ctx.fillStyle = lampGlow;
+      ctx.fillRect(lx - 70, 18, 140, 140);
+    }
+    ctx.restore();
+  }
+
   _drawCharacter(ctx, entity, role = 'npc') {
     const x = entity?.x ?? 0;
     const y = entity?.y ?? 0;
@@ -1349,6 +1446,209 @@ export class LocationScene extends Scene {
     ctx.stroke();
   }
 
+  _renderTouchControls(ctx) {
+    const touch = this._game?.context?.input?.getTouchControlsState?.();
+    if (!touch?.enabled || this._shopOpen) return;
+    const actionOnLeft = touch.layout === "left-action";
+    const safe = this._getSafeInsets();
+    const profile = this._getTouchProfile();
+
+    // Joystick — floats at touch start point, falls back to rest corner
+    const joyRadius = touch.joyRadiusWorld ?? 43;
+    const edgeInsetX = profile.joyEdgeX;
+    const edgeInsetBottom = profile.joyEdgeBottom;
+    const JOY_REST_X = actionOnLeft
+      ? CANVAS_W - (safe.right + edgeInsetX + joyRadius)
+      : safe.left + edgeInsetX + joyRadius;
+    const JOY_REST_Y = CANVAS_H - (safe.bottom + edgeInsetBottom + joyRadius);
+    const leftX     = touch.joyWorldX ?? JOY_REST_X;
+    const leftY     = touch.joyWorldY ?? JOY_REST_Y;
+    const knobTravel = joyRadius * 0.82;
+    const isFloating = touch.joyWorldX !== null;
+
+    ctx.save();
+
+    // ── Outer ring ──
+    ctx.fillStyle = isFloating ? 'rgba(16, 24, 34, 0.52)' : 'rgba(16, 24, 34, 0.30)';
+    ctx.beginPath();
+    ctx.arc(leftX, leftY, joyRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = isFloating ? 'rgba(188, 220, 208, 0.65)' : 'rgba(188, 208, 226, 0.30)';
+    ctx.lineWidth = isFloating ? 2 : 1.5;
+    ctx.beginPath();
+    ctx.arc(leftX, leftY, joyRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // ── Directional pips (N/S/E/W triangles inside the ring) ──
+    const pipSize = 5;
+    const pipDist = joyRadius - pipSize - 3;
+    ctx.fillStyle = isFloating ? 'rgba(154, 210, 182, 0.55)' : 'rgba(188, 210, 200, 0.25)';
+    for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+      ctx.save();
+      ctx.translate(leftX + dx * pipDist, leftY + dy * pipDist);
+      ctx.rotate(Math.atan2(dy, dx) + Math.PI / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, -pipSize);
+      ctx.lineTo(pipSize * 0.65, pipSize * 0.45);
+      ctx.lineTo(-pipSize * 0.65, pipSize * 0.45);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ── Line from ring centre to knob (only when active) ──
+    const knobX = leftX + touch.joyX * knobTravel;
+    const knobY = leftY + touch.joyY * knobTravel;
+    if (touch.joyActive) {
+      ctx.strokeStyle = 'rgba(154, 210, 182, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(leftX, leftY);
+      ctx.lineTo(knobX, knobY);
+      ctx.stroke();
+    }
+
+    // ── Knob ──
+    if (touch.joyActive) {
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(154, 210, 182, 0.55)';
+    }
+    ctx.fillStyle = touch.joyActive ? 'rgba(154, 210, 182, 0.88)' : 'rgba(206, 220, 232, 0.55)';
+    ctx.beginPath();
+    ctx.arc(knobX, knobY, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── Action button ──
+    const actionR = Math.max(50, Math.min(58, joyRadius * 1.24 * profile.actionScale));
+    const actionEdgeX = profile.actionEdgeX;
+    const actionEdgeBottom = profile.actionEdgeBottom;
+    const rightX  = actionOnLeft
+      ? safe.left + actionEdgeX + actionR
+      : CANVAS_W - (safe.right + actionEdgeX + actionR);
+    const rightY  = CANVAS_H - (safe.bottom + actionEdgeBottom + actionR);
+    const flash   = touch.actionFlash > 0;
+    const labelIt = this._nearestNpc ? "Parla" : "Esci";
+    const labelEn = this._nearestNpc ? "Talk" : "Exit";
+
+    if (flash) { ctx.shadowBlur = 12; ctx.shadowColor = 'rgba(138, 220, 156, 0.6)'; }
+    ctx.fillStyle = flash ? 'rgba(138, 220, 156, 0.55)' : 'rgba(16, 24, 34, 0.50)';
+    ctx.beginPath();
+    ctx.arc(rightX, rightY, actionR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = flash ? 'rgba(196, 245, 208, 0.95)' : 'rgba(176, 225, 190, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(rightX, rightY, actionR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#eef8f0';
+    ctx.font = "700 14px Georgia";
+    ctx.textAlign = 'center';
+    ctx.fillText(labelIt, rightX, rightY + 1);
+    ctx.fillStyle = '#cfe5d6';
+    ctx.font = "500 10px Georgia";
+    ctx.fillText(labelEn, rightX, rightY + 16);
+
+    this._renderTouchLayoutToggle(ctx, touch.layout, safe);
+
+    const lesson = this._game.context.lesson?.getLessonForDay?.(this._game.context.day.currentDay);
+    const vocab = lesson?.vocab ?? [];
+    const wordA = vocab[0]?.it;
+    const wordB = vocab[1]?.it;
+    const phraseIt = lesson?.phrase?.it;
+    const phraseEn = lesson?.phrase?.en;
+
+    const coachW = 318;
+    const coachH = 46;
+    const coachX = (CANVAS_W - coachW) / 2;
+    const coachY = CANVAS_H - safe.bottom - 170 - profile.coachLift;
+    this._roundedRect(ctx, coachX, coachY, coachW, coachH, 10);
+    ctx.fillStyle = 'rgba(14, 22, 30, 0.86)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(176, 225, 190, 0.44)';
+    ctx.lineWidth = 1;
+    this._roundedRect(ctx, coachX, coachY, coachW, coachH, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = '#e8f0de';
+    ctx.font = '700 12px Georgia';
+    ctx.fillText(this._nearestNpc ? (phraseIt || 'Ripeti la frase della lezione.') : `Parole: ${[wordA, wordB].filter(Boolean).join(' - ') || 'vocabolario del giorno'}`, coachX + 11, coachY + 18);
+    ctx.fillStyle = '#9cc4d5';
+    ctx.font = '500 11px Georgia';
+    ctx.fillText(this._nearestNpc ? (phraseEn || 'Use lesson phrase before talking.') : (phraseEn || 'Repeat and listen for stronger exposure.'), coachX + 11, coachY + 35);
+    ctx.textAlign = 'left';
+    ctx.restore();
+  }
+
+  _renderTouchLayoutToggle(ctx, layout, safe = this._getSafeInsets()) {
+    const rect = this._getTouchLayoutToggleRect(safe);
+    this._roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 8);
+    ctx.fillStyle = 'rgba(12, 22, 32, 0.78)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(158, 198, 212, 0.55)';
+    ctx.lineWidth = 1;
+    this._roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 8);
+    ctx.stroke();
+
+    const half = rect.w / 2;
+    const leftSelected = layout === 'left-action';
+    const pillInset = 2;
+
+    this._roundedRect(ctx, rect.x + pillInset, rect.y + pillInset, half - pillInset * 1.5, rect.h - pillInset * 2, 7);
+    ctx.fillStyle = leftSelected ? 'rgba(154, 210, 182, 0.35)' : 'rgba(108, 128, 144, 0.18)';
+    ctx.fill();
+
+    this._roundedRect(ctx, rect.x + half + pillInset * 0.5, rect.y + pillInset, half - pillInset * 1.5, rect.h - pillInset * 2, 7);
+    ctx.fillStyle = leftSelected ? 'rgba(108, 128, 144, 0.18)' : 'rgba(154, 210, 182, 0.35)';
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(158, 198, 212, 0.32)';
+    ctx.beginPath();
+    ctx.moveTo(rect.x + half, rect.y + 3);
+    ctx.lineTo(rect.x + half, rect.y + rect.h - 3);
+    ctx.stroke();
+
+    ctx.fillStyle = leftSelected ? '#e7f5ea' : '#c7d9e4';
+    ctx.font = '700 12px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('L', rect.x + half * 0.5, rect.y + 16);
+    ctx.fillStyle = leftSelected ? '#c7d9e4' : '#e7f5ea';
+    ctx.fillText('R', rect.x + half * 1.5, rect.y + 16);
+
+    ctx.fillStyle = '#8fb1c0';
+    ctx.font = '500 9px Georgia';
+    ctx.fillText('action thumb', rect.x + rect.w / 2, rect.y + 29);
+  }
+
+  _getTouchLayoutToggleRect(safe = this._getSafeInsets()) {
+    const profile = this._getTouchProfile();
+    return {
+      x: CANVAS_W - safe.right - profile.selectorRight,
+      y: safe.top + profile.selectorTop,
+      w: 138,
+      h: 36,
+    };
+  }
+
+  _hitTouchLayoutSelector(event) {
+    const touch = this._game?.context?.input?.getTouchControlsState?.();
+    if (!touch?.enabled || event.canvasX === undefined || event.canvasY === undefined) return null;
+    const rect = this._getTouchLayoutToggleRect();
+    const hitPad = 8;
+    const inside = event.canvasX >= rect.x - hitPad
+      && event.canvasX <= rect.x + rect.w + hitPad
+      && event.canvasY >= rect.y - hitPad
+      && event.canvasY <= rect.y + rect.h + hitPad;
+    if (!inside) return null;
+
+    const mid = rect.x + rect.w / 2;
+    return event.canvasX < mid ? 'left-action' : 'right-action';
+  }
+
   _roundedRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -1361,5 +1661,30 @@ export class LocationScene extends Scene {
     ctx.lineTo(x, y + r);
     ctx.quadraticCurveTo(x, y, x + r, y);
     ctx.closePath();
+  }
+
+  _getSafeInsets() {
+    const safe = this._game?.context?._safeInsetsWorld;
+    if (!safe) return { top: 0, right: 0, bottom: 0, left: 0 };
+    return {
+      top: Math.max(0, safe.top || 0),
+      right: Math.max(0, safe.right || 0),
+      bottom: Math.max(0, safe.bottom || 0),
+      left: Math.max(0, safe.left || 0),
+    };
+  }
+
+  _getTouchProfile() {
+    return this._game?.context?._touchDeviceProfile ?? {
+      id: "default-mobile",
+      actionScale: 1,
+      actionEdgeX: 16,
+      actionEdgeBottom: 18,
+      joyEdgeX: 18,
+      joyEdgeBottom: 20,
+      selectorRight: 148,
+      selectorTop: 10,
+      coachLift: 0,
+    };
   }
 }

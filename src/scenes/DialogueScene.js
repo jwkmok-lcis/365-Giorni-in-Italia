@@ -25,6 +25,7 @@ export class DialogueScene extends Scene {
     this._returnParams = undefined;
     this._showTranslation = false;
     this._btnRects = { voice: null, translate: null, choices: [] };
+    this._speechStartTime = null;
   }
 
   enter(game, params = {}) {
@@ -37,7 +38,7 @@ export class DialogueScene extends Scene {
     this._session = game.context.dialogue.startDialogue(params.npcId);
     this._choiceIndex = 0;
     this._cooldownFrames = 8;
-    this._showTranslation = false;
+    this._showTranslation = window.innerWidth <= 840;
     this._voiceFlash = 0;
     this._transFlash = 0;
 
@@ -48,6 +49,17 @@ export class DialogueScene extends Scene {
     if (this._cooldownFrames > 0) this._cooldownFrames -= 1;
     if (this._voiceFlash > 0) this._voiceFlash -= 1;
     if (this._transFlash > 0) this._transFlash -= 1;
+
+    // Detect and break stuck speaking state: if speech started >10s ago but still marked as speaking, force reset.
+    const voice = this._game?.context?.voice;
+    if (voice && this._speechStartTime) {
+      const elapsed = Date.now() - this._speechStartTime;
+      if (elapsed > 10000 && voice._speaking) {
+        voice._speaking = false;
+        this._speechStartTime = null;
+        try { window.speechSynthesis.cancel(); } catch (_e) { /* ignore */ }
+      }
+    }
   }
 
   // ── Input ──────────────────────────────────────────────────────────────
@@ -126,17 +138,8 @@ export class DialogueScene extends Scene {
     if (!voice) return;
     voice.unlockFromGesture();
     const node = this._game.context.dialogue.getCurrentNode(this._session);
-    const result = voice.speak(node.text, { requireUnlock: false });
-    if (!result?.ok) {
-      this._promptPanel.textContent = `Voice unavailable: ${result.reason}. Try keyboard V or check browser speech settings.`;
-      return;
-    }
-    // Post-check real runtime status (some browsers fail silently).
-    setTimeout(() => {
-      const status = voice.getLastStatus?.();
-      if (!status || status.ok) return;
-      this._promptPanel.textContent = `Voice failed (${status.reason}). Check browser/site audio + speech settings.`;
-    }, 900);
+    this._speechStartTime = Date.now();
+    voice.speak(node.text, { requireUnlock: false });
   }
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -398,7 +401,10 @@ export class DialogueScene extends Scene {
   _updatePanels() {
     if (!this._statusPanel || !this._promptPanel) return;
     const clueCount = this._game.context.quest.getUnlockedClues().length;
+    const touchEnabled = this._game.context.input?.getTouchControlsState?.()?.enabled;
     this._statusPanel.textContent = `Talking with ${this._session.npcName}`;
-    this._promptPanel.textContent = `V = voice · T = translate · Arrows/tap choose · Enter/tap confirm | Clues: ${clueCount}`;
+    this._promptPanel.textContent = touchEnabled
+      ? `Touch choices to respond · Use EN toggle for support | Clues: ${clueCount}`
+      : `V = voice · T = translate · Arrows/tap choose · Enter/tap confirm | Clues: ${clueCount}`;
   }
 }

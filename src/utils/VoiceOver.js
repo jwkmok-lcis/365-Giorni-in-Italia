@@ -12,7 +12,6 @@ export class VoiceOver {
     this._voices = [];
     this._unlocked = false;
     this._speaking = false;
-    this._lastStatus = { ok: false, reason: "idle" };
 
     if (this.isSupported()) {
       this._voices = window.speechSynthesis.getVoices();
@@ -44,74 +43,41 @@ export class VoiceOver {
     }
 
     const synthesis = window.speechSynthesis;
-    const shouldInterrupt = options.interrupt !== false;
-    const hasActiveSpeech = synthesis.speaking || synthesis.pending;
 
-    // Some browsers get stuck in paused state after tab/background changes.
+    // Chrome workaround: always cancel + resume + wait a tick before speaking.
+    // Without this, Chrome can fire onstart but produce no audio.
+    synthesis.cancel();
     synthesis.resume();
 
-    const doSpeak = () => {
-      let started = false;
+    const self = this;
+
+    setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(String(text));
-      // Fallback mode: use browser defaults only.
-      if (!options.forceSimple) {
-        utterance.lang = preferredVoice?.lang ?? lang;
-        if (preferredVoice) utterance.voice = preferredVoice;
-      }
-      utterance.rate = options.rate ?? this.defaultRate;
-      utterance.pitch = options.pitch ?? this.defaultPitch;
-      utterance.volume = options.volume ?? this.defaultVolume;
+      utterance.lang = preferredVoice?.lang ?? lang;
+      if (preferredVoice) utterance.voice = preferredVoice;
+      utterance.rate = options.rate ?? self.defaultRate;
+      utterance.pitch = options.pitch ?? self.defaultPitch;
+      utterance.volume = options.volume ?? self.defaultVolume;
       utterance.onstart = () => {
-        started = true;
-        this._unlocked = true;
-        this._speaking = true;
-        this._lastStatus = { ok: true, reason: "playing" };
+        self._unlocked = true;
+        self._speaking = true;
       };
-      utterance.onerror = (e) => {
-        this._speaking = false;
-        this._lastStatus = { ok: false, reason: `error:${e?.error ?? "unknown"}` };
+      utterance.onerror = () => {
+        self._speaking = false;
       };
       utterance.onend = () => {
-        this._speaking = false;
-        if (!started) {
-          this._lastStatus = { ok: false, reason: "no-start" };
-        } else {
-          this._lastStatus = { ok: true, reason: "ended" };
-        }
+        self._speaking = false;
       };
 
       synthesis.speak(utterance);
 
-      // If speech did not actually start, retry once with simpler settings.
-      setTimeout(() => {
-        if (started || synthesis.speaking || synthesis.pending) return;
-        if (options._retried) {
-          this._lastStatus = { ok: false, reason: "no-start" };
-          return;
-        }
-        this.speak(text, {
-          ...options,
-          _retried: true,
-          forceSimple: true,
-          requireUnlock: false,
-          interrupt: false,
-          rate: 1,
-        });
-      }, 600);
-    };
-
-    if (shouldInterrupt && hasActiveSpeech) {
-      synthesis.cancel();
-      // Chrome bug: cancel()+speak() same tick can fail. Delay only when
-      // interrupting existing speech, preserving gesture sync on first tap.
-      if (this._unlocked) {
-        setTimeout(doSpeak, 40);
-      } else {
-        doSpeak();
-      }
-    } else {
-      doSpeak();
-    }
+      // Chrome 15-second bug workaround: periodically resume to keep speech alive.
+      const keepAlive = setInterval(() => {
+        if (!self._speaking) { clearInterval(keepAlive); return; }
+        synthesis.pause();
+        synthesis.resume();
+      }, 5000);
+    }, 100);
 
     return {
       ok: true,
@@ -120,18 +86,13 @@ export class VoiceOver {
     };
   }
 
-  getLastStatus() {
-    return this._lastStatus;
-  }
-
   /** Whether speech is currently playing. */
   isSpeaking() {
-    return this._speaking || window.speechSynthesis.speaking;
+    return this._speaking;
   }
 
   unlockFromGesture() {
     if (!this.isSupported()) return { ok: false, reason: "unsupported" };
-    // Mark unlocked from a real user gesture.
     this._unlocked = true;
     return { ok: true, unlocked: true };
   }
