@@ -1,4 +1,4 @@
-const CACHE_NAME = "giorni-v6";
+const CACHE_NAME = "giorni-v7";
 const ASSETS = [
   "./",
   "./index.html",
