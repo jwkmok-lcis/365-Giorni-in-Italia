@@ -6,6 +6,7 @@ import { MapScene }     from "./scenes/MapScene.js";
 import { LessonScene }  from "./scenes/LessonScene.js";
 import { DialogueScene } from "./scenes/DialogueScene.js";
 import { LocationScene } from "./scenes/LocationScene.js";
+import { IntroScene } from "./scenes/IntroScene.js";
 import { DaySystem }    from "./systems/DaySystem.js";
 import { LessonSystem } from "./systems/LessonSystem.js";
 import { PlayerSystem } from "./systems/PlayerSystem.js";
@@ -14,6 +15,10 @@ import { QuestSystem } from "./systems/QuestSystem.js";
 import { EventFeedSystem } from "./systems/EventFeedSystem.js";
 import { SaveSystem } from "./systems/SaveSystem.js";
 import { VoiceOver } from "./utils/VoiceOver.js";
+// New adaptive learning systems
+import { DynamicDifficultySystem } from "./systems/DynamicDifficultySystem.js";
+import { SkillTreeSystem } from "./systems/SkillTreeSystem.js";
+import { VoicePronunciationSystem } from "./systems/VoicePronunciationSystem.js";
 
 // ── DOM guards ────────────────────────────────────────────────────────────────
 const canvas = document.getElementById("gameCanvas");
@@ -68,17 +73,22 @@ const quest = new QuestSystem();
 const eventFeed = new EventFeedSystem();
 const save = new SaveSystem();
 const voice = new VoiceOver();
+// New adaptive learning systems
+const difficultySystem = new DynamicDifficultySystem();
+const skillTreeSystem = new SkillTreeSystem();
+const voiceSystem = new VoicePronunciationSystem();
 
 eventFeed.attach(bus);
 eventFeed.push("Welcome to Bologna. Start your daily lesson.");
 
 scenes.register("map", new MapScene());
+scenes.register("intro", new IntroScene());
 scenes.register("lesson", new LessonScene());
 scenes.register("dialogue", new DialogueScene());
 scenes.register("location", new LocationScene());
 
 // context is passed through to every scene via game.context.*
-const game = new Game(canvas, { bus, input, scenes, day, lesson, player, dialogue, quest, eventFeed, save, voice });
+const game = new Game(canvas, { bus, input, scenes, day, lesson, player, dialogue, quest, eventFeed, save, voice, difficultySystem, skillTreeSystem, voiceSystem });
 game.context._worldW = 800;
 game.context._worldH = 512;
 game.context._viewPadX = 0;
@@ -278,7 +288,8 @@ window.addEventListener("orientationchange", () => setTimeout(fitCanvas, 200));
 window.visualViewport?.addEventListener("resize", fitCanvas);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-scenes.go(day.canExplore() ? "map" : "lesson", game);
+const entryScene = loaded ? (day.canExplore() ? "map" : "lesson") : "intro";
+scenes.go(entryScene, game);
 game.start();
 
 // Hide the title header once the game is running

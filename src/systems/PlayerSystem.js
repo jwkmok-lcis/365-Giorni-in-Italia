@@ -27,6 +27,29 @@ export class PlayerSystem {
     this.talkedToday = new Set();
     this.day = 1;
     this.lastPlayDate = null;
+
+    // New adaptive learning system properties
+    this.skillScores = {
+      basicSentences: 0,
+      presentTense: 0,
+      pastTense: 0,
+      connectors: 0,
+      modals: 0,
+      pronouns: 0,
+      infinitives: 0,
+      complexCombinations: 0
+    };
+
+    this.consecutiveFailures = {};
+    this.currentStreak = 0;
+    this.maxStreak = 0;
+    this.unlockedRewards = {
+      dialogueOptions: false,
+      fasterTrust: false,
+      secretClues: false,
+      advancedNPCs: false
+    };
+  }
   }
 
   /** Ensure the player is on a walkable tile; reset to spawn if not. */
@@ -149,6 +172,12 @@ export class PlayerSystem {
       talkedToday: Array.from(this.talkedToday),
       day: this.day,
       lastPlayDate: this.lastPlayDate,
+      // New skill system data
+      skillScores: this.skillScores,
+      consecutiveFailures: this.consecutiveFailures,
+      currentStreak: this.currentStreak,
+      maxStreak: this.maxStreak,
+      unlockedRewards: this.unlockedRewards
     };
   }
 
@@ -168,6 +197,92 @@ export class PlayerSystem {
     this.talkedToday = new Set(data.talkedToday ?? []);
     this.day = data.day ?? this.day;
     this.lastPlayDate = data.lastPlayDate ?? this.lastPlayDate;
+
+    // Load new skill system data
+    this.skillScores = data.skillScores ?? this.skillScores;
+    this.consecutiveFailures = data.consecutiveFailures ?? this.consecutiveFailures;
+    this.currentStreak = data.currentStreak ?? this.currentStreak;
+    this.maxStreak = data.maxStreak ?? this.maxStreak;
+    this.unlockedRewards = data.unlockedRewards ?? this.unlockedRewards;
+  }
+
+  // ── New Skill System Methods ─────────────────────────────────────────────
+
+  // Update skill score based on performance
+  updateSkillScore(skillKey, performance, maxScore = 100) {
+    const currentScore = this.skillScores[skillKey] || 0;
+    const improvement = (performance / maxScore) * 20; // Max 20 points per update
+
+    this.skillScores[skillKey] = Math.min(maxScore, currentScore + improvement);
+
+    // Reset consecutive failures on success
+    if (performance > 0) {
+      this.consecutiveFailures[skillKey] = 0;
+    } else {
+      this.consecutiveFailures[skillKey] = (this.consecutiveFailures[skillKey] || 0) + 1;
+    }
+  }
+
+  // Award XP and update streak
+  awardXP(amount) {
+    this.languageXP += amount;
+    this.currentStreak += 1;
+    this.maxStreak = Math.max(this.maxStreak, this.currentStreak);
+    return this.languageXP;
+  }
+
+  // Reset streak on failure
+  resetStreak() {
+    this.currentStreak = 0;
+  }
+
+  // Get skill score
+  getSkillScore(skillKey) {
+    return this.skillScores[skillKey] || 0;
+  }
+
+  // Get all skill scores
+  getAllSkillScores() {
+    return { ...this.skillScores };
+  }
+
+  // Get consecutive failures for skill
+  getConsecutiveFailures(skillKey) {
+    return this.consecutiveFailures[skillKey] || 0;
+  }
+
+  // Check if reward is unlocked
+  hasReward(rewardKey) {
+    return this.unlockedRewards[rewardKey] || false;
+  }
+
+  // Unlock reward
+  unlockReward(rewardKey) {
+    this.unlockedRewards[rewardKey] = true;
+  }
+
+  // Get player stats for UI
+  getSkillStats() {
+    return {
+      totalXP: this.languageXP,
+      currentStreak: this.currentStreak,
+      maxStreak: this.maxStreak,
+      skillScores: { ...this.skillScores },
+      unlockedRewards: { ...this.unlockedRewards }
+    };
+  }
+
+  // Get difficulty level for skill
+  getSkillDifficultyLevel(skillKey) {
+    const score = this.getSkillScore(skillKey);
+    if (score <= 40) return 'A1';
+    if (score <= 70) return 'A1+';
+    return 'A2';
+  }
+
+  // Check if player should get simplified dialogue
+  shouldSimplifyDialogue(skillKey) {
+    return this.getConsecutiveFailures(skillKey) >= 2;
   }
 
   _canOccupy(x, y) {

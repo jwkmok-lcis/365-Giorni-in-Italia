@@ -2,6 +2,7 @@
 // Each node has: speaker, text, choices[]
 // A choice can have: text, next, end, effects
 // Italian is the game language. clueHint appears in English as a learning aid.
+// NEW: Adaptive difficulty with versions (A1, A1+, A2) based on player skill
 
 export const DIALOGUES = {
   // ── Day 1 NPCs ──────────────────────────────────────────────────────────
@@ -11,20 +12,75 @@ export const DIALOGUES = {
     nodes: {
       start: {
         speaker: "Marco",
-        text: "Buongiorno! Stai cercando qualcosa di speciale in questa piazza?",
-        en: "Good morning! Are you looking for something special in this square?",
-        choices: [
-          {
-            text: "Sì — cerco il ragù leggendario di Bologna.",
-            next: "ragu_hook",
-            effects: { relationDelta: 1 }
+        requiredSkills: ["basicSentences"],
+        versions: {
+          A1: {
+            text: "Buongiorno! Cerchi qualcosa?",
+            en: "Good morning! Are you looking for something?",
+            choices: [
+              {
+                text: "Sì.",
+                next: "ragu_hook",
+                effects: { relationDelta: 1 },
+                skills: ["basicSentences"],
+                grammarAccuracy: 0.8,
+                complexity: 1.0
+              },
+              {
+                text: "No.",
+                next: "casual",
+                effects: { relationDelta: 0 },
+                skills: ["basicSentences"],
+                grammarAccuracy: 0.8,
+                complexity: 1.0
+              }
+            ]
           },
-          {
-            text: "Sto solo esplorando la città.",
-            next: "casual",
-            effects: { relationDelta: 0 }
+          A1Plus: {
+            text: "Buongiorno! Stai cercando qualcosa di speciale?",
+            en: "Good morning! Are you looking for something special?",
+            choices: [
+              {
+                text: "Sì, cerco il ragù.",
+                next: "ragu_hook",
+                effects: { relationDelta: 1 },
+                skills: ["basicSentences", "presentTense"],
+                grammarAccuracy: 0.9,
+                complexity: 1.2
+              },
+              {
+                text: "Sto solo esplorando.",
+                next: "casual",
+                effects: { relationDelta: 0 },
+                skills: ["basicSentences", "presentTense"],
+                grammarAccuracy: 0.9,
+                complexity: 1.2
+              }
+            ]
+          },
+          A2: {
+            text: "Buongiorno! Stai cercando qualcosa di speciale in questa piazza?",
+            en: "Good morning! Are you looking for something special in this square?",
+            choices: [
+              {
+                text: "Sì — cerco il ragù leggendario di Bologna.",
+                next: "ragu_hook",
+                effects: { relationDelta: 1 },
+                skills: ["basicSentences", "presentTense", "connectors"],
+                grammarAccuracy: 1.0,
+                complexity: 1.5
+              },
+              {
+                text: "Sto solo esplorando la città.",
+                next: "casual",
+                effects: { relationDelta: 0 },
+                skills: ["basicSentences", "presentTense"],
+                grammarAccuracy: 0.95,
+                complexity: 1.3
+              }
+            ]
           }
-        ]
+        }
       },
       ragu_hook: {
         speaker: "Marco",

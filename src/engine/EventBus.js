@@ -50,4 +50,7 @@ export const Events = Object.freeze({
   DAY_ENDED:                 "DAY_ENDED",
   GAME_SAVED:                "GAME_SAVED",
   SCENE_CHANGED:             "SCENE_CHANGED",
+  XP_AWARDED:                "XP_AWARDED",
+  SKILL_IMPROVED:            "SKILL_IMPROVED",
+  REWARD_UNLOCKED:           "REWARD_UNLOCKED",
 });

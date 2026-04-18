@@ -3,6 +3,9 @@
 import { Scene } from "../engine/Scene.js";
 import { ClueNotebook } from "../ui/ClueNotebook.js";
 import { LOCATIONS, MAP_CONFIG, TILE_MAP, TILE, TILE_PALETTE } from "../content/map.js";
+// New adaptive learning UI components
+import { SkillTreeUI } from "../ui/SkillTreeUI.js";
+import { XPNotificationUI } from "../ui/XPNotificationUI.js";
 
 const TS = MAP_CONFIG.tileSize;
 const COLS = MAP_CONFIG.cols;
@@ -64,6 +67,9 @@ export class MapScene extends Scene {
     this._touchLayoutTapCooldown = 0;
     this._hudFlash = { quest: 0, clues: 0 };
     this._busHandlers = [];
+    // New adaptive learning UI components
+    this._skillTreeUI = null;
+    this._xpNotifications = null;
   }
 
   enter(game) {
@@ -75,6 +81,55 @@ export class MapScene extends Scene {
     this._player.ensureWalkable();
     this._bindHudFeedback();
     this._updatePanels();
+    // Initialize new UI components
+    this._skillTreeUI = new SkillTreeUI();
+    this._xpNotifications = new XPNotificationUI();
+    // Bind new event handlers
+    this._bindAdaptiveLearningEvents();
+  }
+
+  _bindAdaptiveLearningEvents() {
+    // Listen for XP awarded events
+    this._busHandlers.push({
+      event: "XP_AWARDED",
+      handler: (data) => {
+        if (this._xpNotifications) {
+          this._xpNotifications.addXPNotification(
+            data.amount,
+            data.skills || [],
+            data.streak || 0
+          );
+        }
+      }
+    });
+
+    // Listen for skill improvement events
+    this._busHandlers.push({
+      event: "SKILL_IMPROVED",
+      handler: (data) => {
+        if (this._xpNotifications) {
+          this._xpNotifications.addSkillNotification(data.skillName, data.improvement);
+        }
+      }
+    });
+
+    // Listen for reward unlocked events
+    this._busHandlers.push({
+      event: "REWARD_UNLOCKED",
+      handler: (data) => {
+        if (this._xpNotifications) {
+          this._xpNotifications.addFeedbackNotification(
+            `Nuova ricompensa: ${data.rewardName}`,
+            "success"
+          );
+        }
+      }
+    });
+
+    // Bind the handlers
+    this._busHandlers.forEach(({ event, handler }) => {
+      this._game.context.bus.on(event, handler);
+    });
   }
 
   exit() {
@@ -89,6 +144,12 @@ export class MapScene extends Scene {
     this._touchLayoutTapCooldown = Math.max(0, this._touchLayoutTapCooldown - dt);
     this._hudFlash.quest = Math.max(0, this._hudFlash.quest - dt * 2.2);
     this._hudFlash.clues = Math.max(0, this._hudFlash.clues - dt * 2.2);
+
+    // Update XP notifications
+    if (this._xpNotifications) {
+      this._xpNotifications.update(dt);
+    }
+
     if (!game.context.day.canExplore()) return;
 
     const held = new Set();
@@ -136,6 +197,14 @@ export class MapScene extends Scene {
     this._renderLanguageCoach(ctx, nearLoc, nearPiazzaNpc);
     this._renderTouchControls(ctx, nearLoc, nearPiazzaNpc);
 
+    // Render new adaptive learning UI components
+    if (this._xpNotifications) {
+      this._xpNotifications.render(ctx);
+    }
+    if (this._skillTreeUI) {
+      this._skillTreeUI.render(ctx, game.context.skillTreeSystem, this._player);
+    }
+
     if (!this._game.context.day?.canExplore()) {
       this._renderLessonGate(ctx);
     }
@@ -181,6 +250,14 @@ export class MapScene extends Scene {
         } else {
           this._game.context.scenes.go("location", this._game, { location: loc });
         }
+      }
+      return;
+    }
+
+    if (this._game.context.day.canExplore() && isKey && (event.key === "k" || event.key === "K")) {
+      // Toggle skill tree UI
+      if (this._skillTreeUI) {
+        this._skillTreeUI.toggle();
       }
       return;
     }

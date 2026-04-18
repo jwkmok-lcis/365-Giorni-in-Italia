@@ -1,0 +1,1883 @@
+365 Giorni in Italia — Storyline Script
+
+=== GRAMMAR SKILL SYSTEM ===
+
+🎯 Core Concept
+XP is earned not just for talking to NPCs, but for demonstrating mastery of specific grammar structures embedded in dialogue choices. Each choice has a skill tag [S#] that tracks which grammar competency was used.
+
+⸻
+
+📊 SKILL TIERS (Progressive Difficulty)
+
+🟢 A1 Skills (Chapter 1–3, Days 1–7)
+ S1: Basic survival phrases
+ S2: Present tense conjugation (io cerco, tu vai, lui fa)
+ S3: Articles & gender (il mercato, la ricetta, un pane, una carota)
+ S4: Simple questions (Dove? Quando? Quanto? Perché?)
+ S5: Vocabulary repetition & recognition (ragù, soffritto, fuoco basso)
+
+🟡 A2 Skills (Chapter 2+, Days 4+)
+ S6: Passato prossimo (ho visto, ha detto, ho trovato)
+ S7: Connectors (ma, perché, quindi, se)
+ S8: Object pronouns (lo, la, mi, ti)
+ S9: Modal verbs (posso, devo, voglio, posso)
+ S10: Infinitives after modals (voglio vederlo, devo parlare)
+
+⸻
+
+⚙️ XP AWARD MECHANICS
+
+1. Choice Accuracy Tiers
+   ✅ Correct form → Full XP
+   ⚠️ Acceptable (minor error) → 50% XP
+   ❌ Incorrect → 0 XP + NPC rephrasing offered
+
+2. XP Values (Examples)
+   Recognizing S5 structure → +3 XP
+   Producing S5 structure → +5 XP
+   Producing S6 (past tense) → +10 XP
+   Combining two skills (e.g., S7+S9) → +15 XP
+   Complex combinations (S6+S7+S9) → +20 XP
+
+3. Repetition Bonus
+   Use same pattern 3x correctly in same day → +10 bonus XP
+   Pattern: "Ho parlato", "Ho trovato", "Ho capito" = bonus triggered
+   OR: Use 2x different patterns from same skill → +8 bonus XP
+   Pattern: "Perché?" + "Ma..." = S7 bonus
+
+4. Understand vs Produce Split
+   Comprehension (reading/listening NPC) → +2 XP base
+   Production (choosing/building response) → +8 XP base
+
+5. Daily Skill Focus
+   Day 1: S5 (vocabulary, basic present)
+   Day 2: S5 (repetition, recognition)
+   Day 3: S5 + S4 (question formation)
+   Day 4: S6 (passato prossimo intro)
+   Day 5: S7 (connectors: ma, perché, quindi)
+   Day 6: S9 (modals: posso, devo, voglio)
+   Day 7: S7+S9 (combining connectors + modals)
+   Day 8: S8 (object pronouns: lo, la, mi, ti)
+   Day 9: S6+S8 (past + pronouns)
+   Day 10: S7+S8 (connectors + pronouns)
+   Day 11: S8+S9 (pronouns + modals)
+   Day 12: S6+S7+S8 (complex past + connectors + pronouns)
+   Day 13: S9+S10 (modals + infinitives)
+   Day 14: S7+S9+S10 (full synthesis)
+   Day 15: S8+S9 (pronouns + modals reinforcement)
+   Day 16: S6+S7+S8 (complex combinations)
+   Day 17: S9+S10 (modals + infinitives)
+   Day 18: S7+S9+S10 (full synthesis)
+   Day 19: S8 review (object pronouns in new contexts)
+   Day 20: S6+S8 (past + pronouns)
+   Day 21: S7+S8 (connectors + pronouns)
+   Day 22: S8+S9 (pronouns + modals)
+   Day 23: S6+S7+S8 (complex)
+   Day 24: S9+S10 (modals + infinitives)
+   Day 25: S7+S9+S10 (synthesis)
+   Day 26: S5-S8 review (vocabulary + pronouns)
+   Day 27: S6+S9 (past + modals)
+   Day 28: S7+S8+S9 (triple combination)
+   Day 29: S6+S7+S8+S9 (full integration)
+   Day 30: S10 mastery (infinitives in complex contexts)
+
+6. Error Feedback Loop (Gamified Learning)
+   Player chooses → If ❌ incorrect
+   NPC: "Non capisco. Intendi dire: [correct form]?"
+   Player retries or continues → +XP on correct attempt
+   (No punishment, just reframing)
+
+   Example Error Branch:
+   NPC: "Hai parlato con Giorgio?"
+   Player chooses: "Sì, Giorgio." [❌ Incomplete]
+   NPC: "Non capisco. Intendi dire: 'Sì, ho parlato con Giorgio'?"
+   Player retries: "Sì, ho parlato con Giorgio." [✅ +10 XP]
+
+7. Skill Mastery Milestone
+   Skill reaches Level 3 → +20 XP milestone bonus
+   Triggers when: 5 correct uses of skill in varied contexts
+
+⸻
+
+🎮 EXPECTED PROGRESSION (Example)
+   Day 1, Marco node:
+   Player sees: "Buongiorno! Cerchi qualcosa?"
+   Choice: "Sì, cerco il ragù." [S5 production]
+   Result: +5 XP (S5 Level 1/3)
+   
+   By Day 3, after 15+ S5 uses:
+   S5 at Level 3 → +20 milestone bonus
+   Skill unlocked for next tier
+
+   Day 4, Lucia node:
+   NPC: "Hai parlato con Giorgio?"
+   Choice: "Sì, ho parlato con lui." [S6 production]
+   Result: +10 XP (S6 Level 1/3)
+   Pattern builds naturally from context
+
+⸻
+
+=== DIALOGUES ===
+
+--- Day 1 NPCs ---
+
+NPC: Marco Verdini
+Node: start
+Speaker: Marco
+Italian: Buongiorno! Cerchi qualcosa?
+English: Good morning! Are you looking for something?
+Choices:
+ - Sì, cerco il ragù.
+ - No, guardo la piazza.
+
+Node: ragu_hook
+Speaker: Marco
+Italian: Parla piano.
+Il ragù è importante qui.
+Se vuoi capire… inizia dal pane.
+English: Speak softly.
+Ragù is important here.
+If you want to understand… start with bread.
+Choices:
+ - Dal pane? Perché?
+ - Pane? Non capisco.
+
+Node: pane_clue
+Speaker: Marco
+Italian: Il pane è semplice.
+Non troppo duro, non troppo morbido.
+Il ragù deve stare bene con il pane.
+Vai al mercato.
+Parla con Lucia.
+Chiedi del soffritto.
+English: Bread is simple.
+Not too hard, not too soft.
+Ragù must go well with bread.
+Go to the market.
+Talk to Lucia.
+Ask about soffritto.
+Choices:
+ - Va bene, grazie!
+ - Cos'è il soffritto?
+
+Node: soffritto_hint
+Speaker: Marco
+Italian: Soffritto: cipolla, carota, sedano.
+Vai da Lucia.
+English: Soffritto: onion, carrot, celery.
+Go to Lucia.
+Choices:
+ - Grazie, Marco.
+
+Node: casual
+Speaker: Marco
+Italian: Va bene.
+Io sono qui ogni mattina.
+English: Alright.
+I'm here every morning.
+Choices:
+ - A presto!
+
+NPC: Lucia Ferrante
+Node: start
+Speaker: Lucia
+Italian: Ciao! Sei nuovo?
+Sei qui per il ragù?
+English: Hi! Are you new?
+Are you here for ragù?
+Choices:
+ - Sì, Marco mi manda.
+ - No, cerco da solo.
+
+Node: soffritto_reveal
+Speaker: Lucia
+Italian: Bene.
+Il soffritto è importante.
+Cipolla, carota, sedano.
+Sempre tutti e tre.
+English: Good.
+Soffritto is important.
+Onion, carrot, celery.
+Always all three.
+Choices:
+ - E la carne?
+ - Dove compro le verdure?
+
+Node: meat_follow
+Speaker: Lucia
+Italian: Prima il soffritto.
+Poi la carne.
+Cuoci piano.
+Fuoco basso.
+Venti minuti.
+English: First soffritto.
+Then meat.
+Cook slowly.
+Low heat.
+Twenty minutes.
+Choices:
+ - Capito, grazie!
+
+Node: fresh_tip
+Speaker: Lucia
+Italian: Qui al mercato.
+Le verdure sono fresche.
+Fai attenzione:
+non tutto è buono.
+Te le scelgo io.
+English: Here at the market.
+The vegetables are fresh.
+Be careful:
+not everything is good.
+I'll choose them for you.
+Choices:
+ - Grazie mille!
+
+--- Day 2 NPCs ---
+
+NPC: Donna Rosa
+Node: start
+Speaker: Donna Rosa
+Italian: Buongiorno.
+Tu cerchi il ragù, vero?
+English: Good morning.
+You are looking for ragù, right?
+Choices:
+ - Sì.
+ - Un po'.
+
+Node: cooking_time
+Speaker: Donna Rosa
+Italian: Il ragù è lento.
+Tre ore minimo.
+Il sugo deve "tremare"
+(muoversi piano), non bollire.
+English: Ragù is slow.
+Three hours minimum.
+The sauce must "shake"
+(move slowly), not boil.
+Choices:
+ - Ho sentito sei ore.
+ - Capito, grazie.
+
+Node: contradiction
+Speaker: Donna Rosa
+Italian: Sei ore?
+Chi lo dice?
+Forse non è vero.
+Forse è un segreto.
+English: Six hours?
+Who says that?
+Maybe it's not true.
+Maybe it's a secret.
+Choices:
+ - Vado a chiedere.
+ - Interessante.
+
+NPC: Giorgio Neri
+Node: start
+Speaker: Giorgio
+Italian: Il ragù si mangia.
+Non si parla troppo.
+English: Ragù is eaten.
+Not talked about too much.
+Choices:
+ - Quanto tempo?
+ - Tre ore?
+
+Node: time_reveal
+Speaker: Giorgio
+Italian: Sei ore.
+Fuoco molto basso.
+Meno tempo?
+Non è vero ragù.
+English: Six hours.
+Very low heat.
+Less time?
+Not real ragù.
+Choices:
+ - Donna Rosa dice tre ore.
+ - Capito.
+
+Node: three_hours_challenge
+Speaker: Giorgio
+Italian: Tre ore? No.
+Non è ragù.
+Chi lo dice sbaglia.
+English: Three hours? No.
+That's not ragù.
+Who says that is wrong.
+Choices:
+ - Dice Donna Rosa.
+ - Non so.
+
+Node: on_donna_rosa
+Speaker: Giorgio
+Italian: Donna Rosa è gentile.
+Ma fa in modo diverso.
+English: Donna Rosa is kind.
+But she does it differently.
+Choices:
+ - Diverso come?
+
+--- Day 3 NPCs ---
+
+NPC: Prof. Conti
+Node: start
+Speaker: Prof. Conti
+Italian: Ah, tu sei nuovo.
+Cerchi la ricetta?
+English: Ah, you are new.
+Looking for the recipe?
+Choices:
+ - Sì.
+ - Forse.
+
+Node: document_exists
+Speaker: Prof. Conti
+Italian: Sì, esiste un documento.
+È molto vecchio.
+È nella biblioteca.
+English: Yes, a document exists.
+It is very old.
+It is in the library.
+Choices:
+ - Posso vederlo?
+ - Chi lo ha visto?
+
+Node: archive_hint
+Speaker: Prof. Conti
+Italian: La biblioteca ha un archivio.
+Non tutti entrano.
+English: The library has an archive.
+Not everyone can enter.
+Choices:
+ - Come entro?
+
+Node: access_mystery
+Speaker: Prof. Conti
+Italian: Serve aiuto.
+Parla con Elena Bianchi.
+English: You need help.
+Talk to Elena Bianchi.
+Choices:
+ - Chi è?
+
+Node: who_saw_it
+Speaker: Prof. Conti
+Italian: Poche persone.
+Io… e Giorgio.
+English: Few people.
+Me… and Giorgio.
+Choices:
+ - Giorgio di nuovo.
+
+NPC: Elena Bianchi
+Node: start
+Speaker: Elena
+Italian: Ciao!
+Sei in biblioteca?
+English: Hi!
+Are you in the library?
+Choices:
+ - Sì.
+ - Cerco un documento.
+
+Node: access_offer
+Speaker: Elena
+Italian: Cerchi qualcosa di preciso?
+L'archivio è difficile.
+Devi sapere cosa vuoi.
+English: Are you looking for something specific?
+The archive is difficult.
+You must know what you want.
+Choices:
+ - Cerco la ricetta del ragù.
+
+--- Day 4 NPCs (A1→A2: Past Tense Intro) ---
+
+NPC: Lucia Ferrante
+Node: day4_start
+Speaker: Lucia
+Italian: Ciao! Sei tornato.
+Hai parlato con Giorgio?
+English: Hi! You're back.
+Did you talk to Giorgio?
+Choices:
+ - [S6] Sì, ho parlato con lui. [+10 XP: passato prossimo produced]
+ - [S5] No, non ancora. [+5 XP: negation correct]
+
+Node: day4_past_reveal
+Speaker: Lucia
+Italian: E cosa ha detto?
+English: And what did he say?
+Choices:
+ - [S6] Ha detto "sei ore". [+10 XP: past tense comprehension]
+ - [S5] Non ricordo. [+5 XP: communicating uncertainty]
+
+Node: day4_reinforce
+Speaker: Lucia
+Italian: Interessante…
+Io ho sempre fatto tre ore.
+English: Interesting…
+I've always made it three hours.
+Choices:
+ - [S6] Capito. [+3 XP: comprehension of perfect tense]
+ - [S5] Ho una domanda. [+8 XP: past participle recognition]
+
+⸻
+
+NPC: Marco Verdini
+Node: day4_marco_start
+Speaker: Marco
+Italian: Allora?
+Hai trovato qualcosa?
+English: So?
+Have you found anything?
+Choices:
+ - [S6] Sì, ho trovato informazioni. [+10 XP: object + past tense]
+ - [S5] No, cerco ancora. [+5 XP: present tense maintained]
+
+Node: day4_marco_follow
+Speaker: Marco
+Italian: Bene.
+La ricerca è importante.
+English: Good.
+The search is important.
+Choices:
+ - [S5] Grazie. [+2 XP: comprehension]
+
+⸻
+
+--- Day 5 NPCs (A2: Connectors) ---
+
+NPC: Donna Rosa
+Node: day5_connector_start
+Speaker: Donna Rosa
+Italian: Tre ore sono giuste…
+ma dipende dal fuoco.
+English: Three hours is right…
+but it depends on the heat.
+Choices:
+ - [S7] Perché? [+8 XP: asking for cause with connector]
+ - [S5] Non capisco. [+3 XP: communicating comprehension gap]
+
+Node: day5_connector_explain
+Speaker: Donna Rosa
+Italian: Fuoco basso = tempo lungo.
+Quindi serve pazienza.
+English: Low heat = long time.
+So patience is needed.
+Choices:
+ - [S7] Capisco. [+5 XP: understanding quindi]
+ - [S6] Ho capito. [+7 XP: passato prossimo + comprehension]
+
+⸻
+
+NPC: Giorgio Neri
+Node: day5_giorgio_why
+Speaker: Giorgio
+Italian: Sei ore, perché il sapore cambia.
+English: Six hours, because the flavor changes.
+Choices:
+ - [S7] Capisco. [+5 XP: recognizing cause connector]
+ - [S5] Sapore? [+3 XP: vocabulary seeking]
+
+Node: day5_giorgio_but
+Speaker: Giorgio
+Italian: Non è tre ore.
+No, no.
+English: It's not three hours.
+No, no.
+Choices:
+ - [S7] Ma Donna Rosa dice tre ore. [+10 XP: but + attribution]
+ - [S5] Donna Rosa sbaglia? [+6 XP: question about correctness]
+
+⸻
+
+--- Day 6 NPCs (A2: Modal Verbs) ---
+
+NPC: Prof. Conti
+Node: day6_modal_want
+Speaker: Prof. Conti
+Italian: Vuoi vedere il documento?
+English: Do you want to see the document?
+Choices:
+ - [S9] Sì, voglio vederlo. [+12 XP: modal + infinitive]
+ - [S9] Posso entrare? [+10 XP: modal permission]
+
+Node: day6_modal_must
+Speaker: Prof. Conti
+Italian: Non puoi entrare da solo.
+Devi parlare con Elena.
+English: You can't enter alone.
+You must talk to Elena.
+Choices:
+ - [S9] Capito. [+3 XP: modal comprehension]
+ - [S9] Devo andare da Elena? [+12 XP: modal question production]
+
+⸻
+
+NPC: Elena Bianchi
+Node: day6_elena_modal
+Speaker: Elena
+Italian: Posso aiutarti…
+ma devi sapere cosa cerchi.
+English: I can help you…
+but you must know what you're looking for.
+Choices:
+ - [S9] Voglio la ricetta. [+10 XP: modal intention]
+ - [S5] Non sono sicuro. [+6 XP: communicating uncertainty]
+
+Node: day6_elena_require
+Speaker: Elena
+Italian: La parola chiave.
+Sempre la parola chiave.
+English: The keyword.
+Always the keyword.
+Choices:
+ - [S5] Quale parola? [+8 XP: seeking specificity]
+ - [S7] Quale parola, ma dove? [+12 XP: two questions with connector]
+
+⸻
+
+--- Day 7 NPCs (A2: Combining Sentences) ---
+
+NPC: Elena Bianchi
+Node: day7_elena_combine
+Speaker: Elena
+Italian: Hai parlato con Conti?
+English: Did you talk to Conti?
+Choices:
+ - [S7+S9] Sì, ho parlato con lui e voglio entrare. [+15 XP: two clauses + past + modal]
+ - [S7+S6] No, ma voglio parlare con lui. [+12 XP: connector + future intent via voglio]
+
+Node: day7_elena_keyword
+Speaker: Elena
+Italian: Buono.
+La parola è… "Ferrante".
+English: Good.
+The word is… "Ferrante".
+Choices:
+ - [S6] Ho capito! [+5 XP: comprehension marker]
+
+⸻
+
+NPC: Prof. Conti
+Node: day7_conti_condition
+Speaker: Prof. Conti
+Italian: Bene.
+Se hai la parola giusta, puoi entrare.
+English: Good.
+If you have the right word, you can enter.
+Choices:
+ - [S9+S7] Ho la parola, quindi entro. [+15 XP: modal + connector + confidence]
+ - [S9] Posso entrare adesso? [+10 XP: asking permission with modal]
+
+Node: day7_conti_open
+Speaker: Prof. Conti
+Italian: L'archivio è aperto.
+Ci sono molti documenti.
+English: The archive is open.
+There are many documents.
+Choices:
+ - [S5] Grazie mille! [+5 XP]
+
+⸻
+
+NPC: Marco Verdini
+Node: day7_marco_synthesis
+Speaker: Marco
+Italian: Allora?
+Sai qualcosa di più?
+English: So?
+Do you know anything more?
+Choices:
+ - [S7+S5] Sì, ma è difficile. [+12 XP: but + degree descriptor]
+ - [S7+S6] No, ma ho trovato informazioni. [+14 XP: but + past + object]
+
+Node: day7_marco_close
+Speaker: Marco
+Italian: Bravissimo.
+Continua così.
+English: Very good.
+Keep going like this.
+Choices:
+ - [S5] Grazie. [+2 XP]
+
+--- Day 8 NPCs (A2: Object Pronouns) ---
+
+NPC: Lucia Ferrante
+Node: day8_lucia_signature
+Speaker: Lucia
+Italian: M.F.?
+Sì, è mia nonna.
+Maria Ferrante.
+English: M.F.?
+Yes, it's my grandmother.
+Maria Ferrante.
+Choices:
+ - [S8] La conosci? [+8 XP: direct object pronoun]
+ - [S5] Chi è? [+5 XP: question]
+
+Node: day8_lucia_story
+Speaker: Lucia
+Italian: Lei ha scritto la ricetta.
+La famiglia Ferrante l'ha custodita.
+English: She wrote the recipe.
+The Ferrante family guarded it.
+Choices:
+ - [S8] Perché l'avete custodita? [+10 XP: pronoun + question]
+ - [S6] Ho capito. [+5 XP: past comprehension]
+
+⸻
+
+NPC: Marco Verdini
+Node: day8_marco_ferrante
+Speaker: Marco
+Italian: I Ferrante?
+Li conosco da anni.
+English: The Ferrante?
+I've known them for years.
+Choices:
+ - [S8] Li hai visti spesso? [+10 XP: plural pronoun]
+ - [S5] Racconta. [+5 XP: request]
+
+Node: day8_marco_reveal
+Speaker: Marco
+Italian: Maria Ferrante la sapeva lunga.
+Lei ha creato il ragù moderno.
+English: Maria Ferrante knew a lot.
+She created the modern ragù.
+Choices:
+ - [S8] L'hai incontrata? [+8 XP: direct object]
+ - [S6] Interessante. [+5 XP: past marker]
+
+⸻
+
+--- Day 9 NPCs (A2: Past + Pronouns) ---
+
+NPC: Giorgio Neri
+Node: day9_giorgio_two_ragus
+Speaker: Giorgio
+Italian: Due ragù?
+Sì, li ho visti entrambi.
+English: Two ragùs?
+Yes, I've seen both.
+Choices:
+ - [S6+S8] Li hai provati? [+15 XP: past + plural pronoun]
+ - [S8] Quale preferisci? [+8 XP: pronoun question]
+
+Node: day9_giorgio_difference
+Speaker: Giorgio
+Italian: Uno è antico.
+L'altro è moderno.
+Li ho cucinati entrambi.
+English: One is ancient.
+The other is modern.
+I've cooked both.
+Choices:
+ - [S6+S8] Li hai cucinati quando? [+15 XP: past + pronoun + time]
+ - [S7] Ma quale è migliore? [+8 XP: connector + comparison]
+
+⸻
+
+NPC: Donna Rosa
+Node: day9_donna_contrast
+Speaker: Donna Rosa
+Italian: Giorgio li nasconde.
+Ma io li conosco entrambi.
+English: Giorgio hides them.
+But I know both.
+Choices:
+ - [S7+S8] Li conosci da quando? [+12 XP: connector + pronoun + time]
+ - [S8] Quale mi consigli? [+10 XP: pronoun + advice]
+
+Node: day9_donna_explain
+Speaker: Donna Rosa
+Italian: Quello antico l'ho provato da bambina.
+Quello moderno l'ho scoperto dopo.
+English: I tried the ancient one as a child.
+I discovered the modern one later.
+Choices:
+ - [S6+S8] L'hai scoperto come? [+15 XP: past + pronoun + manner]
+ - [S5] Capito. [+3 XP]
+
+⸻
+
+--- Day 10 NPCs (A2: Connectors + Pronouns) ---
+
+NPC: Elena Bianchi
+Node: day10_elena_milk
+Speaker: Elena
+Italian: Un secondo fascicolo?
+Sì, l'ho trovato.
+Ma è difficile da leggere.
+English: A second dossier?
+Yes, I found it.
+But it's hard to read.
+Choices:
+ - [S7+S8] Perché è difficile? [+12 XP: connector + pronoun]
+ - [S8] Lo puoi leggere? [+8 XP: pronoun + modal implied]
+
+Node: day10_elena_note
+Speaker: Elena
+Italian: C'è una nota sul latte.
+Ma il testo è sbiadito.
+English: There's a note about milk.
+But the text is faded.
+Choices:
+ - [S7+S8] Lo puoi decifrare? [+12 XP: connector + pronoun + infinitive]
+ - [S5] Latte nel ragù? [+5 XP: surprise]
+
+⸻
+
+NPC: Prof. Conti
+Node: day10_conti_faded
+Speaker: Prof. Conti
+Italian: La riga sbiadita?
+La posso leggere meglio.
+English: The faded line?
+I can read it better.
+Choices:
+ - [S8+S9] La puoi leggere ora? [+15 XP: pronoun + modal]
+ - [S9] Devo aspettare? [+10 XP: modal question]
+
+Node: day10_conti_reveal
+Speaker: Prof. Conti
+Italian: Dice: "aggiungi latte fresco".
+Ma è strano per il ragù.
+English: It says: "add fresh milk".
+But it's strange for ragù.
+Choices:
+ - [S7+S8] Perché è strano? [+12 XP: connector + pronoun]
+ - [S5] Interessante. [+3 XP]
+
+⸻
+
+--- Day 11 NPCs (A2: Pronouns + Modals) ---
+
+NPC: Lucia Ferrante
+Node: day11_lucia_confirm
+Speaker: Lucia
+Italian: Il pomodoro?
+Sì, lo mettiamo sempre.
+English: The tomato?
+Yes, we always put it.
+Choices:
+ - [S8+S9] Lo devo aggiungere quando? [+15 XP: pronoun + modal + time]
+ - [S8] Dove lo compro? [+8 XP: pronoun + location]
+
+Node: day11_lucia_fresh
+Speaker: Lucia
+Italian: Il pomodoro fresco lo trovi qui.
+Lo devi scegliere bene.
+English: You find fresh tomato here.
+You must choose it well.
+Choices:
+ - [S8+S9] Lo posso vedere? [+12 XP: pronoun + modal]
+ - [S9] Devo comprarlo ora? [+10 XP: modal + time]
+
+⸻
+
+NPC: Donna Rosa
+Node: day11_donna_verify
+Speaker: Donna Rosa
+Italian: Il pomodoro lo aggiungiamo dopo.
+Lo cuociamo piano.
+English: We add the tomato after.
+We cook it slowly.
+Choices:
+ - [S8+S9] Lo devo cuocere quanto? [+15 XP: pronoun + modal + duration]
+ - [S7] Ma Lucia dice di metterlo prima. [+12 XP: connector + attribution]
+
+Node: day11_donna_agree
+Speaker: Donna Rosa
+Italian: Lucia ha ragione.
+Lo mettiamo insieme alla carne.
+English: Lucia is right.
+We put it with the meat.
+Choices:
+ - [S6+S8] L'ho capito ora. [+12 XP: past + pronoun]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+--- Day 12 NPCs (A2: Complex Past + Connectors + Pronouns) ---
+
+NPC: Marco Verdini
+Node: day12_marco_meat
+Speaker: Marco
+Italian: Il taglio della carne?
+La devi fare sottile.
+English: The cut of the meat?
+You must make it thin.
+Choices:
+ - [S8+S9] La devo tagliare come? [+15 XP: pronoun + modal + manner]
+ - [S5] Perché sottile? [+5 XP: cause]
+
+Node: day12_marco_explain
+Speaker: Marco
+Italian: Perché assorbe meglio il sugo.
+L'ho provato molte volte.
+English: Because it absorbs the sauce better.
+I've tried it many times.
+Choices:
+ - [S6+S7+S8] L'hai provato e ti piace? [+20 XP: past + connector + pronoun]
+ - [S7+S8] Ma Giorgio dice diverso. [+15 XP: connector + pronoun + attribution]
+
+⸻
+
+NPC: Giorgio Neri
+Node: day12_giorgio_cut
+Speaker: Giorgio
+Italian: La carne la taglio grossa.
+La lascio intera.
+English: I cut the meat thick.
+I leave it whole.
+Choices:
+ - [S8+S9] La devi lasciare intera? [+15 XP: pronoun + modal + state]
+ - [S7] Perché grossa? [+8 XP: connector + reason]
+
+Node: day12_giorgio_reason
+Speaker: Giorgio
+Italian: Perché rilascia sapore lentamente.
+L'ho imparato da mio padre.
+English: Because it releases flavor slowly.
+I learned it from my father.
+Choices:
+ - [S6+S7+S8] L'hai imparato e lo insegni? [+20 XP: past + connector + pronoun]
+ - [S8] Lo insegni a me? [+10 XP: pronoun + question]
+
+⸻
+
+--- Day 13 NPCs (A2: Modals + Infinitives) ---
+
+NPC: Lucia Ferrante
+Node: day13_lucia_soffritto
+Speaker: Lucia
+Italian: L'ordine del soffritto?
+Prima cipolla, poi carota, poi sedano.
+English: The order of soffritto?
+First onion, then carrot, then celery.
+Choices:
+ - [S9+S10] Lo devo fare sempre così? [+15 XP: modal + infinitive]
+ - [S5] Perché quest'ordine? [+5 XP: reason]
+
+Node: day13_lucia_explain
+Speaker: Lucia
+Italian: Perché la cipolla deve sudare prima.
+La devi cuocere dieci minuti.
+English: Because the onion must sweat first.
+You must cook it ten minutes.
+Choices:
+ - [S9+S10] La devo cuocere quanto? [+15 XP: pronoun + modal + infinitive]
+ - [S7] Ma Marco dice diverso. [+10 XP: connector + attribution]
+
+⸻
+
+NPC: Donna Rosa
+Node: day13_donna_wine
+Speaker: Donna Rosa
+Italian: Il vino bianco?
+Lo aggiungiamo sempre.
+English: The white wine?
+We always add it.
+Choices:
+ - [S8+S9] Lo devo aggiungere quando? [+15 XP: pronoun + modal + time]
+ - [S5] Quanto vino? [+5 XP: quantity]
+
+Node: day13_donna_amount
+Speaker: Donna Rosa
+Italian: Un bicchiere.
+Lo fai evaporare completamente.
+English: One glass.
+You make it evaporate completely.
+Choices:
+ - [S9+S10] Lo devo far evaporare come? [+15 XP: pronoun + modal + infinitive]
+ - [S7] Ma Giorgio dice no vino. [+12 XP: connector + negation]
+
+⸻
+
+--- Day 14 NPCs (A2: Full Synthesis) ---
+
+NPC: Giorgio Neri
+Node: day14_giorgio_flame
+Speaker: Giorgio
+Italian: La fiamma deve essere bassa.
+La devi controllare sempre.
+English: The flame must be low.
+You must control it always.
+Choices:
+ - [S7+S9+S10] La devo controllare ma come? [+20 XP: connector + modal + infinitive]
+ - [S8+S9] La posso regolare? [+15 XP: pronoun + modal]
+
+Node: day14_giorgio_pot
+Speaker: Giorgio
+Italian: La pentola deve essere pesante.
+La devi scegliere bene.
+English: The pot must be heavy.
+You must choose it well.
+Choices:
+ - [S7+S9+S10] La devo scegliere ma dove? [+20 XP: connector + modal + infinitive]
+ - [S8+S9] La posso comprare qui? [+15 XP: pronoun + modal + location]
+
+⸻
+
+NPC: Marco Verdini
+Node: day14_marco_broth
+Speaker: Marco
+Italian: Il brodo?
+Lo devi aggiungere alla fine.
+English: The broth?
+You must add it at the end.
+Choices:
+ - [S7+S9+S10] Lo devo aggiungere ma quanto? [+20 XP: connector + modal + infinitive]
+ - [S8+S9] Lo posso fare dopo? [+15 XP: pronoun + modal + time]
+
+Node: day14_marco_archive
+Speaker: Marco
+Italian: L'archivio ha le risposte.
+Lo devi visitare con Conti.
+English: The archive has the answers.
+You must visit it with Conti.
+Choices:
+ - [S7+S9+S10] Lo devo visitare ma quando? [+20 XP: connector + modal + infinitive]
+ - [S6+S8] L'ho capito. [+12 XP: past + pronoun]
+
+--- Day 15 NPCs (A2: Pronouns + Modals Reinforcement) ---
+
+NPC: Donna Rosa
+Node: day15_donna_meat_cut
+Speaker: Donna Rosa
+Italian: Il taglio della carne?
+La devi fare sottile.
+English: The cut of the meat?
+You must make it thin.
+Choices:
+ - [S8+S9] La devo tagliare come? [+15 XP: pronoun + modal + manner]
+ - [S5] Perché sottile? [+5 XP: cause]
+
+Node: day15_donna_explain
+Speaker: Donna Rosa
+Italian: Perché assorbe meglio il sugo.
+La devi provare così.
+English: Because it absorbs the sauce better.
+You must try it this way.
+Choices:
+ - [S8+S9] La posso provare ora? [+15 XP: pronoun + modal + time]
+ - [S7] Ma Giorgio dice diverso. [+10 XP: connector + attribution]
+
+⸻
+
+NPC: Marco Verdini
+Node: day15_marco_meat
+Speaker: Marco
+Italian: La carne la taglio sempre sottile.
+La lascio riposare dopo.
+English: I always cut the meat thin.
+I let it rest after.
+Choices:
+ - [S8+S9] La devo lasciare riposare quanto? [+15 XP: pronoun + modal + duration]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+Node: day15_marco_agree
+Speaker: Marco
+Italian: Sì, la devi tagliare sottile.
+La devi cuocere piano.
+English: Yes, you must cut it thin.
+You must cook it slowly.
+Choices:
+ - [S8+S9] La devo cuocere come? [+15 XP: pronoun + modal + manner]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+--- Day 16 NPCs (A2: Complex Past + Connectors + Pronouns) ---
+
+NPC: Giorgio Neri
+Node: day16_giorgio_soffritto_order
+Speaker: Giorgio
+Italian: L'ordine del soffritto?
+Prima cipolla, poi carota, poi sedano.
+Li metto sempre così.
+English: The order of soffritto?
+First onion, then carrot, then celery.
+I always put them like this.
+Choices:
+ - [S6+S7+S8] Li hai provati diversi e ti piace questo? [+20 XP: past + connector + pronoun]
+ - [S8] Li devo seguire? [+10 XP: pronoun + modal]
+
+Node: day16_giorgio_reason
+Speaker: Giorgio
+Italian: Sì, li ho cucinati così per anni.
+Li lascio sudare piano.
+English: Yes, I've cooked them like this for years.
+I let them sweat slowly.
+Choices:
+ - [S6+S7+S8] Li hai lasciati sudare ma quanto? [+20 XP: past + connector + pronoun + duration]
+ - [S7] Ma Lucia dice lo stesso. [+12 XP: connector + attribution]
+
+⸻
+
+NPC: Lucia Ferrante
+Node: day16_lucia_confirm
+Speaker: Lucia
+Italian: Sì, l'ordine è importante.
+Li devi cuocere dieci minuti.
+English: Yes, the order is important.
+You must cook them ten minutes.
+Choices:
+ - [S8+S9] Li devo cuocere quanto? [+15 XP: pronoun + modal + duration]
+ - [S5] Perché dieci minuti? [+5 XP: cause]
+
+Node: day16_lucia_explain
+Speaker: Lucia
+Italian: Perché la cipolla deve sudare prima.
+Li ho provati molte volte.
+English: Because the onion must sweat first.
+I've tried them many times.
+Choices:
+ - [S6+S7+S8] Li hai provati e funziona? [+20 XP: past + connector + pronoun]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+⸻
+
+--- Day 17 NPCs (A2: Modals + Infinitives) ---
+
+NPC: Lucia Ferrante
+Node: day17_lucia_wine
+Speaker: Lucia
+Italian: Il vino bianco?
+Lo devi aggiungere sempre.
+English: The white wine?
+You must always add it.
+Choices:
+ - [S9+S10] Lo devo aggiungere quando? [+15 XP: modal + infinitive + time]
+ - [S5] Quanto vino? [+5 XP: quantity]
+
+Node: day17_lucia_amount
+Speaker: Lucia
+Italian: Un bicchiere.
+Lo fai evaporare completamente.
+English: One glass.
+You make it evaporate completely.
+Choices:
+ - [S9+S10] Lo devo far evaporare come? [+15 XP: modal + infinitive + manner]
+ - [S7] Ma Giorgio dice no vino. [+12 XP: connector + negation]
+
+⸻
+
+NPC: Donna Rosa
+Node: day17_donna_wine_debate
+Speaker: Donna Rosa
+Italian: Il vino lo mettiamo sempre.
+Lo aggiungiamo dopo il soffritto.
+English: We always put the wine.
+We add it after the soffritto.
+Choices:
+ - [S8+S9] Lo devo aggiungere quando? [+15 XP: pronoun + modal + time]
+ - [S5] Perché dopo? [+5 XP: cause]
+
+Node: day17_donna_agree
+Speaker: Donna Rosa
+Italian: Perché il sapore deve svilupparsi.
+Lo devi far evaporare piano.
+English: Because the flavor must develop.
+You must make it evaporate slowly.
+Choices:
+ - [S9+S10] Lo devo far evaporare come? [+15 XP: modal + infinitive + manner]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+⸻
+
+--- Day 18 NPCs (A2: Full Synthesis) ---
+
+NPC: Elena Bianchi
+Node: day18_elena_marginal
+Speaker: Elena
+Italian: Una nota marginale?
+Sì, l'ho trovata.
+Ma è difficile da leggere.
+English: A marginal note?
+Yes, I found it.
+But it's hard to read.
+Choices:
+ - [S7+S9+S10] L'ho trovata ma la puoi leggere? [+20 XP: past + connector + modal + infinitive]
+ - [S8] La puoi decifrare? [+10 XP: pronoun + infinitive]
+
+Node: day18_elena_note
+Speaker: Elena
+Italian: Dice qualcosa sul riposo.
+La devi leggere con Conti.
+English: It says something about resting.
+You must read it with Conti.
+Choices:
+ - [S7+S9+S10] La devo leggere ma quando? [+20 XP: modal + infinitive + connector + time]
+ - [S9] Devo andare ora? [+10 XP: modal + time]
+
+⸻
+
+NPC: Prof. Conti
+Node: day18_conti_verify
+Speaker: Prof. Conti
+Italian: La nota marginale?
+La posso leggere meglio.
+English: The marginal note?
+I can read it better.
+Choices:
+ - [S8+S9] La puoi leggere ora? [+15 XP: pronoun + modal + time]
+ - [S9] Devo aspettare? [+10 XP: modal question]
+
+Node: day18_conti_reveal
+Speaker: Prof. Conti
+Italian: Dice: "lascia riposare due ore".
+La devi seguire sempre.
+English: It says: "let rest two hours".
+You must always follow it.
+Choices:
+ - [S7+S9+S10] La devo seguire ma perché? [+20 XP: modal + infinitive + connector + reason]
+ - [S5] Due ore? [+5 XP: confirmation]
+
+⸻
+
+--- Day 19 NPCs (A2: Object Pronouns Review) ---
+
+NPC: Elena Bianchi
+Node: day19_elena_synthesis
+Speaker: Elena
+Italian: Quasi finito!
+La ricetta è quasi completa.
+English: Almost finished!
+The recipe is almost complete.
+Choices:
+ - [S8] La puoi finire ora? [+10 XP: pronoun + infinitive]
+ - [S5] Cosa manca? [+5 XP: question]
+
+Node: day19_elena_verify
+Speaker: Elena
+Italian: Manca la verifica finale.
+La devi fare con tutti.
+English: The final verification is missing.
+You must do it with everyone.
+Choices:
+ - [S8+S9] La devo fare come? [+15 XP: pronoun + modal + manner]
+ - [S7] Ma chi sono tutti? [+8 XP: connector + question]
+
+⸻
+
+NPC: Marco Verdini
+Node: day19_marco_verify
+Speaker: Marco
+Italian: La verifica finale?
+La facciamo insieme.
+English: The final verification?
+We do it together.
+Choices:
+ - [S8] La facciamo quando? [+10 XP: pronoun + time]
+ - [S5] Bene. [+3 XP]
+
+Node: day19_marco_agree
+Speaker: Marco
+Italian: Sì, la devi completare.
+La porti a Donna Rosa.
+English: Yes, you must complete it.
+You bring it to Donna Rosa.
+Choices:
+ - [S8+S9] La devo portare dove? [+15 XP: pronoun + modal + location]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+⸻
+
+--- Day 20 NPCs (A2: Past + Pronouns) ---
+
+NPC: Donna Rosa
+Node: day20_donna_flame
+Speaker: Donna Rosa
+Italian: La regola della fiamma?
+La devi chiarire con Giorgio.
+English: The flame rule?
+You must clarify it with Giorgio.
+Choices:
+ - [S6+S8] L'ho chiesta a lui già. [+12 XP: past + pronoun]
+ - [S8] La devo chiarire come? [+10 XP: pronoun + modal + manner]
+
+Node: day20_donna_explain
+Speaker: Donna Rosa
+Italian: La fiamma deve essere bassa sempre.
+L'ho seguita per anni.
+English: The flame must always be low.
+I've followed it for years.
+Choices:
+ - [S6+S8] L'hai seguita e funziona? [+15 XP: past + pronoun + question]
+ - [S5] Capito. [+3 XP]
+
+⸻
+
+NPC: Giorgio Neri
+Node: day20_giorgio_flame
+Speaker: Giorgio
+Italian: La fiamma bassa?
+Sì, la devi controllare sempre.
+English: The low flame?
+Yes, you must control it always.
+Choices:
+ - [S8+S9] La devo controllare come? [+15 XP: pronoun + modal + manner]
+ - [S7] Ma è difficile. [+8 XP: connector + difficulty]
+
+Node: day20_giorgio_confirm
+Speaker: Giorgio
+Italian: No, la devi regolare piano.
+L'ho fatto molte volte.
+English: No, you must adjust it slowly.
+I've done it many times.
+Choices:
+ - [S6+S8] L'hai fatto e sai come? [+15 XP: past + pronoun + question]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+--- Day 21 NPCs (A2: Connectors + Pronouns) ---
+
+NPC: Giorgio Neri
+Node: day21_giorgio_pot
+Speaker: Giorgio
+Italian: La pentola giusta?
+La devi scegliere pesante.
+English: The right pot?
+You must choose a heavy one.
+Choices:
+ - [S7+S8] La devo scegliere ma perché pesante? [+15 XP: connector + pronoun + reason]
+ - [S8] La posso comprare dove? [+12 XP: pronoun + modal + location]
+
+Node: day21_giorgio_explain
+Speaker: Giorgio
+Italian: Perché mantiene il calore.
+La devi usare sempre.
+English: Because it maintains the heat.
+You must use it always.
+Choices:
+ - [S7+S8] La devo usare ma come? [+15 XP: connector + pronoun + manner]
+ - [S9] Devo comprarla ora? [+10 XP: modal + time]
+
+⸻
+
+NPC: Marco Verdini
+Node: day21_marco_confirm
+Speaker: Marco
+Italian: Sì, la pentola pesante è giusta.
+La conferma Giorgio.
+English: Yes, the heavy pot is right.
+Giorgio confirms it.
+Choices:
+ - [S7+S8] La conferma ma perché? [+15 XP: connector + pronoun + reason]
+ - [S8] La devo usare sempre? [+10 XP: pronoun + modal]
+
+Node: day21_marco_agree
+Speaker: Marco
+Italian: Sì, la devi scegliere bene.
+La porti in cucina.
+English: Yes, you must choose it well.
+You bring it to the kitchen.
+Choices:
+ - [S7+S8] La devo portare ma dove? [+15 XP: connector + pronoun + location]
+ - [S5] Capito. [+3 XP]
+
+⸻
+
+--- Day 22 NPCs (A2: Pronouns + Modals) ---
+
+NPC: Marco Verdini
+Node: day22_marco_broth
+Speaker: Marco
+Italian: Il brodo alla fine?
+Lo devi aggiungere piano.
+English: The broth at the end?
+You must add it slowly.
+Choices:
+ - [S8+S9] Lo devo aggiungere quando? [+15 XP: pronoun + modal + time]
+ - [S5] Quanto brodo? [+5 XP: quantity]
+
+Node: day22_marco_explain
+Speaker: Marco
+Italian: Un po' alla volta.
+Lo fai evaporare leggermente.
+English: A little at a time.
+You make it evaporate slightly.
+Choices:
+ - [S8+S9] Lo devo far evaporare come? [+15 XP: pronoun + modal + infinitive + manner]
+ - [S7] Ma è necessario? [+10 XP: connector + necessity]
+
+⸻
+
+NPC: Elena Bianchi
+Node: day22_elena_archive
+Speaker: Elena
+Italian: L'archivio ha le risposte.
+Lo devi visitare con Conti.
+English: The archive has the answers.
+You must visit it with Conti.
+Choices:
+ - [S8+S9] Lo devo visitare quando? [+15 XP: pronoun + modal + time]
+ - [S9] Devo andare ora? [+10 XP: modal + time]
+
+Node: day22_elena_help
+Speaker: Elena
+Italian: Sì, lo devi vedere subito.
+Lo apre Conti per te.
+English: Yes, you must see it immediately.
+Conti opens it for you.
+Choices:
+ - [S8+S9] Lo apre come? [+15 XP: pronoun + modal + manner]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+--- Day 23 NPCs (A2: Complex Past + Connectors + Pronouns) ---
+
+NPC: Elena Bianchi
+Node: day23_elena_time
+Speaker: Elena
+Italian: Il tempo è la chiave.
+Lo devi controllare sempre.
+English: Time is the key.
+You must control it always.
+Choices:
+ - [S6+S7+S8] L'ho controllato ma è difficile. [+20 XP: past + connector + pronoun]
+ - [S8+S9] Lo devo controllare come? [+15 XP: pronoun + modal + manner]
+
+Node: day23_elena_compare
+Speaker: Elena
+Italian: Lo confronti con Donna Rosa.
+L'ha fatto molte volte.
+English: You compare it with Donna Rosa.
+She's done it many times.
+Choices:
+ - [S6+S7+S8] L'ha fatto e lo spiega? [+20 XP: past + connector + pronoun + question]
+ - [S8] Lo posso fare ora? [+12 XP: pronoun + modal + time]
+
+⸻
+
+NPC: Donna Rosa
+Node: day23_donna_time
+Speaker: Donna Rosa
+Italian: Il tempo del ragù?
+Lo devi rispettare sempre.
+English: The time of ragù?
+You must respect it always.
+Choices:
+ - [S8+S9] Lo devo rispettare quanto? [+15 XP: pronoun + modal + duration]
+ - [S5] Perché importante? [+5 XP: reason]
+
+Node: day23_donna_explain
+Speaker: Donna Rosa
+Italian: Perché cambia tutto.
+L'ho visto molte volte.
+English: Because it changes everything.
+I've seen it many times.
+Choices:
+ - [S6+S7+S8] L'hai visto e lo sai? [+20 XP: past + connector + pronoun + question]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+⸻
+
+--- Day 24 NPCs (A2: Modals + Infinitives) ---
+
+NPC: Donna Rosa
+Node: day24_donna_rest
+Speaker: Donna Rosa
+Italian: Dopo la cottura?
+Devi lasciare riposare.
+English: After cooking?
+You must let it rest.
+Choices:
+ - [S9+S10] Devo lasciare riposare quanto? [+15 XP: modal + infinitive + duration]
+ - [S5] Perché riposare? [+5 XP: reason]
+
+Node: day24_donna_explain
+Speaker: Donna Rosa
+Italian: Perché i sapori si mescolano.
+Devi aspettare due ore.
+English: Because the flavors mix.
+You must wait two hours.
+Choices:
+ - [S9+S10] Devo aspettare come? [+15 XP: modal + infinitive + manner]
+ - [S7] Ma è necessario? [+10 XP: connector + necessity]
+
+⸻
+
+NPC: Marco Verdini
+Node: day24_marco_rest
+Speaker: Marco
+Italian: Il riposo finale?
+Lo devi fare sempre.
+English: The final rest?
+You must do it always.
+Choices:
+ - [S8+S9] Lo devo fare quanto? [+15 XP: pronoun + modal + duration]
+ - [S5] Due ore? [+5 XP: confirmation]
+
+Node: day24_marco_agree
+Speaker: Marco
+Italian: Sì, lo lasci riposare.
+Poi lo servi con pasta.
+English: Yes, you let it rest.
+Then you serve it with pasta.
+Choices:
+ - [S9+S10] Devo servire come? [+15 XP: modal + infinitive + manner]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+⸻
+
+--- Day 25 NPCs (A2: Full Synthesis) ---
+
+NPC: Lucia Ferrante
+Node: day25_lucia_pasta
+Speaker: Lucia
+Italian: La pasta giusta?
+Devi scegliere tagliatelle.
+English: The right pasta?
+You must choose tagliatelle.
+Choices:
+ - [S7+S9+S10] Devo scegliere tagliatelle ma perché? [+20 XP: modal + infinitive + connector + reason]
+ - [S8+S9] Le devo comprare dove? [+15 XP: pronoun + modal + location]
+
+Node: day25_lucia_explain
+Speaker: Lucia
+Italian: Perché assorbono il sugo bene.
+Le devi cuocere al dente.
+English: Because they absorb the sauce well.
+You must cook them al dente.
+Choices:
+ - [S7+S9+S10] Le devo cuocere ma come? [+20 XP: pronoun + modal + infinitive + connector + manner]
+ - [S5] Al dente? [+5 XP: vocabulary]
+
+⸻
+
+NPC: Donna Rosa
+Node: day25_donna_confirm
+Speaker: Donna Rosa
+Italian: Sì, le tagliatelle sono giuste.
+Le porti da me dopo.
+English: Yes, tagliatelle are right.
+You bring them to me after.
+Choices:
+ - [S7+S9+S10] Le devo portare ma quando? [+20 XP: pronoun + modal + infinitive + connector + time]
+ - [S8] Le posso fare ora? [+12 XP: pronoun + modal + time]
+
+Node: day25_donna_final
+Speaker: Donna Rosa
+Italian: No, le fai dopo il riposo.
+Poi le servi calde.
+English: No, you make them after resting.
+Then you serve them hot.
+Choices:
+ - [S7+S9+S10] Le devo servire ma come? [+20 XP: pronoun + modal + infinitive + connector + manner]
+ - [S5] Capito. [+3 XP]
+
+⸻
+
+--- Day 26 NPCs (A2: Vocabulary + Pronouns Review) ---
+
+NPC: Donna Rosa
+Node: day26_donna_ratios
+Speaker: Donna Rosa
+Italian: Le misure finali?
+Le devi bilanciare bene.
+English: The final measurements?
+You must balance them well.
+Choices:
+ - [S5+S8] Le devo bilanciare come? [+12 XP: vocabulary + pronoun + manner]
+ - [S8] Le posso cambiare? [+10 XP: pronoun + modal]
+
+Node: day26_donna_explain
+Speaker: Donna Rosa
+Italian: No, le devi seguire precise.
+Le ho provate molte volte.
+English: No, you must follow them precisely.
+I've tried them many times.
+Choices:
+ - [S5+S6+S8] Le ho provate e funzionano? [+18 XP: vocabulary + past + pronoun + question]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+NPC: Giorgio Neri
+Node: day26_giorgio_ratios
+Speaker: Giorgio
+Italian: Le proporzioni?
+Le devi rispettare sempre.
+English: The proportions?
+You must respect them always.
+Choices:
+ - [S5+S8] Le devo rispettare come? [+12 XP: vocabulary + pronoun + manner]
+ - [S9] Devo ricordarle? [+10 XP: modal + infinitive]
+
+Node: day26_giorgio_agree
+Speaker: Giorgio
+Italian: Sì, le devi scrivere.
+Poi le porti a Conti.
+English: Yes, you must write them.
+Then you bring them to Conti.
+Choices:
+ - [S5+S8+S9] Le devo portare ma dove? [+18 XP: vocabulary + pronoun + modal + location]
+ - [S5] Capito. [+3 XP]
+
+⸻
+
+--- Day 27 NPCs (A2: Past + Modals) ---
+
+NPC: Prof. Conti
+Node: day27_conti_notebook
+Speaker: Prof. Conti
+Italian: Il quaderno Ferrante?
+L'ho trovato finalmente.
+English: The Ferrante notebook?
+I finally found it.
+Choices:
+ - [S6+S9] L'hai trovato dove? [+12 XP: past + modal implied]
+ - [S8] Lo posso vedere? [+10 XP: pronoun + modal]
+
+Node: day27_conti_reveal
+Speaker: Prof. Conti
+Italian: Sì, lo devi leggere subito.
+Lo tengo in biblioteca.
+English: Yes, you must read it immediately.
+I keep it in the library.
+Choices:
+ - [S6+S9] Lo devo leggere come? [+15 XP: pronoun + modal + infinitive + manner]
+ - [S9] Devo venire ora? [+10 XP: modal + time]
+
+⸻
+
+NPC: Elena Bianchi
+Node: day27_elena_help
+Speaker: Elena
+Italian: Il quaderno?
+Lo aiuto a leggere.
+English: The notebook?
+I help read it.
+Choices:
+ - [S8+S9] Lo puoi leggere ora? [+15 XP: pronoun + modal + time]
+ - [S5] Cosa dice? [+5 XP: question]
+
+Node: day27_elena_explain
+Speaker: Elena
+Italian: Dice le formule finali.
+Le devi copiare bene.
+English: It says the final formulas.
+You must copy them well.
+Choices:
+ - [S5+S9] Le devo copiare come? [+12 XP: vocabulary + modal + infinitive + manner]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+⸻
+
+--- Day 28 NPCs (A2: Triple Combination) ---
+
+NPC: Marco Verdini
+Node: day28_marco_formula
+Speaker: Marco
+Italian: La formula finale?
+La devi completare con tutti.
+English: The final formula?
+You must complete it with everyone.
+Choices:
+ - [S7+S8+S9] La devo completare ma con chi? [+18 XP: connector + pronoun + modal]
+ - [S8+S9] La posso finire ora? [+15 XP: pronoun + modal + time]
+
+Node: day28_marco_explain
+Speaker: Marco
+Italian: Con Conti, Lucia ed Elena.
+La scriviamo insieme.
+English: With Conti, Lucia and Elena.
+We write it together.
+Choices:
+ - [S7+S8+S9] La scriviamo ma dove? [+18 XP: connector + pronoun + modal + location]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+NPC: Lucia Ferrante
+Node: day28_lucia_formula
+Speaker: Lucia
+Italian: La formula?
+La dobbiamo scrivere precisa.
+English: The formula?
+We must write it precisely.
+Choices:
+ - [S8+S9] La dobbiamo scrivere come? [+15 XP: pronoun + modal + manner]
+ - [S7] Ma è difficile. [+8 XP: connector + difficulty]
+
+Node: day28_lucia_agree
+Speaker: Lucia
+Italian: Sì, la dobbiamo seguire sempre.
+La portiamo a Donna Rosa.
+English: Yes, we must follow it always.
+We bring it to Donna Rosa.
+Choices:
+ - [S7+S8+S9] La portiamo ma quando? [+18 XP: connector + pronoun + modal + time]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+⸻
+
+--- Day 29 NPCs (A2: Full Integration) ---
+
+NPC: Elena Bianchi
+Node: day29_elena_final
+Speaker: Elena
+Italian: Capitolo Bologna quasi chiuso.
+Lo dobbiamo consegnare ora.
+English: Bologna chapter almost closed.
+We must deliver it now.
+Choices:
+ - [S6+S7+S8+S9] L'ho finito ma lo devo controllare? [+22 XP: past + connector + pronoun + modal]
+ - [S8+S9] Lo posso consegnare dove? [+15 XP: pronoun + modal + location]
+
+Node: day29_elena_explain
+Speaker: Elena
+Italian: Lo consegniamo a Donna Rosa, Marco e Giorgio.
+Loro lo approvano finale.
+English: We deliver it to Donna Rosa, Marco and Giorgio.
+They give final approval.
+Choices:
+ - [S6+S7+S8+S9] Loro lo approvano ma come? [+22 XP: pronoun + modal + connector + manner]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+NPC: Prof. Conti
+Node: day29_conti_approval
+Speaker: Prof. Conti
+Italian: L'approvazione finale?
+La dobbiamo ricevere tutti insieme.
+English: The final approval?
+We must receive it all together.
+Choices:
+ - [S7+S8+S9] La dobbiamo ricevere ma dove? [+18 XP: connector + pronoun + modal + location]
+ - [S9] Devo organizzare? [+10 XP: modal + infinitive]
+
+Node: day29_conti_final
+Speaker: Prof. Conti
+Italian: Sì, la organizzi tu.
+Poi andiamo a Milano.
+English: Yes, you organize it.
+Then we go to Milan.
+Choices:
+ - [S6+S7+S8+S9] L'ho organizzato ma è pronto? [+22 XP: past + connector + pronoun + modal + question]
+ - [S5] Milano? [+5 XP: vocabulary]
+
+⸻
+
+--- Day 30 NPCs (A2: Infinitives Mastery) ---
+
+NPC: Giorgio Neri
+Node: day30_giorgio_finale
+Speaker: Giorgio
+Italian: Capitolo uno completato.
+Lo dobbiamo celebrare.
+English: Chapter one completed.
+We must celebrate it.
+Choices:
+ - [S8+S10] Lo dobbiamo celebrare come? [+15 XP: pronoun + modal + infinitive + manner]
+ - [S5] Sì! [+3 XP]
+
+Node: day30_giorgio_milan
+Speaker: Giorgio
+Italian: A Milano ci aspetta una nuova storia.
+La dobbiamo scoprire insieme.
+English: In Milan a new story awaits us.
+We must discover it together.
+Choices:
+ - [S7+S9+S10] La dobbiamo scoprire ma quando? [+20 XP: connector + modal + infinitive + time]
+ - [S6] L'ho capito. [+5 XP: past comprehension]
+
+Node: day30_giorgio_end
+Speaker: Giorgio
+Italian: Sì, la cominciamo domani.
+Ora riposiamo.
+English: Yes, we begin it tomorrow.
+Now we rest.
+Choices:
+ - [S9+S10] Devo riposare quanto? [+15 XP: modal + infinitive + duration]
+ - [S5] Bene. [+3 XP]
+
+⸻
+
+⸻
+
+=== IDLE DIALOGUES ===
+
+NPC: Marco Verdini
+ - Ciao! Cerchi qualcosa? / Hi! Are you looking for something?
+ - Io sono qui sempre. / I'm always here.
+ - Buongiorno! / Good morning!
+ - Il mercato è il cuore di Bologna. / The market is the heart of Bologna.
+ - Se hai domande, chiedi. / If you have questions, ask.
+
+NPC: Lucia Ferrante
+ - Ciao! Verdure fresche oggi. / Hi! Fresh vegetables today.
+ - Il soffritto è importante! / Soffritto is important!
+ - Buongiorno! Sei nuovo? / Good morning! Are you new?
+ - Qui al mercato abbiamo tutto. / Here at the market we have everything.
+ - Che bella giornata! / What a beautiful day!
+
+NPC: Donna Rosa
+ - Buongiorno. Come stai? / Good morning. How are you?
+ - Il ragù è importante. / Ragù is important.
+ - La piazza è bella oggi. / The square is beautiful today.
+ - A Bologna, il cibo è serio. / In Bologna, food is serious.
+ - Tre ore, minimo! / Three hours, minimum!
+
+NPC: Giorgio Neri
+ - Bentornato. / Welcome back.
+ - Sei ore, minimo. / Six hours, minimum.
+ - Fuoco basso, sempre. / Low heat, always.
+ - Il ragù si mangia, non si parla. / Ragù is eaten, not talked about.
+ - Voglia un bicchiere d'acqua? / Want a glass of water?
+
+NPC: Prof. Conti
+ - Buongiorno. / Good morning.
+ - La biblioteca ha tanti libri vecchi. / The library has many old books.
+ - La ricetta è qui, da qualche parte. / The recipe is here, somewhere.
+ - Cerchi la ricetta? / Looking for the recipe?
+ - Vai da Elena. / Go to Elena.
+
+NPC: Elena Bianchi
+ - Ciao! Benvenuto in biblioteca. / Hi! Welcome to the library.
+ - L'archivio è difficile. / The archive is difficult.
+ - Cosa cerchi? / What are you looking for?
+ - Documenti vecchi sono qui. / Old documents are here.
+ - Aiuto? Dimmi cosa cerchi. / Help? Tell me what you're looking for.
+
+=== QUESTS ===
+
+Quest: Sussurri del Mercato
+Description: Marco di Piazza Maggiore potrebbe sapere qualcosa sul ragù autentico. Parlagli — e poi vai da Lucia al mercato.
+Objectives:
+ - Talk to Marco Verdini
+ - Talk to Lucia Ferrante
+Rewards: clue_soffritto_base, xp 20
+
+Quest: Voci Contraddittorie
+Description: Donna Rosa ha sentito qualcosa di strano sull'osteria. Trovala in piazza — poi confronta la versione con Giorgio al Sole.
+Objectives:
+ - Talk to Donna Rosa
+ - Talk to Giorgio Neri
+Rewards: clue_tempo_contraddittorio, xp 25
+
+Quest: L'Archivio Chiuso
+Description: Si dice che la Biblioteca Salaborsa conservi documenti antichi sulla cucina bolognese. Il Prof. Conti di Via Zamboni sa come entrarci?
+Objectives:
+ - Talk to Prof. Conti
+Rewards: clue_archivio_chiuso, xp 30
+
+=== CLUES ===
+
+Il Pane del Ragù
+Text: Marco abbassa la voce: "Un vero bolognese capisce il ragù attraverso il pane locale. Non per mangiarlo — per leggere la cultura dietro."
+Source: Marco Verdini
+
+La Base del Ragù
+Text: Lucia è sicura: "Cipolla, carota, sedano — sempre tutti e tre. Chi ne omette uno non fa ragù bolognese. Fa qualcos'altro."
+Source: Lucia Ferrante
+
+Una Contraddizione
+Text: Donna Rosa dice tre ore minimo. Giorgio insiste su sei. Entrambi sembrano sinceri — e nessuno cede. Qualcosa non torna.
+Source: Donna Rosa / Giorgio Neri
+
+L'Archivio Segreto
+Text: Il Prof. Conti conferma: esiste un documento originale alla Biblioteca Salaborsa. L'archivio storico è chiuso al pubblico. Ci vuole qualcuno con l'accesso giusto.
+Source: Prof. Conti
+
+=== QUEST COMPLETION HINTS ===
+
+q_day1_market_whispers:
+Lucia dice: "Hai sentito Donna Rosa in piazza? Lei parla di tempi diversi..."
+
+q_day2_conflicting_voices:
+Giorgio dice: "Se vuoi risposte, vai da quel professore in Via Zamboni."
+
+q_day3_locked_archive:
+Prof. Conti dice: "Elena Bianchi lavora alla biblioteca. Lei può aiutarti."
+
+q_day4_library_card:
+Elena dice: "La parola chiave... chiedi al mercato. Lucia sa certe cose."
+
+q_day5_keyword_hunt:
+Elena dice: "Vai da Conti. Con la parola chiave possiamo aprire il fascicolo."
+
+q_day6_open_archive:
+Prof. Conti dice: "Torna da Elena. Abbiamo trovato una sigla interessante."
+
+q_day7_signature_trail:
+Marco dice: "M.F. — parla con Lucia. La sua famiglia sa qualcosa."
+
+q_day8_name_of_mf:
+Lucia dice: "Donna Rosa parla spesso del ragu di festa. E Giorgio? Chiedergli!"
+
+q_day9_two_ragus:
+Giorgio dice: "Torna alla biblioteca. Elena ha trovato qualcosa..."
+
+q_day10_milk_note:
+Prof. Conti dice: "Elena mi ha detto di un secondo fascicolo. Vai da lei."
+
+q_day11_second_dossier:
+Elena dice: "Conti può leggere meglio la riga sbiadita. Vai da lui."
+
+q_day12_faded_ink:
+Prof. Conti dice: "Lucia e Donna Rosa possono confermare il pomodoro."
+
+q_day13_mystery_ingredient:
+Marco dice: "Donna Rosa e Giorgio sanno la verità sul pomodoro."
+
+q_day14_verify_sources:
+Giorgio dice: "Torna da Lucia e Donna Rosa per il pomodoro fresco."
+
+q_day15_tomato_crosscheck:
+Donna Rosa dice: "Il taglio della carne... chiedi a Marco e Giorgio."
+
+q_day16_meat_cut_check:
+Giorgio dice: "Marco e Lucia sanno l'ordine giusto del soffritto."
+
+q_day17_soffritto_order:
+Lucia dice: "Il vino bianco? Donna Rosa e Giorgio ne parlano."
+
+q_day18_wine_debate:
+Donna Rosa dice: "In biblioteca c'è ancora una nota. Elena e Conti aspettano."
+
+q_day19_marginal_note:
+Elena dice: "Quasi finito! Marco, Lucia e Donna Rosa per l'ultima verifica."
+
+q_day20_synthesis:
+Donna Rosa dice: "Non fermarti: chiarisci la regola della fiamma con me e Giorgio."
+
+q_day21_low_flame_rule:
+Giorgio dice: "La fiamma è chiara. Ora conferma la pentola giusta con Marco."
+
+q_day22_right_pot:
+Marco dice: "Per il brodo serve l'archivio: parla con Conti e Elena."
+
+q_day23_broth_control:
+Elena dice: "Il tempo è la chiave. Confronta questa idea con Donna Rosa."
+
+q_day24_time_identity:
+Donna Rosa dice: "Dopo la cottura c'è il riposo. Chiedi a Marco e Lucia."
+
+q_day25_resting_phase:
+Lucia dice: "Bene. Ora chiudiamo la pasta giusta: torna da me e poi da Donna Rosa."
+
+q_day26_pasta_pairing:
+Donna Rosa dice: "Mancano le misure finali. Giorgio e Conti ti aspettano."
+
+q_day27_balance_ratios:
+Conti dice: "Elena ha trovato un quaderno Ferrante. Vai subito in biblioteca."
+
+q_day28_ferrante_notebook:
+Marco dice: "Ultimo passo tecnico: formula finale con Conti, Lucia ed Elena."
+
+q_day29_final_formula:
+Elena dice: "Capitolo Bologna quasi chiuso. Consegna tutto a Donna Rosa, Marco e Giorgio."
+
+q_day30_chapter_one_finale:
+Giorgio dice: "Capitolo uno completato. A Milano ti aspetta una nuova storia."

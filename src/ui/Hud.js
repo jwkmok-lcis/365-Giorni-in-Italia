@@ -8,7 +8,7 @@ const HUD_H = MAP_CONFIG.hudHeight;
 export class Hud {
   /**
    * @param {CanvasRenderingContext2D} ctx
-   * @param {{ day: number, languageXP: number, coins: number }} player
+   * @param {{ day: number, languageXP: number, coins: number, currentStreak: number, maxStreak: number }} player
    * @param {string} locationLabel
    */
   render(ctx, player, locationLabel) {
@@ -37,11 +37,12 @@ export class Hud {
     ctx.font = "400 15px Georgia";
     ctx.fillText(locationLabel || "Bologna", 160, 34);
 
-    // Language XP
+    // Language XP and streak
     ctx.fillStyle = "#a8d890";
     ctx.font = "400 15px Georgia";
     ctx.textAlign = "right";
     ctx.fillText(`XP: ${player.languageXP}`, W - 14, 34);
+    ctx.fillText(`Serie: ${player.currentStreak || 0}`, W - 14, 52);
 
     ctx.textAlign = "left"; // reset
   }
