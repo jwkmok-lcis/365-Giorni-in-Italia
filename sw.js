@@ -1,4 +1,4 @@
-const CACHE_NAME = "giorni-v7";
+const CACHE_NAME = "giorni-v8";
 const ASSETS = [
   "./",
   "./index.html",
@@ -40,10 +40,12 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (e) => {
+  self.skipWaiting();
   e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 
 self.addEventListener("activate", (e) => {
+  self.clients.claim();
   e.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
