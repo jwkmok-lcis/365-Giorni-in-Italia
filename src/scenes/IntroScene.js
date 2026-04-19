@@ -51,7 +51,7 @@ export class IntroScene extends Scene {
 
     // Add some text
     ctx.fillStyle = "white";
-    ctx.font = "48px Arial";
+    ctx.font = "48px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("Intro Scene Loading...", W / 2, H / 2);
 }
