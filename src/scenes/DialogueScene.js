@@ -164,14 +164,14 @@ export class DialogueScene extends Scene {
     ctx.fillRect(0, 0, W, 52);
 
     ctx.fillStyle = "#d4c8a8";
-    ctx.font = "600 16px 'Segoe UI', sans-serif";
+    ctx.font = "600 16px 'Arial, sans-serif'";
     ctx.textAlign = "left";
     ctx.fillText("DIALOGO", 20, 33);
 
     // Clue count on the right
     const clueCount = this._game.context.quest.getUnlockedClues().length;
     ctx.fillStyle = "#8a9ab0";
-    ctx.font = "400 14px 'Segoe UI', sans-serif";
+    ctx.font = "400 14px 'Arial, sans-serif'";
     ctx.textAlign = "right";
     ctx.fillText(`${clueCount} clue${clueCount !== 1 ? "s" : ""}`, W - 20, 33);
     ctx.textAlign = "left";
@@ -201,7 +201,7 @@ export class DialogueScene extends Scene {
 
     // NPC name
     ctx.fillStyle = style.accent;
-    ctx.font = "700 22px 'Segoe UI', sans-serif";
+    ctx.font = "700 22px 'Arial, sans-serif'";
     ctx.fillText(node.speaker, portraitX + portraitSize + 16, portraitY + 28);
 
     // ── Action buttons (voice + translate) ───────────────────────────
@@ -228,13 +228,13 @@ export class DialogueScene extends Scene {
     const bubbleR = 14;
 
     // Calculate text height first
-    ctx.font = "400 20px 'Segoe UI', Georgia, sans-serif";
+    ctx.font = "400 20px 'Arial, sans-serif'";
     const italianLines = this._getWrappedLines(ctx, node.text, bubbleW - 40, 28);
     let totalLines = italianLines.length;
 
     let enLines = [];
     if (this._showTranslation && node.en) {
-      ctx.font = "italic 400 17px 'Segoe UI', sans-serif";
+      ctx.font = "italic 400 17px 'Arial, sans-serif'";
       enLines = this._getWrappedLines(ctx, node.en, bubbleW - 40, 24);
       totalLines += enLines.length + 0.5; // gap
     }
@@ -250,7 +250,7 @@ export class DialogueScene extends Scene {
 
     // Italian text
     ctx.fillStyle = "#eae6dc";
-    ctx.font = "400 20px 'Segoe UI', Georgia, sans-serif";
+    ctx.font = "400 20px 'Arial, sans-serif'";
     let textY = bubbleY + 28;
     for (const line of italianLines) {
       ctx.fillText(line, bubbleX + 24, textY);
@@ -261,7 +261,7 @@ export class DialogueScene extends Scene {
     if (this._showTranslation && enLines.length) {
       textY += 6;
       ctx.fillStyle = "#8ab8c8";
-      ctx.font = "italic 400 17px 'Segoe UI', sans-serif";
+      ctx.font = "italic 400 17px 'Arial, sans-serif'";
       for (const line of enLines) {
         ctx.fillText(line, bubbleX + 24, textY);
         textY += 24;
@@ -270,7 +270,7 @@ export class DialogueScene extends Scene {
 
     // ── Choices ──────────────────────────────────────────────────────
     let choiceY = bubbleY + bubbleH + 18;
-    ctx.font = "500 18px 'Segoe UI', sans-serif";
+    ctx.font = "500 18px 'Arial, sans-serif'";
 
 
     node.choices.forEach((choice, idx) => {
@@ -297,12 +297,12 @@ export class DialogueScene extends Scene {
 
       // Arrow indicator
       ctx.fillStyle = selected ? "#b8e8c0" : "#6a7a8a";
-      ctx.font = "600 16px 'Segoe UI', sans-serif";
+      ctx.font = "600 16px 'Arial, sans-serif'";
       ctx.fillText(selected ? "▸" : " ", cX + 12, choiceY + 27);
 
       // Choice text
       ctx.fillStyle = selected ? "#d8f0dc" : "#b0bec8";
-      ctx.font = "400 17px 'Segoe UI', sans-serif";
+      ctx.font = "400 17px 'Arial, sans-serif'";
       ctx.fillText(choice.text, cX + 32, choiceY + 27);
 
       this._btnRects.choices.push({ x: cX, y: choiceY, w: cW, h: cH });
@@ -315,13 +315,13 @@ export class DialogueScene extends Scene {
       ctx.fillStyle = "rgba(228,200,143,0.12)";
       ctx.fillRect(0, hintY - 16, W, 36);
       ctx.fillStyle = "#e4c88f";
-      ctx.font = "italic 400 14px 'Segoe UI', sans-serif";
+      ctx.font = "italic 400 14px 'Arial, sans-serif'";
       ctx.fillText(`💡 ${this._session.clueHint}`, 20, hintY + 4);
     }
 
     // ── Bottom toolbar hint ──────────────────────────────────────────
     ctx.fillStyle = "#4a5a6a";
-    ctx.font = "400 12px 'Segoe UI', sans-serif";
+    ctx.font = "400 12px 'Arial, sans-serif'";
     ctx.textAlign = "center";
     ctx.fillText("V = voice  ·  T = translate  ·  ↑↓ = select  ·  Enter / tap = confirm", W / 2, H - 8);
     ctx.textAlign = "left";
@@ -330,7 +330,7 @@ export class DialogueScene extends Scene {
   // ── Drawing helpers ────────────────────────────────────────────────────
 
   _drawPill(ctx, label, x, y, bg, fg) {
-    ctx.font = "600 15px 'Segoe UI', sans-serif";
+    ctx.font = "600 15px 'Arial, sans-serif'";
     const w = ctx.measureText(label).width + 32;
     const h = 34;
     // Pill background

@@ -245,11 +245,11 @@ export class LessonScene extends Scene {
     ctx.fillRect(0, 0, W, 54);
 
     ctx.fillStyle = "#d4c8a8";
-    ctx.font = "600 16px 'Segoe UI', sans-serif";
+    ctx.font = "600 16px 'Arial, sans-serif'";
     ctx.fillText("LEZIONE", 22, 34);
 
     ctx.fillStyle = "#93a8bc";
-    ctx.font = "400 14px 'Segoe UI', sans-serif";
+    ctx.font = "400 14px 'Arial, sans-serif'";
     ctx.textAlign = "right";
     ctx.fillText(`Giorno ${game.context.day.currentDay}`, W - 20, 34);
     ctx.textAlign = "left";
@@ -269,16 +269,16 @@ export class LessonScene extends Scene {
     this._drawCard(ctx, 24, 72, W - 48, 380, 16, "rgba(255,255,255,0.06)");
 
     ctx.fillStyle = "#eef3f7";
-    ctx.font = "700 28px 'Segoe UI', sans-serif";
+    ctx.font = "700 28px 'Arial, sans-serif'";
     let y = this._drawWrappedText(ctx, this._lesson.title, 46, 122, W - 92, 34);
 
     ctx.fillStyle = "#89b5c9";
-    ctx.font = "700 16px 'Segoe UI', sans-serif";
+    ctx.font = "700 16px 'Arial, sans-serif'";
     y += 12;
     ctx.fillText("VOCABOLARIO", 46, y);
 
     ctx.fillStyle = "#d8e3ec";
-    ctx.font = "500 20px 'Segoe UI', sans-serif";
+    ctx.font = "500 20px 'Arial, sans-serif'";
     y += 34;
     this._lesson.vocab.forEach((v) => {
       y = this._drawWrappedText(ctx, `${v.it}  -  ${v.en}`, 46, y, W - 92, 30);
@@ -286,12 +286,12 @@ export class LessonScene extends Scene {
 
     y += 8;
     ctx.fillStyle = "#9ec8db";
-    ctx.font = "600 15px 'Segoe UI', sans-serif";
+    ctx.font = "600 15px 'Arial, sans-serif'";
     y = this._drawWrappedText(ctx, `Frase: ${this._lesson.phrase.it} (${this._lesson.phrase.en})`, 46, y, W - 92, 24);
 
     y += 4;
     ctx.fillStyle = "#8cb4c9";
-    ctx.font = "500 14px 'Segoe UI', sans-serif";
+    ctx.font = "500 14px 'Arial, sans-serif'";
     this._drawWrappedText(
       ctx,
       `Grammar: ${this._lesson.grammar.topic} - ${this._lesson.grammar.note}`,
@@ -311,11 +311,11 @@ export class LessonScene extends Scene {
     this._drawCard(ctx, 24, 72, W - 48, 382, 16, "rgba(255,255,255,0.06)");
 
     ctx.fillStyle = "#9ec8db";
-    ctx.font = "600 14px 'Segoe UI', sans-serif";
+    ctx.font = "600 14px 'Arial, sans-serif'";
     ctx.fillText(`Question ${this._qIndex + 1} / ${this._lesson.quiz.length}`, 46, 112);
 
     ctx.fillStyle = "#f1f6fa";
-    ctx.font = "600 25px 'Segoe UI', sans-serif";
+    ctx.font = "600 25px 'Arial, sans-serif'";
     this._drawWrappedText(ctx, q.prompt, 46, 154, W - 92, 34);
 
     let y = 200;
@@ -330,7 +330,7 @@ export class LessonScene extends Scene {
       this._drawCard(ctx, rect.x, rect.y, rect.w, rect.h, 12, bg, border);
 
       ctx.fillStyle = selected ? "#dff4e5" : "#d4e0e8";
-      ctx.font = "500 19px 'Segoe UI', sans-serif";
+      ctx.font = "500 19px 'Arial, sans-serif'";
       ctx.fillText(q.choices[i], rect.x + 20, rect.y + 36);
 
       this._btnRects.choices.push(rect);
@@ -346,11 +346,11 @@ export class LessonScene extends Scene {
     this._drawCard(ctx, 120, 120, W - 240, 270, 16, "rgba(255,255,255,0.08)");
 
     ctx.fillStyle = "#f1f6fa";
-    ctx.font = "700 30px 'Segoe UI', sans-serif";
+    ctx.font = "700 30px 'Arial, sans-serif'";
     ctx.textAlign = "center";
     ctx.fillText("Lesson Result", W / 2, 176);
 
-    ctx.font = "500 22px 'Segoe UI', sans-serif";
+    ctx.font = "500 22px 'Arial, sans-serif'";
     ctx.fillText(`Score ${this._result.score}%`, W / 2, 222);
     ctx.fillText(`Correct ${this._result.correct} / ${this._result.total}`, W / 2, 256);
 
@@ -423,7 +423,7 @@ export class LessonScene extends Scene {
 
     this._drawCard(ctx, x, y, w, h, 10, fill, border);
     ctx.fillStyle = fg;
-    ctx.font = "600 16px 'Segoe UI', sans-serif";
+    ctx.font = "600 16px 'Arial, sans-serif'";
     ctx.textAlign = "center";
     ctx.fillText(label, x + w / 2, y + 26);
     ctx.textAlign = "left";
