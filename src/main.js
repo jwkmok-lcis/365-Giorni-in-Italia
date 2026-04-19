@@ -30,6 +30,52 @@ if (!(canvas instanceof HTMLCanvasElement) || !statusPanel || !promptPanel) {
   throw new Error("Bootstrap failed: required DOM nodes are missing.");
 }
 
+const debugOverlay = (() => {
+  const overlay = document.createElement('div');
+  overlay.id = 'appDebugOverlay';
+  overlay.style.position = 'fixed';
+  overlay.style.left = '0';
+  overlay.style.right = '0';
+  overlay.style.top = '0';
+  overlay.style.zIndex = '9999';
+  overlay.style.padding = '0.75rem 1rem';
+  overlay.style.fontFamily = 'system-ui, sans-serif';
+  overlay.style.fontSize = '0.9rem';
+  overlay.style.color = '#fff';
+  overlay.style.background = 'rgba(220, 38, 38, 0.9)';
+  overlay.style.whiteSpace = 'pre-wrap';
+  overlay.style.display = 'none';
+  overlay.style.maxHeight = '45vh';
+  overlay.style.overflowY = 'auto';
+  overlay.textContent = 'Initializing...';
+  document.body.appendChild(overlay);
+  return overlay;
+})();
+
+function showDebugMessage(message, isError = false) {
+  if (promptPanel) promptPanel.textContent = message;
+  if (debugOverlay) {
+    debugOverlay.textContent = message;
+    debugOverlay.style.display = isError ? 'block' : 'none';
+  }
+  if (isError && canvas) {
+    canvas.style.backgroundColor = '#330000';
+  }
+}
+
+window.addEventListener('error', (event) => {
+  const msg = `Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`;
+  console.error(msg, event.error);
+  showDebugMessage(msg, true);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason instanceof Error ? event.reason.message : String(event.reason);
+  const msg = `Unhandled promise rejection: ${reason}`;
+  console.error(msg, event.reason);
+  showDebugMessage(msg, true);
+});
+
 async function hardRefreshApp() {
   try {
     if ("serviceWorker" in navigator) {
@@ -289,9 +335,17 @@ window.visualViewport?.addEventListener("resize", fitCanvas);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const entryScene = "intro"; // Force intro for testing
-scenes.go(entryScene, game);
-game.start();
-game.canvas.focus(); // Focus canvas for keyboard input
+try {
+  showDebugMessage('Booting game...');
+  scenes.go(entryScene, game);
+  game.start();
+  game.canvas.focus(); // Focus canvas for keyboard input
+  showDebugMessage('Game started successfully.');
+} catch (error) {
+  const msg = `Startup failed: ${error?.message ?? String(error)}`;
+  console.error(msg, error);
+  showDebugMessage(msg, true);
+}
 
 // Hide the title header once the game is running
 const header = document.getElementById("gameHeader");
