@@ -288,9 +288,10 @@ window.addEventListener("orientationchange", () => setTimeout(fitCanvas, 200));
 window.visualViewport?.addEventListener("resize", fitCanvas);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-const entryScene = loaded ? (day.canExplore() ? "map" : "lesson") : "intro";
+const entryScene = "intro"; // Force intro for testing
 scenes.go(entryScene, game);
 game.start();
+game.canvas.focus(); // Focus canvas for keyboard input
 
 // Hide the title header once the game is running
 const header = document.getElementById("gameHeader");
