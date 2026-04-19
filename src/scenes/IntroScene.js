@@ -45,61 +45,13 @@ export class IntroScene extends Scene {
     const W = 800;
     const H = 512;
 
-    // Background
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, "#1b2632");
-    grad.addColorStop(1, "#111922");
-    ctx.fillStyle = grad;
+    // Simple test: fill with red to see if rendering works
+    ctx.fillStyle = "red";
     ctx.fillRect(0, 0, W, H);
 
-    // Soft vignette
-    const vignette = ctx.createRadialGradient(W / 2, H / 2, 160, W / 2, H / 2, 420);
-    vignette.addColorStop(0, "rgba(255,255,255,0)");
-    vignette.addColorStop(1, "rgba(0,0,0,0.6)");
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, W, H);
-
-    // Title block
-    ctx.fillStyle = "rgba(255,255,255,0.05)";
-    ctx.fillRect(40, 44, W - 80, 220);
-    ctx.strokeStyle = "rgba(255,255,255,0.18)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(40.5, 44.5, W - 81, 219);
-
-    ctx.fillStyle = "#f5e7cf";
-    ctx.font = "700 44px 'Segoe UI', sans-serif";
+    // Add some text
+    ctx.fillStyle = "white";
+    ctx.font = "48px Arial";
     ctx.textAlign = "center";
-    ctx.fillText(this._title, W / 2, 96);
-
-    ctx.fillStyle = "#e0c37e";
-    ctx.font = "600 28px 'Segoe UI', sans-serif";
-    ctx.fillText(this._subtitle, W / 2, 142);
-
-    ctx.fillStyle = "#d4c8a8";
-    ctx.font = "400 18px 'Segoe UI', sans-serif";
-    ctx.textAlign = "left";
-    const lineStartY = 190;
-    for (let i = 0; i < this._lines.length; i += 1) {
-      ctx.fillText(this._lines[i], 60, lineStartY + i * 30);
-    }
-
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    ctx.fillRect(40, 322, W - 80, 152);
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
-    ctx.strokeRect(40.5, 322.5, W - 81, 151);
-
-    ctx.fillStyle = "#bcd4e6";
-    ctx.font = "500 18px 'Segoe UI', sans-serif";
-    ctx.fillText("Cosa fare in questo capitolo:", 60, 352);
-    ctx.font = "400 16px 'Segoe UI', sans-serif";
-    ctx.fillText("- Parla con Marco e poi con Lucia in città.", 60, 382);
-    ctx.fillText("- Usa il pulsante V nella conversazione per ascoltare.", 60, 408);
-    ctx.fillText("- Usa il pulsante T per vedere la traduzione.", 60, 434);
-
-    const hintAlpha = 0.4 + Math.abs(Math.sin(this._blink * Math.PI)) * 0.6;
-    ctx.fillStyle = `rgba(240, 224, 200, ${hintAlpha})`;
-    ctx.font = "600 20px 'Segoe UI', sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(this._hint, W / 2, 490);
-  }
+    ctx.fillText("Intro Scene Loading...", W / 2, H / 2);
 }
