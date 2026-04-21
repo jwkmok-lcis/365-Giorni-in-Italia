@@ -96,13 +96,14 @@ export class DialogueScene extends Scene {
       return;
     }
 
-    if (event.key === "ArrowUp") {
-      this._choiceIndex = (this._choiceIndex - 1 + node.choices.length) % node.choices.length;
+    const choiceCount = node.choices?.length ?? 0;
+    if (event.key === "ArrowUp" && choiceCount > 0) {
+      this._choiceIndex = (this._choiceIndex - 1 + choiceCount) % choiceCount;
       this._updatePanels();
       return;
     }
-    if (event.key === "ArrowDown") {
-      this._choiceIndex = (this._choiceIndex + 1) % node.choices.length;
+    if (event.key === "ArrowDown" && choiceCount > 0) {
+      this._choiceIndex = (this._choiceIndex + 1) % choiceCount;
       this._updatePanels();
       return;
     }
@@ -139,7 +140,7 @@ export class DialogueScene extends Scene {
     voice.unlockFromGesture();
     const node = this._game.context.dialogue.getCurrentNode(this._session);
     this._speechStartTime = Date.now();
-    voice.speak(node.text, { requireUnlock: false });
+    voice.speakAs(node.speaker, node.text, { requireUnlock: false });
   }
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -229,7 +230,7 @@ export class DialogueScene extends Scene {
 
     // Calculate text height first
     ctx.font = "400 20px 'Arial, sans-serif'";
-    const italianLines = this._getWrappedLines(ctx, node.text, bubbleW - 40, 28);
+    const italianLines = this._getWrappedLines(ctx, node.text || "...", bubbleW - 40, 28);
     let totalLines = italianLines.length;
 
     let enLines = [];
@@ -272,8 +273,8 @@ export class DialogueScene extends Scene {
     let choiceY = bubbleY + bubbleH + 18;
     ctx.font = "500 18px 'Arial, sans-serif'";
 
-
-    node.choices.forEach((choice, idx) => {
+    const choices = node.choices ?? [];
+    choices.forEach((choice, idx) => {
       const selected = idx === this._choiceIndex;
       const cW = W - 60;
       const cH = 42;

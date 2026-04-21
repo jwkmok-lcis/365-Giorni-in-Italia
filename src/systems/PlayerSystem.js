@@ -50,7 +50,6 @@ export class PlayerSystem {
       advancedNPCs: false
     };
   }
-  }
 
   /** Ensure the player is on a walkable tile; reset to spawn if not. */
   ensureWalkable() {
@@ -65,10 +64,10 @@ export class PlayerSystem {
     let dx = 0;
     let dy = 0;
 
-    if (heldKeys.has("ArrowLeft") || heldKeys.has("a")) { dx -= 1; this.facing = "left"; }
-    if (heldKeys.has("ArrowRight") || heldKeys.has("d")) { dx += 1; this.facing = "right"; }
-    if (heldKeys.has("ArrowUp") || heldKeys.has("w")) { dy -= 1; this.facing = "up"; }
-    if (heldKeys.has("ArrowDown") || heldKeys.has("s")) { dy += 1; this.facing = "down"; }
+    if (heldKeys.has("ArrowLeft") || heldKeys.has("a") || heldKeys.has("A")) { dx -= 1; this.facing = "left"; }
+    if (heldKeys.has("ArrowRight") || heldKeys.has("d") || heldKeys.has("D")) { dx += 1; this.facing = "right"; }
+    if (heldKeys.has("ArrowUp") || heldKeys.has("w") || heldKeys.has("W")) { dy -= 1; this.facing = "up"; }
+    if (heldKeys.has("ArrowDown") || heldKeys.has("s") || heldKeys.has("S")) { dy += 1; this.facing = "down"; }
 
     this.moving = dx !== 0 || dy !== 0;
     if (!this.moving) return;

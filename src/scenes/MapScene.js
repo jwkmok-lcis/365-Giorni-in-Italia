@@ -2,7 +2,7 @@
 
 import { Scene } from "../engine/Scene.js";
 import { ClueNotebook } from "../ui/ClueNotebook.js";
-import { LOCATIONS, MAP_CONFIG, TILE_MAP, TILE, TILE_PALETTE } from "../content/map.js";
+import { LOCATIONS, MAP_CONFIG, TILE_MAP, TILE, TILE_PALETTE, isWalkable } from "../content/map.js";
 // New adaptive learning UI components
 import { SkillTreeUI } from "../ui/SkillTreeUI.js";
 import { XPNotificationUI } from "../ui/XPNotificationUI.js";
@@ -67,6 +67,7 @@ export class MapScene extends Scene {
     this._touchLayoutTapCooldown = 0;
     this._hudFlash = { quest: 0, clues: 0 };
     this._busHandlers = [];
+    this._moveTarget = null;
     // New adaptive learning UI components
     this._skillTreeUI = null;
     this._xpNotifications = null;
@@ -78,6 +79,7 @@ export class MapScene extends Scene {
     this._statusPanel = document.getElementById("statusPanel");
     this._promptPanel = document.getElementById("promptPanel");
     if (!this._tileCanvas) this._buildTileCache();
+    this._moveTarget = null;
     this._player.ensureWalkable();
     this._bindHudFeedback();
     this._updatePanels();
@@ -150,14 +152,18 @@ export class MapScene extends Scene {
       this._xpNotifications.update(dt);
     }
 
-    if (!game.context.day.canExplore()) return;
-
     const held = new Set();
-    for (const key of ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "a", "d", "w", "s"]) {
+    for (const key of ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "a", "d", "w", "s", "A", "D", "W", "S"]) {
       if (game.context.input.isDown(key)) held.add(key);
     }
 
-    this._player.applyMovement(held, dt);
+    if (held.size > 0) {
+      this._moveTarget = null;
+      this._player.applyMovement(held, dt);
+    } else {
+      this._applyClickMovement(dt);
+    }
+
     this._player.day = game.context.day.currentDay;
     this._updatePanels();
   }
@@ -191,6 +197,7 @@ export class MapScene extends Scene {
     this._renderNpcs(ctx, nearLoc, nearPiazzaNpc);
     this._renderLocationLabels(ctx, nearLoc);
     this._renderPlayer(ctx);
+    this._renderMoveTarget(ctx);
     this._renderRoofOcclusion(ctx, occLoc);
 
     this._renderHudOverlay(ctx);
@@ -202,7 +209,7 @@ export class MapScene extends Scene {
       this._xpNotifications.render(ctx);
     }
     if (this._skillTreeUI) {
-      this._skillTreeUI.render(ctx, game.context.skillTreeSystem, this._player);
+      this._skillTreeUI.render(ctx, this._game.context.skillTreeSystem, this._player);
     }
 
     if (!this._game.context.day?.canExplore()) {
@@ -219,9 +226,21 @@ export class MapScene extends Scene {
 
     if (!isKey && !isTap) return;
 
-    if (!this._game.context.day.canExplore() && isConfirm) {
-      this._game.context.scenes.go("lesson", this._game);
-      return;
+    if (!this._game.context.day.canExplore()) {
+      if (isKey && (event.key === "Enter" || event.key === " ")) {
+        this._game.context.scenes.go("lesson", this._game);
+        return;
+      }
+
+      if (isTap && event.canvasX !== undefined && event.canvasY !== undefined) {
+        const loc = this._player.nearEntrance(LOCATIONS);
+        if (loc) {
+          this._game.context.scenes.go("lesson", this._game);
+        } else {
+          this._setMoveTarget(event.canvasX, event.canvasY);
+        }
+        return;
+      }
     }
 
     if (isTap) {
@@ -250,6 +269,11 @@ export class MapScene extends Scene {
         } else {
           this._game.context.scenes.go("location", this._game, { location: loc });
         }
+        return;
+      }
+
+      if (isTap && event.canvasX !== undefined && event.canvasY !== undefined) {
+        this._setMoveTarget(event.canvasX, event.canvasY);
       }
       return;
     }
@@ -1335,17 +1359,45 @@ export class MapScene extends Scene {
 
   _renderLessonGate(ctx) {
     const width = COLS * TS;
-    const height = ROWS * TS;
-    ctx.fillStyle = "rgba(10, 18, 28, 0.82)";
-    ctx.fillRect(0, HUD, width, height - HUD);
+    const panelW = Math.min(540, width - 48);
+    const panelH = 64;
+    const panelX = (width - panelW) / 2;
+    const panelY = HUD + 14;
+
+    ctx.save();
+    this._roundedRect(ctx, panelX, panelY, panelW, panelH, 12);
+    ctx.fillStyle = "rgba(10, 18, 28, 0.72)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(232, 216, 176, 0.35)";
+    ctx.lineWidth = 1.5;
+    this._roundedRect(ctx, panelX, panelY, panelW, panelH, 12);
+    ctx.stroke();
+
     ctx.fillStyle = "#e8d8b0";
-    ctx.font = "700 26px Georgia";
+    ctx.font = "700 20px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Completa la lezione di oggi", width / 2, height / 2 - 14);
-    ctx.font = "400 17px Georgia";
+    ctx.fillText("Nuovo giorno: fai la lezione quando sei pronto", width / 2, panelY + 26);
     ctx.fillStyle = "#a0b8c8";
-    ctx.fillText("La mappa si sbloccherà dopo la lezione.", width / 2, height / 2 + 18);
+    ctx.font = "400 14px Arial, sans-serif";
+    ctx.fillText("Puoi ancora muoverti. Premi Enter vicino a un luogo per iniziare.", width / 2, panelY + 47);
     ctx.textAlign = "left";
+    ctx.restore();
+  }
+
+  _renderMoveTarget(ctx) {
+    if (!this._moveTarget) return;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(173, 218, 193, 0.68)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(this._moveTarget.x, this._moveTarget.y, 10, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(this._moveTarget.x, this._moveTarget.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(217, 239, 221, 0.9)";
+    ctx.fill();
+    ctx.restore();
   }
 
   _renderTouchControls(ctx, nearLoc, nearPiazzaNpc) {
@@ -1488,11 +1540,107 @@ export class MapScene extends Scene {
       const latest = this._game.context.eventFeed.latest();
       const controls = touchEnabled
         ? "Touch: joystick = muovi, azione = pulsante grande, L/R in alto = mano"
-        : "Arrows/WASD move · Enter near doors/NPCs";
+        : "Arrows/WASD or click move · Enter/click near doors/NPCs";
       this._promptPanel.textContent = latest
         ? `${controls} · N end day | ${latest}`
         : `${controls} · N end day`;
     }
+  }
+
+  _setMoveTarget(x, y) {
+    const radius = 12;
+    const minY = HUD + radius;
+    const maxY = HUD + ROWS * TS - radius;
+    const clampedX = Math.max(radius, Math.min(COLS * TS - radius, x));
+    const clampedY = Math.max(minY, Math.min(maxY, y));
+
+    const clickedLoc = LOCATIONS.find((loc) => {
+      const left = loc.tx * TS;
+      const top = HUD + loc.ty * TS;
+      const right = left + loc.w * TS;
+      const bottom = top + loc.h * TS;
+      return clampedX >= left && clampedX <= right && clampedY >= top && clampedY <= bottom;
+    });
+
+    if (clickedLoc?.entrance) {
+      this._moveTarget = {
+        x: clickedLoc.entrance.col * TS + TS / 2,
+        y: HUD + clickedLoc.entrance.row * TS + TS / 2,
+      };
+      return;
+    }
+
+    const col = Math.floor(clampedX / TS);
+    const row = Math.floor((clampedY - HUD) / TS);
+    if (isWalkable(col, row)) {
+      this._moveTarget = { x: clampedX, y: clampedY };
+      return;
+    }
+
+    let best = null;
+    for (let r = 1; r <= 4; r += 1) {
+      for (let dy = -r; dy <= r; dy += 1) {
+        for (let dx = -r; dx <= r; dx += 1) {
+          const nextCol = col + dx;
+          const nextRow = row + dy;
+          if (!isWalkable(nextCol, nextRow)) continue;
+          const wx = nextCol * TS + TS / 2;
+          const wy = HUD + nextRow * TS + TS / 2;
+          const dist = Math.hypot(wx - clampedX, wy - clampedY);
+          if (!best || dist < best.dist) {
+            best = { x: wx, y: wy, dist };
+          }
+        }
+      }
+      if (best) break;
+    }
+
+    this._moveTarget = best
+      ? { x: best.x, y: best.y }
+      : { x: clampedX, y: clampedY };
+  }
+
+  _applyClickMovement(dt) {
+    if (!this._moveTarget) return;
+
+    const dx = this._moveTarget.x - this._player.x;
+    const dy = this._moveTarget.y - this._player.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist < 4) {
+      this._moveTarget = null;
+      this._player.moving = false;
+      return;
+    }
+
+    const step = 160 * dt;
+    const ux = dx / dist;
+    const uy = dy / dist;
+    const moveX = ux * Math.min(step, dist);
+    const moveY = uy * Math.min(step, dist);
+
+    if (Math.abs(ux) > Math.abs(uy)) {
+      this._player.facing = ux > 0 ? "right" : "left";
+    } else {
+      this._player.facing = uy > 0 ? "down" : "up";
+    }
+
+    const nextX = this._player.x + moveX;
+    if (typeof this._player._canOccupy !== "function" || this._player._canOccupy(nextX, this._player.y)) {
+      this._player.x = nextX;
+    }
+
+    const nextY = this._player.y + moveY;
+    if (typeof this._player._canOccupy !== "function" || this._player._canOccupy(this._player.x, nextY)) {
+      this._player.y = nextY;
+    }
+
+    const radius = 12;
+    const minY = HUD + radius;
+    const maxY = HUD + ROWS * TS - radius;
+    this._player.x = Math.max(radius, Math.min(COLS * TS - radius, this._player.x));
+    this._player.y = Math.max(minY, Math.min(maxY, this._player.y));
+    this._player.moving = true;
   }
 
   _renderLanguageCoach(ctx, nearLoc, nearPiazzaNpc) {
@@ -1527,6 +1675,7 @@ export class MapScene extends Scene {
     const panelH = 52;
     const panelX = Math.floor((width - panelW) / 2);
     const safe = this._getSafeInsets();
+    const profile = this._getTouchProfile();
     const panelY = ROWS * TS - safe.bottom - 170 - profile.coachLift;
 
     ctx.save();

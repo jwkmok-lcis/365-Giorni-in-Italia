@@ -1,9 +1,23 @@
 // VoiceOver – lightweight browser TTS helper for dialogue playback.
 // Uses Web Speech API when available; no-op fallback when unsupported.
+// Supports per-NPC voice profiles with gender-matched voice selection.
+
+// NPC voice profiles: pitch/rate tweaks + gender hint for voice selection.
+const NPC_VOICE_PROFILES = {
+  "Marco":       { gender: "male",   pitch: 0.95, rate: 0.82 },
+  "Lucia":       { gender: "female", pitch: 1.15, rate: 0.78 },
+  "Donna Rosa":  { gender: "female", pitch: 0.90, rate: 0.72 },
+  "Giorgio":     { gender: "male",   pitch: 0.80, rate: 0.85 },
+  "Prof. Conti": { gender: "male",   pitch: 1.05, rate: 0.75 },
+  "Elena":       { gender: "female", pitch: 1.10, rate: 0.80 },
+};
 
 export class VoiceOver {
   constructor() {
-    this.muted = false;
+    const storedMuted = typeof window !== "undefined"
+      ? window.localStorage?.getItem("voiceMuted")
+      : null;
+    this.muted = storedMuted === "true";
     this.defaultLang = "it-IT";
     this.defaultRate = 0.8;
     this.defaultPitch = 1.0;
@@ -36,7 +50,9 @@ export class VoiceOver {
     }
 
     const lang = options.lang ?? this.defaultLang;
-    const preferredVoice = this._selectBestVoice(lang);
+    const preferredVoice = options._gender
+      ? this._selectVoiceForGender(lang, options._gender)
+      : this._selectBestVoice(lang);
 
     if (!preferredVoice && (options.strictItalian ?? this.strictItalian)) {
       return { ok: false, reason: "no-italian-voice" };
@@ -109,6 +125,11 @@ export class VoiceOver {
 
   setMuted(nextMuted) {
     this.muted = Boolean(nextMuted);
+    try {
+      window.localStorage?.setItem("voiceMuted", String(this.muted));
+    } catch {
+      // Ignore storage issues; voice toggle should still work.
+    }
     if (this.muted) {
       this.stop();
     }
@@ -167,5 +188,70 @@ export class VoiceOver {
       .sort((a, b) => b.score - a.score);
 
     return scored[0]?.v ?? familyMatches[0];
+  }
+
+  /**
+   * Select a voice matching both language and gender.
+   * Falls back to _selectBestVoice if no gender match is found.
+   */
+  _selectVoiceForGender(lang, gender) {
+    if (!gender) return this._selectBestVoice(lang);
+
+    const voices = this._voices.length
+      ? this._voices
+      : (typeof window !== "undefined" ? window.speechSynthesis?.getVoices() : []) ?? [];
+    if (!voices.length) return this._selectBestVoice(lang);
+
+    const normalized = String(lang || this.defaultLang).toLowerCase();
+    const family = normalized.split("-")[0];
+
+    const langMatches = voices.filter((v) => {
+      const vl = String(v.lang).toLowerCase();
+      return vl === normalized || vl.startsWith(`${family}-`) || vl === family;
+    });
+    if (!langMatches.length) return this._selectBestVoice(lang);
+
+    // Common name patterns for gender detection across TTS engines
+    const FEMALE_HINTS = ["female", "woman", "elsa", "alice", "federica", "cosima", "google.*female", "isabella", "paola", "anna", "carla", "bianca", "francesca", "gianna"];
+    const MALE_HINTS   = ["male", " man", "cosimo", "luca", "diego", "google.*male", "giorgio", "marco", "paolo", "riccardo", "andrea"];
+
+    const hints = gender === "female" ? FEMALE_HINTS : MALE_HINTS;
+    const antiHints = gender === "female" ? MALE_HINTS : FEMALE_HINTS;
+
+    const scored = langMatches.map((v) => {
+      const name = String(v.name).toLowerCase();
+      let score = 0;
+      for (const h of hints) { if (name.match(h)) score += 5; }
+      for (const h of antiHints) { if (name.match(h)) score -= 5; }
+      if (name.includes("google")) score += 3;
+      if (name.includes("microsoft")) score += 2;
+      if (v.default) score += 1;
+      return { v, score };
+    }).sort((a, b) => b.score - a.score);
+
+    return scored[0]?.v ?? this._selectBestVoice(lang);
+  }
+
+  /**
+   * Speak text as a specific NPC, using their voice profile (gender, pitch, rate).
+   * @param {string} speaker  NPC display name (e.g. "Marco", "Lucia")
+   * @param {string} text
+   * @param {object} [options]  Same options as speak(), profile values override defaults.
+   */
+  speakAs(speaker, text, options = {}) {
+    const profile = NPC_VOICE_PROFILES[speaker];
+    if (!profile) return this.speak(text, options);
+
+    return this.speak(text, {
+      ...options,
+      pitch: options.pitch ?? profile.pitch,
+      rate: options.rate ?? profile.rate,
+      _gender: profile.gender,
+    });
+  }
+
+  /** Get the voice profile for an NPC speaker name. */
+  getNpcProfile(speaker) {
+    return NPC_VOICE_PROFILES[speaker] ?? null;
   }
 }

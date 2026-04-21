@@ -1,4 +1,4 @@
-const CACHE_NAME = "giorni-v8";
+const CACHE_NAME = "giorni-v12";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,16 +12,20 @@ const ASSETS = [
   "./src/engine/Scene.js",
   "./src/engine/SceneManager.js",
   "./src/scenes/DialogueScene.js",
+  "./src/scenes/IntroScene.js",
   "./src/scenes/LessonScene.js",
   "./src/scenes/LocationScene.js",
   "./src/scenes/MapScene.js",
   "./src/systems/DaySystem.js",
   "./src/systems/DialogueSystem.js",
+  "./src/systems/DynamicDifficultySystem.js",
   "./src/systems/EventFeedSystem.js",
   "./src/systems/LessonSystem.js",
   "./src/systems/PlayerSystem.js",
   "./src/systems/QuestSystem.js",
   "./src/systems/SaveSystem.js",
+  "./src/systems/SkillTreeSystem.js",
+  "./src/systems/VoicePronunciationSystem.js",
   "./src/content/dialogues.js",
   "./src/content/glossary.js",
   "./src/content/idleDialogues.js",

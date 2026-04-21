@@ -40,6 +40,11 @@ export class Game {
     if (this._scene && typeof this._scene.enter === "function") {
       this._scene.enter(this);
     }
+    try {
+      this.canvas?.focus?.();
+    } catch {
+      // Keep scene transitions resilient even if focus fails.
+    }
   }
 
   /** Start the animation loop. Safe to call once only. */

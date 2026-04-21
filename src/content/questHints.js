@@ -30,24 +30,24 @@ export const QUEST_COMPLETION_HINTS = {
     "Marco dice: \"Donna Rosa e Giorgio sanno la verità sul pomodoro.\"",
   q_day14_verify_sources:
     "Giorgio dice: \"Torna da Lucia e Donna Rosa per il pomodoro fresco.\"",
-  q_day15_tomato_crosscheck:
-    "Donna Rosa dice: \"Il taglio della carne... chiedi a Marco e Giorgio.\"",
+  q_day15_confrontation:
+    "Giorgio dice: \"Ho detto abbastanza. Parla con Marco — lui sa qualcosa sulla storia vecchia.\"",
   q_day16_meat_cut_check:
     "Giorgio dice: \"Marco e Lucia sanno l'ordine giusto del soffritto.\"",
   q_day17_soffritto_order:
-    "Lucia dice: \"Il vino bianco? Donna Rosa e Giorgio ne parlano.\"",
+    "Lucia dice: \"Il vino bianco? Sì... ma non fermarti al vino. Donna Rosa capirà cosa manca.\"",
   q_day18_wine_debate:
     "Donna Rosa dice: \"In biblioteca c'è ancora una nota. Elena e Conti aspettano.\"",
   q_day19_marginal_note:
     "Elena dice: \"Quasi finito! Marco, Lucia e Donna Rosa per l'ultima verifica.\"",
-  q_day20_synthesis:
-    "Donna Rosa dice: \"Non fermarti: chiarisci la regola della fiamma con me e Giorgio.\"",
+  q_day20_confession:
+    "Donna Rosa dice: \"Adesso sai perché litigavano sui tempi. Ma manca ancora il resto: fiamma, carne, brodo.\"",
   q_day21_low_flame_rule:
     "Giorgio dice: \"La fiamma è chiara. Ora conferma la pentola giusta con Marco.\"",
   q_day22_right_pot:
     "Marco dice: \"Per il brodo serve l'archivio: parla con Conti e Elena.\"",
   q_day23_broth_control:
-    "Elena dice: \"Il tempo è la chiave. Confronta questa idea con Donna Rosa.\"",
+    "Elena dice: \"Nel quaderno non ci sono solo numeri. Confrontalo con Donna Rosa.\"",
   q_day24_time_identity:
     "Donna Rosa dice: \"Dopo la cottura c'è il riposo. Chiedi a Marco e Lucia.\"",
   q_day25_resting_phase:
@@ -55,11 +55,11 @@ export const QUEST_COMPLETION_HINTS = {
   q_day26_pasta_pairing:
     "Donna Rosa dice: \"Mancano le misure finali. Giorgio e Conti ti aspettano.\"",
   q_day27_balance_ratios:
-    "Conti dice: \"Elena ha trovato un quaderno Ferrante. Vai subito in biblioteca.\"",
+    "Conti dice: \"Il quaderno Ferrante non parla solo di misure. Vieni in biblioteca con Elena.\"",
   q_day28_ferrante_notebook:
-    "Marco dice: \"Ultimo passo tecnico: formula finale con Conti, Lucia ed Elena.\"",
+    "Marco dice: \"Ultimo passo: i pezzi devono stare insieme. Vai da Lucia ed Elena.\"",
   q_day29_final_formula:
-    "Elena dice: \"Capitolo Bologna quasi chiuso. Consegna tutto a Donna Rosa, Marco e Giorgio.\"",
+    "Elena dice: \"Capitolo Bologna quasi chiuso. Adesso devono riconoscerla, non solo leggerla.\"",
   q_day30_chapter_one_finale:
-    "Giorgio dice: \"Capitolo uno completato. A Milano ti aspetta una nuova storia.\"",
+    "Giorgio dice: \"In piazza Maggiore. Tutti insieme. Donna Rosa ha qualcosa da mostrare.\"",
 };

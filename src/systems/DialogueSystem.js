@@ -11,10 +11,24 @@ export class DialogueSystem {
       throw new Error(`Dialogue not found for npc: ${npcId}`);
     }
 
+    // Resolve the entry node based on current game day.
+    // dayStarts maps a day number to a start node; we pick the highest key <= today.
+    let startNode = script.start;
+    if (script.dayStarts) {
+      const day = context?.day ?? 1;
+      const bestDay = Object.keys(script.dayStarts)
+        .map(Number)
+        .filter(d => d <= day)
+        .sort((a, b) => b - a)[0];
+      if (bestDay !== undefined) {
+        startNode = script.dayStarts[bestDay];
+      }
+    }
+
     return {
       npcId,
       npcName: script.npcName,
-      nodeId: script.start,
+      nodeId: startNode,
       ended: false,
       clueHint: null,
       difficultyLevel: 'A1', // Will be updated by adaptive system
@@ -39,6 +53,21 @@ export class DialogueSystem {
           choices: adaptedNode.choices || node.choices
         };
         session.difficultyLevel = adaptedNode.level || 'A1';
+      }
+    }
+
+    // Fallback: if node uses versions but adaptive system didn't resolve,
+    // pick the version matching the session difficulty or default to A1.
+    if (node.versions && !node.text) {
+      const level = session.difficultyLevel || 'A1';
+      const version = node.versions[level] || node.versions.A1 || Object.values(node.versions)[0];
+      if (version) {
+        node = {
+          ...node,
+          text: version.text,
+          en: version.en,
+          choices: version.choices || node.choices,
+        };
       }
     }
 

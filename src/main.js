@@ -173,6 +173,8 @@ if (!voice.isSupported()) {
 }
 
 const loaded = save.loadIntoContext(game.context);
+game.context._hasSave = loaded;
+game.context._resumeScene = loaded ? (day.canExplore() ? "map" : "lesson") : "intro";
 if (loaded) {
   eventFeed.push(`Save loaded for day ${day.currentDay}.`);
 }
@@ -334,13 +336,13 @@ window.addEventListener("orientationchange", () => setTimeout(fitCanvas, 200));
 window.visualViewport?.addEventListener("resize", fitCanvas);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-const entryScene = "intro"; // Force intro for testing
+const entryScene = "intro";
 try {
-  showDebugMessage('Booting game...');
+  showDebugMessage("Booting game...");
   scenes.go(entryScene, game);
   game.start();
   game.canvas.focus(); // Focus canvas for keyboard input
-  showDebugMessage('Game started successfully.');
+  showDebugMessage("Game started successfully.");
 } catch (error) {
   const msg = `Startup failed: ${error?.message ?? String(error)}`;
   console.error(msg, error);
