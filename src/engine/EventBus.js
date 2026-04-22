@@ -53,4 +53,5 @@ export const Events = Object.freeze({
   XP_AWARDED:                "XP_AWARDED",
   SKILL_IMPROVED:            "SKILL_IMPROVED",
   REWARD_UNLOCKED:           "REWARD_UNLOCKED",
+  GRAMMAR_FEEDBACK:          "GRAMMAR_FEEDBACK",
 });

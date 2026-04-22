@@ -18,6 +18,8 @@ const BUILDING_STYLES = {
   bakery: { base: "#d8a870", base2: "#c09060", roof: "#583818", trim: "#f0cc88", door: "#6a4a2a", awning: "#d89838", awning2: "#f8bc50", sign: "PANETTERIA", roofType: "gable", facadeType: "shopfront" },
   cafe: { base: "#b88060", base2: "#a07050", roof: "#402818", trim: "#d0a870", door: "#5a3a25", awning: "#963028", awning2: "#c84e40", sign: "CAFFÈ", roofType: "flat", facadeType: "shopfront" },
   library: { base: "#505870", base2: "#404860", roof: "#1c2030", trim: "#7070a0", door: "#1a1a38", awning: null, awning2: null, sign: "BIBLIOTECA", roofType: "flat", facadeType: "classical" },
+  markethall: { base: "#8d775f", base2: "#7a6552", roof: "#3b3026", trim: "#d8c19b", door: "#4b3624", awning: null, awning2: null, sign: "PORTICO", roofType: "hip", facadeType: "arches" },
+  station: { base: "#8d7b69", base2: "#78695a", roof: "#3e352f", trim: "#d5c6aa", door: "#49392c", awning: null, awning2: null, sign: "STAZIONE", roofType: "flat", facadeType: "academic" },
   university: { base: "#7a8888", base2: "#6a7878", roof: "#303e3e", trim: "#94a8a0", door: "#444e50", awning: null, awning2: null, sign: null, roofType: "hip", facadeType: "academic" },
   default: { base: "#706860", base2: "#605850", roof: "#302418", trim: "#8a7e6e", door: "#362818", awning: null, awning2: null, sign: null, roofType: "flat", facadeType: "basic" },
 };
@@ -53,6 +55,65 @@ const MAP_PROPS = [
 
   { col: 8, row: 11, type: "bike" },
   { col: 14, row: 11, type: "lamp_post" },
+  { col: 9, row: 2, type: "planter" },
+  { col: 11, row: 2, type: "lamp_post" },
+  { col: 13, row: 2, type: "planter" },
+  { col: 15, row: 2, type: "lamp_post" },
+  { col: 8, row: 14, type: "planter" },
+  { col: 16, row: 14, type: "planter" },
+  { col: 21, row: 14, type: "train_car" },
+  { col: 23, row: 14, type: "barrel" },
+];
+
+const SCENIC_BUILDINGS = [
+  {
+    id: "portico_nord",
+    label: "Portico del Podesta",
+    bx: 8,
+    by: 0,
+    bw: 9,
+    bh: 2,
+    entrance: { col: 12, row: 2 },
+    style: "markethall",
+  },
+  {
+    id: "forno_vecchio",
+    label: "Forno Antico",
+    bx: 0,
+    by: 13,
+    bw: 5,
+    bh: 2,
+    entrance: { col: 2, row: 13 },
+    style: "bakery",
+  },
+  {
+    id: "archivio_civico",
+    label: "Archivio Civico",
+    bx: 16,
+    by: 10,
+    bw: 3,
+    bh: 3,
+    entrance: { col: 17, row: 9 },
+    style: "library",
+  },
+  {
+    id: "stazione_centrale",
+    label: "Stazione Centrale",
+    bx: 20,
+    by: 13,
+    bw: 5,
+    bh: 2,
+    entrance: { col: 22, row: 13 },
+    style: "station",
+  },
+];
+
+const ROUTE_PATHS = [
+  { id: "bakery", label: "1", from: { x: 152, y: 208 }, to: { x: 286, y: 318 }, bend: { x: 228, y: 254 } },
+  { id: "market", label: "2", from: { x: 140, y: 92 }, to: { x: 352, y: 246 }, bend: { x: 260, y: 126 } },
+  { id: "cafe", label: "3", from: { x: 694, y: 92 }, to: { x: 510, y: 252 }, bend: { x: 594, y: 136 } },
+  { id: "osteria", label: "4", from: { x: 674, y: 210 }, to: { x: 548, y: 322 }, bend: { x: 614, y: 294 } },
+  { id: "library", label: "5", from: { x: 574, y: 432 }, to: { x: 444, y: 364 }, bend: { x: 518, y: 382 } },
 ];
 
 export class MapScene extends Scene {
@@ -185,6 +246,10 @@ export class MapScene extends Scene {
     const nearPiazzaNpc = this._getNearestPiazzaNpc(nearLoc);
     const occLoc = this._getPlayerOcclusionLocation();
 
+    for (const loc of SCENIC_BUILDINGS) {
+      this._drawBuilding3D(ctx, loc, false);
+    }
+
     for (const loc of LOCATIONS) {
       if (loc.style === "piazza") continue;
       this._drawBuilding3D(ctx, loc, nearLoc?.id === loc.id);
@@ -192,10 +257,14 @@ export class MapScene extends Scene {
 
     this._renderFountain(ctx);
     this._renderAmbientEffects(ctx);
+    this._renderRouteNetwork(ctx);
     this._renderEntranceMarkers(ctx, nearLoc);
     this._renderInteractionCue(ctx, nearLoc, nearPiazzaNpc);
     this._renderNpcs(ctx, nearLoc, nearPiazzaNpc);
+    this._renderScenicLabels(ctx);
     this._renderLocationLabels(ctx, nearLoc);
+    this._renderLocationBadges(ctx);
+    this._renderLegend(ctx);
     this._renderPlayer(ctx);
     this._renderMoveTarget(ctx);
     this._renderRoofOcclusion(ctx, occLoc);
@@ -642,6 +711,20 @@ export class MapScene extends Scene {
           tc.arc(x + 16, y + 8, 3, 0, Math.PI * 2);
           tc.fill();
           break;
+        case "train_car":
+          tc.fillStyle = "#58606c";
+          tc.fillRect(x + 2, y + 10, 28, 12);
+          tc.fillStyle = "#a98c58";
+          tc.fillRect(x + 4, y + 8, 24, 4);
+          tc.fillStyle = "#d8d5c4";
+          tc.fillRect(x + 6, y + 13, 4, 4);
+          tc.fillRect(x + 12, y + 13, 4, 4);
+          tc.fillRect(x + 18, y + 13, 4, 4);
+          tc.fillRect(x + 24, y + 13, 3, 4);
+          tc.fillStyle = "#34363a";
+          tc.fillRect(x + 6, y + 22, 4, 3);
+          tc.fillRect(x + 22, y + 22, 4, 3);
+          break;
         default:
           break;
       }
@@ -805,7 +888,7 @@ export class MapScene extends Scene {
       this._drawWindowRow(ctx, winStartX, y + h - h / 3 + 6, winCount, winGap, 5, 6, palette, false);
     }
 
-    const doorCX = loc.entrance.col * TS + TS / 2;
+    const doorCX = loc.entrance ? (loc.entrance.col * TS + TS / 2) : (x + w / 2);
     const doorW = 11;
     const doorH = 17;
     const doorX = doorCX - doorW / 2;
@@ -1101,13 +1184,149 @@ export class MapScene extends Scene {
       ctx.save();
       ctx.textAlign = "center";
       ctx.font = isNear ? "700 11px Georgia" : "600 10px Georgia";
-      ctx.fillStyle = isNear ? "#fff5d0" : "rgba(240, 230, 210, 0.72)";
-      ctx.shadowColor = "rgba(0,0,0,0.7)";
-      ctx.shadowBlur = 3;
-      ctx.shadowOffsetY = 1;
+      const textWidth = ctx.measureText(loc.label).width + 18;
+      this._roundedRect(ctx, cx - textWidth / 2, cy - 11, textWidth, 16, 5);
+      ctx.fillStyle = isNear ? "rgba(78, 56, 28, 0.88)" : "rgba(44, 34, 26, 0.7)";
+      ctx.fill();
+      ctx.fillStyle = isNear ? "#fff1c2" : "rgba(246, 236, 214, 0.86)";
       ctx.fillText(loc.label, cx, cy);
       ctx.restore();
     }
+  }
+
+  _renderScenicLabels(ctx) {
+    for (const loc of SCENIC_BUILDINGS) {
+      const cx = (loc.bx + loc.bw / 2) * TS;
+      const cy = HUD + loc.by * TS - 8;
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.font = "600 9px Georgia";
+      ctx.fillStyle = "rgba(240, 232, 214, 0.62)";
+      ctx.fillText(loc.label, cx, cy);
+      ctx.restore();
+    }
+  }
+
+  _renderLocationBadges(ctx) {
+    for (const loc of LOCATIONS) {
+      if (!loc.npcSlots?.length && !loc.shop) continue;
+
+      const cx = loc.style === "piazza"
+        ? (loc.bx + loc.bw - 0.7) * TS
+        : (loc.bx + 0.9) * TS;
+      const cy = HUD + (loc.by + loc.bh - 0.45) * TS;
+      const story = Boolean(loc.npcSlots?.length) && !loc.shop;
+      const fill = story ? "#2d6f9d" : "#d6ae46";
+      const stroke = story ? "#ddecf8" : "#fff0bf";
+      const label = story ? "Story" : "Side";
+
+      ctx.save();
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.font = "700 6.5px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#fdf8eb";
+      ctx.fillText(label, cx, cy + 2.3);
+      ctx.restore();
+    }
+  }
+
+  _renderLegend(ctx) {
+    const x = 606;
+    const y = HUD + 372;
+    ctx.save();
+    this._roundedRect(ctx, x, y, 168, 66, 8);
+    ctx.fillStyle = "rgba(28, 22, 18, 0.76)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(240, 226, 190, 0.25)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "700 10px Georgia";
+    ctx.fillStyle = "#f4ead6";
+    ctx.fillText("Map Key", x + 12, y + 14);
+
+    this._drawLegendDot(ctx, x + 16, y + 28, "#2d6f9d", "Story hub");
+    this._drawLegendDot(ctx, x + 16, y + 43, "#d6ae46", "Support stop");
+    this._drawLegendLine(ctx, x + 10, y + 57, "Suggested route");
+    ctx.restore();
+  }
+
+  _drawLegendDot(ctx, x, y, color, label) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.65)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.font = "600 9px Trebuchet MS";
+    ctx.fillStyle = "#ede4d3";
+    ctx.fillText(label, x + 12, y + 3);
+  }
+
+  _drawLegendLine(ctx, x, y, label) {
+    ctx.strokeStyle = "rgba(99, 171, 203, 0.82)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 22, y);
+    ctx.stroke();
+    this._drawArrowHead(ctx, x + 22, y, 0.25, 8, "rgba(99, 171, 203, 0.82)");
+    ctx.font = "600 9px Trebuchet MS";
+    ctx.fillStyle = "#ede4d3";
+    ctx.fillText(label, x + 34, y + 3);
+  }
+
+  _renderRouteNetwork(ctx) {
+    ctx.save();
+    for (const route of ROUTE_PATHS) {
+      ctx.strokeStyle = "rgba(97, 169, 202, 0.78)";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(route.from.x, route.from.y);
+      ctx.quadraticCurveTo(route.bend.x, route.bend.y, route.to.x, route.to.y);
+      ctx.stroke();
+
+      const angle = Math.atan2(route.to.y - route.bend.y, route.to.x - route.bend.x);
+      this._drawArrowHead(ctx, route.to.x, route.to.y, angle, 12, "rgba(97, 169, 202, 0.92)");
+
+      const badgeX = route.from.x + (route.bend.x - route.from.x) * 0.24;
+      const badgeY = route.from.y + (route.bend.y - route.from.y) * 0.24;
+      ctx.fillStyle = "#2d6f9d";
+      ctx.beginPath();
+      ctx.arc(badgeX, badgeY, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#f2ebd2";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = "#fff9eb";
+      ctx.font = "700 14px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText(route.label, badgeX, badgeY + 5);
+    }
+    ctx.restore();
+  }
+
+  _drawArrowHead(ctx, x, y, angle, size, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-size, size * 0.45);
+    ctx.lineTo(-size * 0.72, 0);
+    ctx.lineTo(-size, -size * 0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 
   _renderPlayer(ctx) {

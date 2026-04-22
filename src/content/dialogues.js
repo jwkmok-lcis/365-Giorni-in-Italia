@@ -4,6 +4,125 @@
 // Italian is the game language. clueHint appears in English as a learning aid.
 // NEW: Adaptive difficulty with versions (A1, A1+, A2) based on player skill
 
+const LEGACY_SKILL_TAGS = {
+  basicSentences: ["S1"],
+  presentTense: ["S2"],
+  articleGender: ["S3"],
+  simpleQuestions: ["S4"],
+  vocabulary: ["S5"],
+  vocabularyRecognition: ["S5"],
+  pastTense: ["S6"],
+  connectors: ["S7"],
+  pronouns: ["S8"],
+  modals: ["S9"],
+  infinitives: ["S10"],
+  complexCombinations: ["S6", "S7", "S8", "S9", "S10"],
+};
+
+const DAILY_SCRIPT_FOCUS = {
+  1: ["S5"],
+  2: ["S5"],
+  3: ["S5", "S4"],
+  4: ["S6"],
+  5: ["S7"],
+  6: ["S9"],
+  7: ["S7", "S9"],
+  8: ["S8"],
+  9: ["S6", "S8"],
+  10: ["S7", "S8"],
+  11: ["S8", "S9"],
+  12: ["S6", "S7", "S8"],
+  13: ["S9", "S10"],
+  14: ["S7", "S9", "S10"],
+  15: ["S8", "S9"],
+  16: ["S6", "S7", "S8"],
+  17: ["S9", "S10"],
+  18: ["S7", "S9", "S10"],
+  19: ["S8"],
+  20: ["S6", "S8"],
+  21: ["S7", "S8"],
+  22: ["S8", "S9"],
+  23: ["S6", "S7", "S8"],
+  24: ["S9", "S10"],
+  25: ["S7", "S9", "S10"],
+  26: ["S5", "S6", "S7", "S8"],
+  27: ["S6", "S9"],
+  28: ["S7", "S8", "S9"],
+  29: ["S6", "S7", "S8", "S9"],
+  30: ["S10"],
+};
+
+const ACKNOWLEDGEMENT_RE = /^(grazie|capito|bene\.?|interessante\.?|a presto|milano\?|due ore\?|al dente\?|qualcos'altro\?|maria… chi\?|sapore\?|forse\.?|sì\.?|no\.?|un po\.?|ottima idea\.)/i;
+
+function inferNodeDay(nodeId) {
+  const match = String(nodeId).match(/^day(\d+)_/);
+  return match ? Number(match[1]) : 1;
+}
+
+function inferSkillTags(choice, nodeDay) {
+  if (Array.isArray(choice.skillTags) && choice.skillTags.length > 0) {
+    return [...new Set(choice.skillTags)];
+  }
+
+  if (Array.isArray(choice.skills) && choice.skills.length > 0) {
+    const mapped = choice.skills.flatMap((skillKey) => LEGACY_SKILL_TAGS[skillKey] ?? []);
+    if (mapped.length > 0) {
+      return [...new Set(mapped)];
+    }
+  }
+
+  return [...(DAILY_SCRIPT_FOCUS[nodeDay] ?? ["S5"])];
+}
+
+function inferXpMode(choice, skillTags) {
+  if (choice.xpMode) {
+    return choice.xpMode;
+  }
+
+  if (skillTags.length === 0) {
+    return "comprehension";
+  }
+
+  return ACKNOWLEDGEMENT_RE.test(choice.text ?? "") ? "comprehension" : "production";
+}
+
+function inferXp(choice, skillTags, xpMode) {
+  if (choice.xp !== undefined) {
+    return choice.xp;
+  }
+
+  if ((choice.grammarAccuracy ?? 0.85) < 0.65) {
+    return 0;
+  }
+
+  if (xpMode === "comprehension") {
+    return Math.max(2, skillTags.length >= 2 ? 5 : 2);
+  }
+
+  if (skillTags.length >= 4) return 22;
+  if (skillTags.length >= 3) return 20;
+  if (skillTags.length === 2) return 15;
+  if (skillTags.includes("S6")) return 10;
+  if (skillTags.includes("S5")) return 5;
+  return 8;
+}
+
+function enrichDialogueMetadata(dialogues) {
+  Object.values(dialogues).forEach((script) => {
+    Object.entries(script.nodes).forEach(([nodeId, node]) => {
+      const nodeDay = inferNodeDay(nodeId);
+      (node.choices ?? []).forEach((choice) => {
+        const skillTags = inferSkillTags(choice, nodeDay);
+        choice.skillTags ??= skillTags;
+        choice.xpMode ??= inferXpMode(choice, skillTags);
+        choice.xp ??= inferXp(choice, skillTags, choice.xpMode);
+        choice.grammarAccuracy ??= skillTags.length === 0 ? 1 : 0.85;
+        choice.complexity ??= 1 + Math.max(0, skillTags.length - 1) * 0.15;
+      });
+    });
+  });
+}
+
 export const DIALOGUES = {
   // ── Day 1 NPCs ──────────────────────────────────────────────────────────
   marco_verdini: {
@@ -159,6 +278,9 @@ export const DIALOGUES = {
             text: "Sì, ho trovato informazioni.",
             next: "day4_marco_follow",
             effects: { relationDelta: 1 },
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "production",
             skills: ["pastTense"],
             grammarAccuracy: 0.9,
             complexity: 1.3
@@ -167,6 +289,9 @@ export const DIALOGUES = {
             text: "No, cerco ancora.",
             end: true,
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 5,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.0
@@ -178,7 +303,7 @@ export const DIALOGUES = {
         text: "Bene. La ricerca è importante. Continua.",
         en: "Good. The research matters. Keep going.",
         choices: [
-          { text: "Grazie.", end: true, effects: { relationDelta: 1 } }
+          { text: "Grazie.", end: true, effects: { relationDelta: 1 }, skillTags: ["S5"], xp: 2, xpMode: "comprehension", skills: ["basicSentences"], grammarAccuracy: 0.8, complexity: 1.0 }
         ]
       },
 
@@ -192,6 +317,9 @@ export const DIALOGUES = {
             text: "Sì, ma è difficile.",
             next: "day7_marco_close",
             effects: { relationDelta: 0 },
+            skillTags: ["S7", "S5"],
+            xp: 12,
+            xpMode: "production",
             skills: ["connectors", "basicSentences"],
             grammarAccuracy: 0.85,
             complexity: 1.3
@@ -200,6 +328,9 @@ export const DIALOGUES = {
             text: "No, ma ho trovato informazioni.",
             next: "day7_marco_close",
             effects: { relationDelta: 1 },
+            skillTags: ["S7", "S6"],
+            xp: 14,
+            xpMode: "production",
             skills: ["connectors", "pastTense"],
             grammarAccuracy: 0.9,
             complexity: 1.4
@@ -211,7 +342,7 @@ export const DIALOGUES = {
         text: "Bravissimo. Continua così.",
         en: "Very good. Keep going like this.",
         choices: [
-          { text: "Grazie.", end: true, effects: { relationDelta: 1 } }
+          { text: "Grazie.", end: true, effects: { relationDelta: 1 }, skillTags: ["S5"], xp: 2, xpMode: "comprehension", skills: ["basicSentences"], grammarAccuracy: 0.8, complexity: 1.0 }
         ]
       },
 
@@ -565,6 +696,9 @@ export const DIALOGUES = {
             text: "Sì, ho parlato con lui.",
             next: "day4_past_reveal",
             effects: { relationDelta: 1 },
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "production",
             skills: ["pastTense"],
             grammarAccuracy: 0.9,
             complexity: 1.3
@@ -573,6 +707,51 @@ export const DIALOGUES = {
             text: "No, non ancora.",
             end: true,
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 5,
+            xpMode: "production",
+            skills: ["basicSentences"],
+            grammarAccuracy: 0.8,
+            complexity: 1.0
+          },
+          {
+            text: "Sì, Giorgio.",
+            next: "day4_lucia_retry_prompt",
+            effects: { relationDelta: 0 },
+            retryPrompt: "Non capisco. Prova con il passato completo.",
+            retryCorrection: "Sì, ho parlato con lui.",
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "production",
+            skills: ["pastTense"],
+            grammarAccuracy: 0.4,
+            complexity: 1.0
+          }
+        ]
+      },
+      day4_lucia_retry_prompt: {
+        speaker: "Lucia",
+        text: "Non capisco. Intendi dire: 'Sì, ho parlato con lui?'",
+        en: "I don't understand. Do you mean: 'Yes, I spoke with him?'",
+        choices: [
+          {
+            text: "Sì, ho parlato con lui.",
+            next: "day4_past_reveal",
+            effects: { relationDelta: 1 },
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "production",
+            skills: ["pastTense"],
+            grammarAccuracy: 0.9,
+            complexity: 1.3
+          },
+          {
+            text: "Non ancora.",
+            end: true,
+            effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 3,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.0
@@ -588,6 +767,9 @@ export const DIALOGUES = {
             text: "Ha detto 'sei ore'.",
             next: "day4_reinforce",
             effects: { relationDelta: 1 },
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "comprehension",
             skills: ["pastTense"],
             grammarAccuracy: 0.9,
             complexity: 1.3
@@ -596,6 +778,9 @@ export const DIALOGUES = {
             text: "Non ricordo.",
             end: true,
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 5,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.0
@@ -611,6 +796,9 @@ export const DIALOGUES = {
             text: "Ho una domanda.",
             end: true,
             effects: { relationDelta: 1 },
+            skillTags: ["S5"],
+            xp: 8,
+            xpMode: "production",
             skills: ["pastTense"],
             grammarAccuracy: 0.85,
             complexity: 1.3
@@ -618,7 +806,13 @@ export const DIALOGUES = {
           {
             text: "Capito.",
             end: true,
-            effects: { relationDelta: 0, clueHint: "Lucia has always used three hours. Giorgio insists six. The contradiction deepens." }
+            effects: { relationDelta: 0, clueHint: "Lucia has always used three hours. Giorgio insists six. The contradiction deepens." },
+            skillTags: ["S6"],
+            xp: 3,
+            xpMode: "comprehension",
+            skills: ["pastTense"],
+            grammarAccuracy: 0.85,
+            complexity: 1.0
           }
         ]
       },
@@ -633,6 +827,9 @@ export const DIALOGUES = {
             text: "L'ho trovata nell'archivio.",
             next: "day8_lucia_pause",
             effects: { relationDelta: 1 },
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "production",
             skills: ["pastTense"],
             grammarAccuracy: 0.9,
             complexity: 1.3
@@ -641,6 +838,51 @@ export const DIALOGUES = {
             text: "In biblioteca.",
             next: "day8_lucia_pause",
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 5,
+            xpMode: "production",
+            skills: ["basicSentences"],
+            grammarAccuracy: 0.8,
+            complexity: 1.0
+          },
+          {
+            text: "Trovata archivio.",
+            next: "day8_lucia_signature_retry",
+            effects: { relationDelta: 0 },
+            retryPrompt: "Non capisco. Usa il pronome e il passato completo.",
+            retryCorrection: "L'ho trovata nell'archivio.",
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "production",
+            skills: ["pastTense"],
+            grammarAccuracy: 0.4,
+            complexity: 1.0
+          }
+        ]
+      },
+      day8_lucia_signature_retry: {
+        speaker: "Lucia",
+        text: "Non capisco. Intendi dire: 'L'ho trovata nell'archivio?'",
+        en: "I don't understand. Do you mean: 'I found it in the archive?'",
+        choices: [
+          {
+            text: "L'ho trovata nell'archivio.",
+            next: "day8_lucia_pause",
+            effects: { relationDelta: 1 },
+            skillTags: ["S6"],
+            xp: 10,
+            xpMode: "production",
+            skills: ["pastTense"],
+            grammarAccuracy: 0.9,
+            complexity: 1.3
+          },
+          {
+            text: "In biblioteca.",
+            next: "day8_lucia_pause",
+            effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 5,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.0
@@ -884,7 +1126,8 @@ export const DIALOGUES = {
       23: "day23_donna_time",
       24: "day24_donna_rest",
       25: "day25_donna_confirm",
-      26: "day26_donna_ratios"
+      26: "day26_donna_ratios",
+      30: "day30_donna_card"
     },
     nodes: {
       start: {
@@ -961,6 +1204,9 @@ export const DIALOGUES = {
             text: "Perché?",
             next: "day5_connector_explain",
             effects: { relationDelta: 1 },
+            skillTags: ["S7"],
+            xp: 8,
+            xpMode: "production",
             skills: ["connectors"],
             grammarAccuracy: 0.85,
             complexity: 1.3
@@ -969,6 +1215,9 @@ export const DIALOGUES = {
             text: "Non capisco.",
             next: "day5_connector_explain",
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 3,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.0
@@ -984,6 +1233,9 @@ export const DIALOGUES = {
             text: "Capisco.",
             end: true,
             effects: { relationDelta: 1 },
+            skillTags: ["S7"],
+            xp: 5,
+            xpMode: "comprehension",
             skills: ["connectors"],
             grammarAccuracy: 0.85,
             complexity: 1.2
@@ -992,6 +1244,9 @@ export const DIALOGUES = {
             text: "Ho capito.",
             end: true,
             effects: { relationDelta: 1 },
+            skillTags: ["S6"],
+            xp: 7,
+            xpMode: "comprehension",
             skills: ["pastTense"],
             grammarAccuracy: 0.85,
             complexity: 1.3
@@ -1346,6 +1601,34 @@ export const DIALOGUES = {
             complexity: 1.0
           }
         ]
+      },
+
+      // ── Day 30: FINALE — Donna Rosa reveals Maria's card ────────────────
+      day30_donna_card: {
+        speaker: "Donna Rosa",
+        text: "[Tira fuori una carta scritta a mano — la ricetta di Maria.]\nEcco. L'ho tenuta per trent'anni. Maria diceva: \"Quando trovi qualcuno che capisce… dagliele.\" Sei tu.",
+        en: "[She pulls out a handwritten card — Maria's recipe.]\nHere. I've kept it for thirty years. Maria used to say: \"When you find someone who understands… give it to them.\" That's you.",
+        choices: [
+          {
+            text: "L'hai tenuta cosi a lungo?",
+            end: true,
+            effects: {
+              relationDelta: 2,
+              clueHint: "Donna Rosa finally reveals Maria Ferrante's handwritten recipe card in the piazza finale."
+            },
+            skills: ["pastTense", "pronouns"],
+            grammarAccuracy: 0.9,
+            complexity: 1.5
+          },
+          {
+            text: "Posso leggerla ad alta voce?",
+            end: true,
+            effects: { relationDelta: 2 },
+            skills: ["modals", "infinitives"],
+            grammarAccuracy: 0.9,
+            complexity: 1.6
+          }
+        ]
       }
     }
   },
@@ -1440,6 +1723,9 @@ export const DIALOGUES = {
             text: "Capisco.",
             next: "day5_giorgio_but",
             effects: { relationDelta: 0 },
+            skillTags: ["S7"],
+            xp: 5,
+            xpMode: "comprehension",
             skills: ["connectors"],
             grammarAccuracy: 0.85,
             complexity: 1.2
@@ -1448,6 +1734,9 @@ export const DIALOGUES = {
             text: "Sapore?",
             next: "day5_giorgio_but",
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 3,
+            xpMode: "comprehension",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.0
@@ -1463,6 +1752,9 @@ export const DIALOGUES = {
             text: "Ma Donna Rosa dice tre ore.",
             end: true,
             effects: { relationDelta: -1, clueHint: "Giorgio is immovable on six hours. Mentions of three hours or Donna Rosa show tension." },
+            skillTags: ["S7"],
+            xp: 10,
+            xpMode: "production",
             skills: ["connectors"],
             grammarAccuracy: 0.85,
             complexity: 1.4
@@ -1471,6 +1763,9 @@ export const DIALOGUES = {
             text: "Donna Rosa sbaglia?",
             end: true,
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 6,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.1
@@ -1914,6 +2209,9 @@ export const DIALOGUES = {
             text: "Sì, voglio vederlo.",
             next: "day6_modal_must",
             effects: { relationDelta: 1 },
+            skillTags: ["S9", "S10"],
+            xp: 12,
+            xpMode: "production",
             skills: ["modals", "infinitives"],
             grammarAccuracy: 0.9,
             complexity: 1.5
@@ -1922,6 +2220,49 @@ export const DIALOGUES = {
             text: "Posso entrare?",
             next: "day6_modal_must",
             effects: { relationDelta: 0 },
+            skillTags: ["S9"],
+            xp: 10,
+            xpMode: "production",
+            skills: ["modals"],
+            grammarAccuracy: 0.9,
+            complexity: 1.3
+          },
+          {
+            text: "Sì, voglio.",
+            next: "day6_modal_retry_prompt",
+            effects: { relationDelta: 0 },
+            skillTags: ["S9", "S10"],
+            xp: 12,
+            xpMode: "production",
+            skills: ["modals", "infinitives"],
+            grammarAccuracy: 0.4,
+            complexity: 1.0
+          }
+        ]
+      },
+      day6_modal_retry_prompt: {
+        speaker: "Prof. Conti",
+        text: "Non capisco. Intendi dire: 'Sì, voglio vederlo?'",
+        en: "I don't understand. Do you mean: 'Yes, I want to see it?'",
+        choices: [
+          {
+            text: "Sì, voglio vederlo.",
+            next: "day6_modal_must",
+            effects: { relationDelta: 1 },
+            skillTags: ["S9", "S10"],
+            xp: 12,
+            xpMode: "production",
+            skills: ["modals", "infinitives"],
+            grammarAccuracy: 0.9,
+            complexity: 1.5
+          },
+          {
+            text: "Posso entrare?",
+            next: "day6_modal_must",
+            effects: { relationDelta: 0 },
+            skillTags: ["S9"],
+            xp: 10,
+            xpMode: "production",
             skills: ["modals"],
             grammarAccuracy: 0.9,
             complexity: 1.3
@@ -1937,6 +2278,9 @@ export const DIALOGUES = {
             text: "Devo andare da Elena?",
             end: true,
             effects: { relationDelta: 1 },
+            skillTags: ["S9"],
+            xp: 12,
+            xpMode: "production",
             skills: ["modals"],
             grammarAccuracy: 0.9,
             complexity: 1.3
@@ -1944,7 +2288,13 @@ export const DIALOGUES = {
           {
             text: "Capito.",
             end: true,
-            effects: { relationDelta: 0 }
+            effects: { relationDelta: 0 },
+            skillTags: ["S9"],
+            xp: 3,
+            xpMode: "comprehension",
+            skills: ["modals"],
+            grammarAccuracy: 0.85,
+            complexity: 1.0
           }
         ]
       },
@@ -1959,6 +2309,9 @@ export const DIALOGUES = {
             text: "La puoi leggere ora?",
             next: "day10_conti_reveal",
             effects: { relationDelta: 1 },
+            skillTags: ["S8", "S9"],
+            xp: 15,
+            xpMode: "production",
             skills: ["pronouns", "modals"],
             grammarAccuracy: 0.9,
             complexity: 1.5
@@ -1967,6 +2320,49 @@ export const DIALOGUES = {
             text: "Devo aspettare?",
             next: "day10_conti_reveal",
             effects: { relationDelta: 0 },
+            skillTags: ["S9"],
+            xp: 10,
+            xpMode: "production",
+            skills: ["modals"],
+            grammarAccuracy: 0.9,
+            complexity: 1.2
+          },
+          {
+            text: "Leggere ora?",
+            next: "day10_conti_retry_prompt",
+            effects: { relationDelta: 0 },
+            skillTags: ["S8", "S9"],
+            xp: 15,
+            xpMode: "production",
+            skills: ["pronouns", "modals"],
+            grammarAccuracy: 0.4,
+            complexity: 1.0
+          }
+        ]
+      },
+      day10_conti_retry_prompt: {
+        speaker: "Prof. Conti",
+        text: "Non capisco. Intendi dire: 'La puoi leggere ora?'",
+        en: "I don't understand. Do you mean: 'Can you read it now?'",
+        choices: [
+          {
+            text: "La puoi leggere ora?",
+            next: "day10_conti_reveal",
+            effects: { relationDelta: 1 },
+            skillTags: ["S8", "S9"],
+            xp: 15,
+            xpMode: "production",
+            skills: ["pronouns", "modals"],
+            grammarAccuracy: 0.9,
+            complexity: 1.5
+          },
+          {
+            text: "Devo aspettare?",
+            next: "day10_conti_reveal",
+            effects: { relationDelta: 0 },
+            skillTags: ["S9"],
+            xp: 10,
+            xpMode: "production",
             skills: ["modals"],
             grammarAccuracy: 0.9,
             complexity: 1.2
@@ -2176,6 +2572,9 @@ export const DIALOGUES = {
             text: "Voglio la ricetta.",
             next: "day6_elena_require",
             effects: { relationDelta: 1 },
+            skillTags: ["S9"],
+            xp: 10,
+            xpMode: "production",
             skills: ["modals"],
             grammarAccuracy: 0.9,
             complexity: 1.3
@@ -2184,6 +2583,9 @@ export const DIALOGUES = {
             text: "Non sono sicuro.",
             next: "day6_elena_require",
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 6,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.0
@@ -2199,6 +2601,9 @@ export const DIALOGUES = {
             text: "Quale parola, ma dove?",
             end: true,
             effects: { relationDelta: 1 },
+            skillTags: ["S7"],
+            xp: 12,
+            xpMode: "production",
             skills: ["connectors"],
             grammarAccuracy: 0.85,
             complexity: 1.4
@@ -2207,6 +2612,9 @@ export const DIALOGUES = {
             text: "Quale parola?",
             end: true,
             effects: { relationDelta: 0 },
+            skillTags: ["S5"],
+            xp: 8,
+            xpMode: "production",
             skills: ["basicSentences"],
             grammarAccuracy: 0.8,
             complexity: 1.1
@@ -2224,6 +2632,9 @@ export const DIALOGUES = {
             text: "Sì, ho parlato con lui e voglio entrare.",
             next: "day7_elena_keyword",
             effects: { relationDelta: 1 },
+            skillTags: ["S7", "S9"],
+            xp: 15,
+            xpMode: "production",
             skills: ["connectors", "pastTense", "modals"],
             grammarAccuracy: 0.9,
             complexity: 1.7
@@ -2232,6 +2643,9 @@ export const DIALOGUES = {
             text: "No, ma voglio parlare con lui.",
             next: "day7_elena_keyword",
             effects: { relationDelta: 0 },
+            skillTags: ["S7", "S6"],
+            xp: 12,
+            xpMode: "production",
             skills: ["connectors", "modals"],
             grammarAccuracy: 0.85,
             complexity: 1.5
@@ -2243,7 +2657,7 @@ export const DIALOGUES = {
         text: "Con la parola \"Ferrante\" possiamo aprire il secondo fascicolo. Vai da Conti.",
         en: "With the word \"Ferrante\" we can open the second dossier. Go to Conti.",
         choices: [
-          { text: "Ho capito!", end: true, effects: { relationDelta: 1, clueHint: "KEYWORD: \"Ferrante\" is the archive access word. The second dossier can now be opened." } }
+          { text: "Ho capito!", end: true, effects: { relationDelta: 1, clueHint: "KEYWORD: \"Ferrante\" is the archive access word. The second dossier can now be opened." }, skillTags: ["S6"], xp: 5, xpMode: "comprehension", skills: ["pastTense"], grammarAccuracy: 0.85, complexity: 1.0 }
         ]
       },
 
@@ -2532,3 +2946,5 @@ export const DIALOGUES = {
     }
   }
 };
+
+enrichDialogueMetadata(DIALOGUES);

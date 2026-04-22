@@ -21,9 +21,10 @@ export class QuestSystem {
       const q = cloneQuestTemplate(template);
       this.quests[q.id] = q;
     });
-    this.activeQuestId = Object.keys(QUESTS)[0];
     this.completedQuestIds = [];
     this.unlockedClueIds = [];
+    this.activeQuestId = null;
+    this.syncActiveQuest(1);
   }
 
   get activeQuest() {
@@ -32,6 +33,25 @@ export class QuestSystem {
 
   getUnlockedClues() {
     return this.unlockedClueIds.map((id) => CLUES[id]).filter(Boolean);
+  }
+
+  syncActiveQuest(day = 1) {
+    const currentQuest = this.activeQuest;
+    if (currentQuest && !this.completedQuestIds.includes(currentQuest.id)) {
+      if (currentQuest.dayMin <= day && currentQuest.dayMax >= day) {
+        return currentQuest;
+      }
+    }
+
+    const quests = Object.values(this.quests);
+    const exactMatch = quests.find(
+      (quest) => !this.completedQuestIds.includes(quest.id) && quest.dayMin <= day && quest.dayMax >= day,
+    );
+    const overdueMatch = quests.find(
+      (quest) => !this.completedQuestIds.includes(quest.id) && quest.dayMin <= day,
+    );
+    this.activeQuestId = exactMatch?.id ?? overdueMatch?.id ?? null;
+    return this.activeQuest;
   }
 
   recordNpcTalk(npcId, context) {
@@ -80,11 +100,10 @@ export class QuestSystem {
       });
     }
 
-    // Activate the next incomplete quest in declaration order.
-    const next = Object.values(this.quests).find(
-      (q) => !this.completedQuestIds.includes(q.id)
-    );
-    this.activeQuestId = next ? next.id : null;
+    const currentDay = typeof context?.day === "number"
+      ? context.day
+      : context?.day?.currentDay ?? 1;
+    this.syncActiveQuest(currentDay);
   }
 
   getQuestSummary() {

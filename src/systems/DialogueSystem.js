@@ -15,7 +15,9 @@ export class DialogueSystem {
     // dayStarts maps a day number to a start node; we pick the highest key <= today.
     let startNode = script.start;
     if (script.dayStarts) {
-      const day = context?.day ?? 1;
+      const day = typeof context?.day === "number"
+        ? context.day
+        : context?.day?.currentDay ?? 1;
       const bestDay = Object.keys(script.dayStarts)
         .map(Number)
         .filter(d => d <= day)
@@ -32,7 +34,8 @@ export class DialogueSystem {
       ended: false,
       clueHint: null,
       difficultyLevel: 'A1', // Will be updated by adaptive system
-      skillsUsed: []
+      skillsUsed: [],
+      skillTagsUsed: []
     };
   }
 
@@ -87,30 +90,98 @@ export class DialogueSystem {
 
     // Track skills used in this choice
     session.skillsUsed = choice.skills || [];
+    session.skillTagsUsed = context?.skillTreeSystem?.resolveTrackedSkills(choice, session.skillsUsed) ?? [];
+
+    const grammarAccuracy = choice.grammarAccuracy || 1.0;
+    const complexity = choice.complexity || 1.0;
+    const accuracyTier = context?.skillTreeSystem?.getAccuracyTier(grammarAccuracy, true) ?? "full";
+
+    if (accuracyTier === "incorrect") {
+      if (context?.player) {
+        context.player.currentStreak = 0;
+      }
+
+      context?.bus?.emit(Events.GRAMMAR_FEEDBACK, {
+        type: "retry",
+        npcId: session.npcId,
+        nodeId: session.nodeId,
+        choiceText: choice.text,
+        correction: choice.retryCorrection ?? null,
+        message: choice.retryPrompt ?? "Non capisco. Riprova con una frase completa.",
+        skills: session.skillTagsUsed,
+      });
+
+      if (choice.end) {
+        session.ended = true;
+        return { ended: true, retry: true };
+      }
+
+      session.nodeId = choice.next ?? session.nodeId;
+      return {
+        ended: false,
+        retry: true,
+        node: this.getCurrentNode(session, context),
+      };
+    }
 
     this._applyEffects(session, choice.effects, context);
 
     // Award XP based on choice performance
-    if (context?.skillTreeSystem && session.skillsUsed.length > 0) {
-      const grammarAccuracy = choice.grammarAccuracy || 1.0;
-      const complexity = choice.complexity || 1.0;
-      const xpAmount = context.skillTreeSystem.calculateXP(choice, true, grammarAccuracy, complexity);
-      const xpResult = context.skillTreeSystem.awardXP(xpAmount, session.skillsUsed);
+    if (context?.skillTreeSystem && session.skillTagsUsed.length > 0) {
+      const currentDay = typeof context?.day === "number"
+        ? context.day
+        : context?.day?.currentDay ?? 1;
+      const xpAmount = context.skillTreeSystem.calculateXP(choice, true, grammarAccuracy, complexity, {
+        day: currentDay,
+        skillsUsed: session.skillTagsUsed,
+        mode: context.skillTreeSystem.resolveXpMode(choice, session.skillTagsUsed),
+      });
+      const xpResult = context.skillTreeSystem.awardXP(xpAmount, session.skillTagsUsed, {
+        day: currentDay,
+        accuracyTier,
+        choiceText: choice.text,
+      });
+
+      if (xpResult.totalAwarded > 0 && context?.player) {
+        context.player.awardXP(xpResult.totalAwarded);
+        context.player.currentStreak = context.skillTreeSystem.currentStreak;
+        context.player.maxStreak = context.skillTreeSystem.maxStreak;
+        context.player.unlockedRewards = context.skillTreeSystem.getRewards();
+      }
 
       // Update player skill scores
       if (context?.player) {
-        session.skillsUsed.forEach(skill => {
+        session.skillTagsUsed.forEach(skill => {
           context.player.updateSkillScore(skill, grammarAccuracy * 10);
         });
       }
 
       // Emit XP event for UI updates
       context.bus?.emit(Events.XP_AWARDED, {
-        amount: xpAmount,
-        totalXP: xpResult.totalXP,
-        skills: session.skillsUsed,
-        streak: xpResult.streak
+        amount: xpResult.totalAwarded,
+        baseAmount: xpResult.awardedXP,
+        bonusXP: xpResult.bonusXP,
+        totalXP: context?.player?.languageXP ?? xpResult.totalXP,
+        skills: session.skillTagsUsed,
+        skillTags: session.skillTagsUsed,
+        streak: xpResult.streak,
+        milestones: xpResult.milestoneSkills
       });
+
+      if (xpResult.totalAwarded > 0) {
+        const focusSkills = context.skillTreeSystem.getDailyFocus(currentDay);
+        context.bus?.emit(Events.GRAMMAR_FEEDBACK, {
+          type: "success",
+          npcId: session.npcId,
+          nodeId: session.nodeId,
+          message: xpResult.milestoneSkills.length > 0
+            ? `Milestone unlocked in ${xpResult.milestoneSkills.join(", ")}.`
+            : `+${xpResult.totalAwarded} XP for ${session.skillTagsUsed.join(", ")}.`,
+          skills: session.skillTagsUsed,
+          focusSkills,
+          milestones: xpResult.milestoneSkills,
+        });
+      }
     }
 
     // Record choice for difficulty adaptation
@@ -124,6 +195,7 @@ export class DialogueSystem {
       nodeId: session.nodeId,
       choiceIndex,
       skillsUsed: session.skillsUsed,
+      skillTagsUsed: session.skillTagsUsed,
       difficultyLevel: session.difficultyLevel
     });
 
