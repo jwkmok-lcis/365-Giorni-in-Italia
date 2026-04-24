@@ -134,11 +134,11 @@ function createVirtualJoystick(scene, enabled) {
     contains,
     layout() {
       base.setPosition(112, scene.scale.height - 116);
-      thumb.setPosition(base.x, base.y);
+      resetThumb();
       label.setPosition(base.x, base.y + 84);
     },
     updateVisibility() {
-      const visible = enabled && scene.scale.height >= scene.scale.width;
+      const visible = enabled;
       base.setVisible(visible);
       thumb.setVisible(visible);
       label.setVisible(visible);
