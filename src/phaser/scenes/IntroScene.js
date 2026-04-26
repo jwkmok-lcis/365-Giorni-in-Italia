@@ -51,6 +51,11 @@ export class IntroScene extends Phaser.Scene {
     this.menuIndex = 0;
     this.pageIndex = 0;
     this.root = null;
+    this.touchStartX = 0;
+    this.touchStartY = 0;
+    this.isSwiping = false;
+    this.blockStoryTapNav = false;
+    this.isStoryTransitioning = false;
   }
 
   preload() {
@@ -73,17 +78,69 @@ export class IntroScene extends Phaser.Scene {
 
     this.keyHandler = (event) => this.handleKey(event);
     this.input.keyboard.on("keydown", this.keyHandler);
+    this.pointerDownHandler = (pointer) => {
+      if (this.mode !== "story") return;
+      this.touchStartX = pointer.x;
+      this.touchStartY = pointer.y;
+      this.isSwiping = true;
+    };
+    this.pointerMoveHandler = (pointer) => {
+      if (!this.isSwiping || this.mode !== "story" || this.isStoryTransitioning) return;
+      const dx = pointer.x - this.touchStartX;
+      this.root.x = dx * 0.2;
+    };
+    this.pointerUpHandler = (pointer) => {
+      if (!this.isSwiping || this.mode !== "story") return;
+
+      const dx = pointer.x - this.touchStartX;
+      const dy = pointer.y - this.touchStartY;
+      this.isSwiping = false;
+      this.tweens.add({
+        targets: this.root,
+        x: 0,
+        duration: 150,
+      });
+
+      if (this.isStoryTransitioning) return;
+      if (this.blockStoryTapNav) {
+        this.blockStoryTapNav = false;
+        return;
+      }
+
+      if (Math.abs(dy) > Math.abs(dx)) return;
+      const threshold = 50;
+      if (dx < -threshold) {
+        this.goNextPage();
+      } else if (dx > threshold) {
+        this.goPrevPage();
+      } else {
+        this.goNextPage();
+      }
+    };
+    this.input.on("pointerdown", this.pointerDownHandler);
+    this.input.on("pointermove", this.pointerMoveHandler);
+    this.input.on("pointerup", this.pointerUpHandler);
     this.resizeHandler = () => this.refresh();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.keyboard.off("keydown", this.keyHandler);
+      this.input.off("pointerdown", this.pointerDownHandler);
+      this.input.off("pointermove", this.pointerMoveHandler);
+      this.input.off("pointerup", this.pointerUpHandler);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.resizeHandler);
       this.runtime.voice.stop();
     });
   }
 
   getScaleFactor() {
+    if (this.isPortrait()) {
+      return Phaser.Math.Clamp(this.scale.width / 430, 0.7, 1.2);
+    }
     return Phaser.Math.Clamp(this.scale.width / 800, 0.72, 1.35);
+  }
+
+  isPortrait() {
+    return this.scale.height > this.scale.width;
   }
 
   textPx(size) {
@@ -95,6 +152,41 @@ export class IntroScene extends Phaser.Scene {
   }
 
   getMenuLayout(menuCount) {
+    if (this.isPortrait()) {
+      return this.getPortraitLayout(menuCount);
+    }
+    return this.getDesktopLayout(menuCount);
+  }
+
+  getPortraitLayout(menuCount) {
+    const { width, height } = this.scale;
+    const scaleFactor = Phaser.Math.Clamp(width / 430, 0.7, 1.2);
+    const topSafe = this.getTopSafeInset();
+    const panelWidth = width * 0.92;
+    const panelHeight = height * 0.78;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const buttonSpacing = 56 * scaleFactor;
+
+    return {
+      scaleFactor,
+      panelWidth,
+      panelHeight,
+      panelX: centerX,
+      panelY: centerY,
+      crestY: topSafe + 60,
+      titleY: topSafe + 100,
+      subtitleOneY: topSafe + 150,
+      subtitleTwoY: topSafe + 180,
+      copyY: topSafe + 230,
+      buttonBaseY: height - menuCount * buttonSpacing - 40,
+      buttonSpacing,
+      speakerX: width - 40,
+      speakerY: topSafe + 40,
+    };
+  }
+
+  getDesktopLayout(menuCount) {
     const { width, height } = this.scale;
     const scaleFactor = this.getScaleFactor();
     const topSafe = this.getTopSafeInset();
@@ -154,6 +246,17 @@ export class IntroScene extends Phaser.Scene {
         repeat: -1,
         ease: "Sine.easeInOut",
       });
+      if (this.isPortrait()) {
+        this.tweens.add({
+          targets: image,
+          scaleX: scale * 1.05,
+          scaleY: scale * 1.05,
+          duration: 12000,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.easeInOut",
+        });
+      }
       const gradient = this.add.graphics();
       gradient.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.06, 0.16, 0.2, 0.1);
       gradient.fillRect(0, 0, width, height);
@@ -219,25 +322,35 @@ export class IntroScene extends Phaser.Scene {
   }
 
   buildMenu() {
+    const portrait = this.isPortrait();
     const menuItems = this.getMenuItems();
     const layout = this.getMenuLayout(menuItems.length);
-    const panelShadow = this.add.rectangle(layout.panelX, layout.panelY + 6 * layout.scaleFactor, layout.panelWidth, layout.panelHeight, 0x000000, 0.08)
-      .setOrigin(0.5)
-      .setScale(1.02);
-    const panelGlow = this.add.graphics();
-    panelGlow.fillStyle(0xffffff, 0.06);
-    panelGlow.fillRoundedRect(
-      layout.panelX - (layout.panelWidth + 20 * layout.scaleFactor) / 2,
-      layout.panelY - (layout.panelHeight + 20 * layout.scaleFactor) / 2,
-      layout.panelWidth + 20 * layout.scaleFactor,
-      layout.panelHeight + 20 * layout.scaleFactor,
-      MENU_PANEL_RADIUS + 8
-    );
+    const panelShadow = portrait
+      ? null
+      : this.add.rectangle(layout.panelX, layout.panelY + 6 * layout.scaleFactor, layout.panelWidth, layout.panelHeight, 0x000000, 0.08)
+          .setOrigin(0.5)
+          .setScale(1.02);
+    const panelGlow = portrait ? null : this.add.graphics();
+    if (panelGlow) {
+      panelGlow.fillStyle(0xffffff, 0.06);
+      panelGlow.fillRoundedRect(
+        layout.panelX - (layout.panelWidth + 20 * layout.scaleFactor) / 2,
+        layout.panelY - (layout.panelHeight + 20 * layout.scaleFactor) / 2,
+        layout.panelWidth + 20 * layout.scaleFactor,
+        layout.panelHeight + 20 * layout.scaleFactor,
+        MENU_PANEL_RADIUS + 8
+      );
+    }
     const panel = this.add.graphics();
-    panel.fillStyle(PALETTE.paper, 0.88);
-    panel.fillRoundedRect(layout.panelX - layout.panelWidth / 2, layout.panelY - layout.panelHeight / 2, layout.panelWidth, layout.panelHeight, MENU_PANEL_RADIUS);
-    panel.lineStyle(2, PALETTE.paperEdge, 0.62);
-    panel.strokeRoundedRect(layout.panelX - layout.panelWidth / 2, layout.panelY - layout.panelHeight / 2, layout.panelWidth, layout.panelHeight, MENU_PANEL_RADIUS);
+    if (portrait) {
+      panel.fillStyle(PALETTE.paper, 0.96);
+      panel.fillRect(0, 0, this.scale.width, this.scale.height);
+    } else {
+      panel.fillStyle(PALETTE.paper, 0.88);
+      panel.fillRoundedRect(layout.panelX - layout.panelWidth / 2, layout.panelY - layout.panelHeight / 2, layout.panelWidth, layout.panelHeight, MENU_PANEL_RADIUS);
+      panel.lineStyle(2, PALETTE.paperEdge, 0.62);
+      panel.strokeRoundedRect(layout.panelX - layout.panelWidth / 2, layout.panelY - layout.panelHeight / 2, layout.panelWidth, layout.panelHeight, MENU_PANEL_RADIUS);
+    }
     const crest = this.add.text(layout.panelX, layout.crestY, "365", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
       fontSize: this.textPx(48),
@@ -246,7 +359,7 @@ export class IntroScene extends Phaser.Scene {
     }).setOrigin(0.5);
     const title = this.add.text(layout.panelX, layout.titleY, "Giorni in Italia", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: this.textPx(32),
+      fontSize: this.textPx(portrait ? 36 : 32),
       color: "#58612f",
       fontStyle: "700",
     }).setOrigin(0.5);
@@ -254,17 +367,17 @@ export class IntroScene extends Phaser.Scene {
     const terracottaRule = this.add.rectangle(layout.panelX + 26 * layout.scaleFactor, layout.titleY + 40 * layout.scaleFactor, 44 * layout.scaleFactor, 4 * layout.scaleFactor, PALETTE.terracotta).setOrigin(0.5);
     const subtitleOne = this.add.text(layout.panelX, layout.subtitleOneY, "Travel city by city.", {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: this.textPx(16),
+      fontSize: this.textPx(portrait ? 18 : 16),
       color: "#333333",
     }).setOrigin(0.5);
     const subtitleTwo = this.add.text(layout.panelX, layout.subtitleTwoY, "Uncover hidden stories.", {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: this.textPx(16),
+      fontSize: this.textPx(portrait ? 18 : 16),
       color: "#333333",
     }).setOrigin(0.5);
     const copy = this.add.text(layout.panelX, layout.copyY, "Your Italian grows with\nevery choice you make.", {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: this.textPx(14),
+      fontSize: this.textPx(portrait ? 15 : 14),
       color: "#666666",
       align: "center",
       lineSpacing: Math.round(4 * layout.scaleFactor),
@@ -286,7 +399,9 @@ export class IntroScene extends Phaser.Scene {
 
     menuItems.forEach((item, index) => {
       const y = baseY + index * spacing;
-      const width = Math.min(300, this.scale.width * 0.62);
+      const width = portrait
+        ? this.scale.width * 0.85
+        : Math.min(300, this.scale.width * 0.62);
       const height = Math.round(52 * layout.scaleFactor);
       const button = this.createButton(layout.panelX, y, width, height, item.label, {
         active: this.menuIndex === index,
@@ -299,7 +414,7 @@ export class IntroScene extends Phaser.Scene {
       this.root.add(button);
     });
 
-    const elements = [panelShadow, panelGlow, panel, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton];
+    const elements = [panelShadow, panelGlow, panel, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton].filter(Boolean);
     elements.forEach((el) => {
       el.setAlpha(0);
     });
@@ -427,10 +542,7 @@ export class IntroScene extends Phaser.Scene {
       disabled: this.pageIndex === 0,
       variant: "tertiary",
       onClick: () => {
-        if (this.pageIndex === 0) return;
-        this.pageIndex -= 1;
-        this.refresh();
-        this.speakCurrentPage();
+        this.goPrevPage();
       },
     });
     const nextLabel = this.pageIndex === STORY_PAGES.length - 1 ? "Begin Day 1 Lesson" : "Next";
@@ -438,13 +550,7 @@ export class IntroScene extends Phaser.Scene {
       active: true,
       variant: "primary",
       onClick: () => {
-        if (this.pageIndex === STORY_PAGES.length - 1) {
-          this.scene.start("LessonScene");
-          return;
-        }
-        this.pageIndex += 1;
-        this.refresh();
-        this.speakCurrentPage();
+        this.goNextPage();
       },
     });
 
@@ -474,6 +580,55 @@ export class IntroScene extends Phaser.Scene {
       this.mode = "settings";
       this.refresh();
     }
+  }
+
+  goNextPage() {
+    if (this.isStoryTransitioning) return;
+    if (this.pageIndex === STORY_PAGES.length - 1) {
+      this.scene.start("LessonScene");
+      return;
+    }
+    this.pageIndex += 1;
+    this.transitionStory(1);
+  }
+
+  goPrevPage() {
+    if (this.isStoryTransitioning || this.pageIndex === 0) return;
+    this.pageIndex -= 1;
+    this.transitionStory(-1);
+  }
+
+  transitionStory(direction) {
+    if (this.mode !== "story" || this.isStoryTransitioning) return;
+    this.isStoryTransitioning = true;
+    const oldElements = [...this.root.list];
+    this.root.x = 0;
+    this.tweens.add({
+      targets: oldElements,
+      x: `+=${direction * -80}`,
+      alpha: 0,
+      duration: 220,
+      ease: "Power2",
+      onComplete: () => {
+        this.refresh();
+        const newElements = [...this.root.list];
+        newElements.forEach((el) => {
+          el.x += direction * 80;
+          el.alpha = 0;
+        });
+        this.tweens.add({
+          targets: newElements,
+          x: `+=${direction * -80}`,
+          alpha: 1,
+          duration: 260,
+          ease: "Power2",
+          onComplete: () => {
+            this.isStoryTransitioning = false;
+          },
+        });
+        this.speakCurrentPage();
+      },
+    });
   }
 
   handleKey(event) {
@@ -512,20 +667,12 @@ export class IntroScene extends Phaser.Scene {
       this.refresh();
       return;
     }
-    if ((event.key === "ArrowLeft" || event.key === "Backspace") && this.pageIndex > 0) {
-      this.pageIndex -= 1;
-      this.refresh();
-      this.speakCurrentPage();
+    if (event.key === "ArrowLeft" || event.key === "Backspace") {
+      this.goPrevPage();
       return;
     }
     if (event.key === "ArrowRight" || event.key === "Enter" || event.key === " ") {
-      if (this.pageIndex === STORY_PAGES.length - 1) {
-        this.scene.start("LessonScene");
-        return;
-      }
-      this.pageIndex += 1;
-      this.refresh();
-      this.speakCurrentPage();
+      this.goNextPage();
     }
   }
 
@@ -656,6 +803,7 @@ export class IntroScene extends Phaser.Scene {
     const zone = this.add.zone(x, y, width, height).setInteractive({ useHandCursor: !disabled });
     if (!disabled) {
       zone.on("pointerdown", () => {
+        this.blockStoryTapNav = this.mode === "story";
         this.tweens.killTweensOf(rect);
         this.tweens.add({
           targets: rect,
