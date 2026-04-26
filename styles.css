@@ -95,9 +95,9 @@ body::after {
 }
 
 .hard-reset-btn {
-  position: absolute;
-  top: 0.1rem;
-  right: 0.1rem;
+  position: fixed;
+  top: calc(var(--safe-top) + 0.65rem);
+  right: calc(var(--safe-right) + 0.65rem);
   z-index: 30;
   border: 1px solid rgba(255, 236, 202, 0.72);
   background: rgba(55, 31, 22, 0.82);
@@ -139,7 +139,6 @@ body::after {
 #gameCanvas {
   width: 100%;
   max-width: 100%;
-  aspect-ratio: 25 / 16;
   height: auto;
   display: block;
   margin: 0 auto;
@@ -217,15 +216,12 @@ body::after {
 
   #gameCanvas {
     width: 100vw;
-    max-height: 100vh;
-    max-height: 100dvh;
-    height: auto;
-    aspect-ratio: 25 / 16;
+    height: 100vh;
+    height: 100dvh;
     max-width: none;
     border-width: 0;
     border-radius: 0;
     box-shadow: none;
-    object-fit: fill;
   }
 
   .info-drawer {

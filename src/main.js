@@ -75,6 +75,9 @@ unlockVoiceFromFirstGesture(runtime);
 try {
   showDebugMessage("Booting game...");
   const game = createPhaserGame({ canvas, runtime });
+  window.addEventListener("resize", () => {
+    game.scale.resize(window.innerWidth, window.innerHeight);
+  });
   window.__giorniGame = game;
   canvas.focus();
   showDebugMessage("Game started successfully.");

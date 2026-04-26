@@ -2,6 +2,7 @@ import * as Phaser from "../../vendor/phaser.esm.js";
 
 const MENU_BG_TEXTURE_KEY = "menu-bg";
 const MENU_BG_URL = "assets/menu-bg-real.png";
+const MENU_PANEL_RADIUS = 18;
 
 const PALETTE = {
   skyTop: 0xf4d8a6,
@@ -72,10 +73,55 @@ export class IntroScene extends Phaser.Scene {
 
     this.keyHandler = (event) => this.handleKey(event);
     this.input.keyboard.on("keydown", this.keyHandler);
+    this.resizeHandler = () => this.refresh();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.keyboard.off("keydown", this.keyHandler);
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.resizeHandler);
       this.runtime.voice.stop();
     });
+  }
+
+  getScaleFactor() {
+    return Phaser.Math.Clamp(this.scale.width / 800, 0.72, 1.35);
+  }
+
+  textPx(size) {
+    return `${Math.round(size * this.getScaleFactor())}px`;
+  }
+
+  getTopSafeInset() {
+    return Math.max(40, this.scale.height * 0.06);
+  }
+
+  getMenuLayout(menuCount) {
+    const { width, height } = this.scale;
+    const scaleFactor = this.getScaleFactor();
+    const topSafe = this.getTopSafeInset();
+    const panelWidth = Math.min(420, width * 0.85);
+    const panelHeight = Math.min(360, height * 0.7);
+    const yStart = Math.max(height * 0.3, topSafe + 100);
+    const gap = 40 * scaleFactor;
+    const buttonSpacing = 60 * scaleFactor;
+    const maxButtonBaseY = height - topSafe - (menuCount - 1) * buttonSpacing - 52 * scaleFactor;
+    const buttonBaseY = Math.min(yStart + gap * 6.7, maxButtonBaseY);
+
+    return {
+      scaleFactor,
+      panelWidth,
+      panelHeight,
+      panelX: width / 2,
+      panelY: height / 2,
+      crestY: yStart,
+      titleY: yStart + gap * 1.2,
+      subtitleOneY: yStart + gap * 3.2,
+      subtitleTwoY: yStart + gap * 3.85,
+      copyY: yStart + gap * 5.1,
+      buttonBaseY,
+      buttonSpacing,
+      speakerX: width / 2 + panelWidth / 2 - 26 * scaleFactor,
+      speakerY: yStart + 12 * scaleFactor,
+    };
   }
 
   getMenuItems() {
@@ -93,17 +139,23 @@ export class IntroScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     if (this.textures.exists(MENU_BG_TEXTURE_KEY)) {
-      const image = this.add.image(width / 2, height / 2, MENU_BG_TEXTURE_KEY).setDisplaySize(width, height);
+      const image = this.add.image(0, 0, MENU_BG_TEXTURE_KEY).setOrigin(0);
+      const scaleX = width / image.width;
+      const scaleY = height / image.height;
+      const scale = Math.max(scaleX, scaleY);
+      image.setScale(scale);
+      image.setPosition((width - image.width * scale) / 2, (height - image.height * scale) / 2);
+      const baseX = image.x;
       this.tweens.add({
         targets: image,
-        x: width / 2 + 10,
+        x: baseX + 10,
         duration: 10000,
         yoyo: true,
         repeat: -1,
         ease: "Sine.easeInOut",
       });
       const gradient = this.add.graphics();
-      gradient.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.1, 0.22, 0.28, 0.14);
+      gradient.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.06, 0.16, 0.2, 0.1);
       gradient.fillRect(0, 0, width, height);
       const vignetteTop = this.add.rectangle(width / 2, 0, width, 150, 0x000000, 0.08).setOrigin(0.5, 0);
       const vignetteBottom = this.add.rectangle(width / 2, height, width, 190, 0x000000, 0.16).setOrigin(0.5, 1);
@@ -167,48 +219,58 @@ export class IntroScene extends Phaser.Scene {
   }
 
   buildMenu() {
-    const panelShadow = this.add.rectangle(400, 250, 388, 404, 0x000000, 0.16)
+    const menuItems = this.getMenuItems();
+    const layout = this.getMenuLayout(menuItems.length);
+    const panelShadow = this.add.rectangle(layout.panelX, layout.panelY + 6 * layout.scaleFactor, layout.panelWidth, layout.panelHeight, 0x000000, 0.08)
       .setOrigin(0.5)
-      .setScale(1.04, 1.02);
-    const panel = this.add.rectangle(400, 244, 388, 404, PALETTE.paper, 0.985)
-      .setOrigin(0.5)
-      .setStrokeStyle(2, PALETTE.paperEdge, 0.62);
-    const panelInner = this.add.rectangle(400, 244, 370, 386, 0x000000, 0)
-      .setOrigin(0.5)
-      .setStrokeStyle(1, 0xcbb28a, 0.6);
-    const crest = this.add.text(400, 92, "365", {
+      .setScale(1.02);
+    const panelGlow = this.add.graphics();
+    panelGlow.fillStyle(0xffffff, 0.06);
+    panelGlow.fillRoundedRect(
+      layout.panelX - (layout.panelWidth + 20 * layout.scaleFactor) / 2,
+      layout.panelY - (layout.panelHeight + 20 * layout.scaleFactor) / 2,
+      layout.panelWidth + 20 * layout.scaleFactor,
+      layout.panelHeight + 20 * layout.scaleFactor,
+      MENU_PANEL_RADIUS + 8
+    );
+    const panel = this.add.graphics();
+    panel.fillStyle(PALETTE.paper, 0.88);
+    panel.fillRoundedRect(layout.panelX - layout.panelWidth / 2, layout.panelY - layout.panelHeight / 2, layout.panelWidth, layout.panelHeight, MENU_PANEL_RADIUS);
+    panel.lineStyle(2, PALETTE.paperEdge, 0.62);
+    panel.strokeRoundedRect(layout.panelX - layout.panelWidth / 2, layout.panelY - layout.panelHeight / 2, layout.panelWidth, layout.panelHeight, MENU_PANEL_RADIUS);
+    const crest = this.add.text(layout.panelX, layout.crestY, "365", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: "48px",
+      fontSize: this.textPx(48),
       color: "#a94a2c",
       fontStyle: "700",
     }).setOrigin(0.5);
-    const title = this.add.text(400, 136, "Giorni in Italia", {
+    const title = this.add.text(layout.panelX, layout.titleY, "Giorni in Italia", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: "32px",
+      fontSize: this.textPx(32),
       color: "#58612f",
       fontStyle: "700",
     }).setOrigin(0.5);
-    const oliveRule = this.add.rectangle(374, 170, 44, 4, PALETTE.olive).setOrigin(0.5);
-    const terracottaRule = this.add.rectangle(426, 170, 44, 4, PALETTE.terracotta).setOrigin(0.5);
-    const subtitleOne = this.add.text(400, 218, "Travel city by city.", {
+    const oliveRule = this.add.rectangle(layout.panelX - 26 * layout.scaleFactor, layout.titleY + 40 * layout.scaleFactor, 44 * layout.scaleFactor, 4 * layout.scaleFactor, PALETTE.olive).setOrigin(0.5);
+    const terracottaRule = this.add.rectangle(layout.panelX + 26 * layout.scaleFactor, layout.titleY + 40 * layout.scaleFactor, 44 * layout.scaleFactor, 4 * layout.scaleFactor, PALETTE.terracotta).setOrigin(0.5);
+    const subtitleOne = this.add.text(layout.panelX, layout.subtitleOneY, "Travel city by city.", {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: "16px",
+      fontSize: this.textPx(16),
       color: "#333333",
     }).setOrigin(0.5);
-    const subtitleTwo = this.add.text(400, 242, "Uncover hidden stories.", {
+    const subtitleTwo = this.add.text(layout.panelX, layout.subtitleTwoY, "Uncover hidden stories.", {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: "16px",
+      fontSize: this.textPx(16),
       color: "#333333",
     }).setOrigin(0.5);
-    const copy = this.add.text(400, 292, "Your Italian grows with\nevery choice you make.", {
+    const copy = this.add.text(layout.panelX, layout.copyY, "Your Italian grows with\nevery choice you make.", {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: "14px",
+      fontSize: this.textPx(14),
       color: "#666666",
       align: "center",
-      lineSpacing: 4,
-      wordWrap: { width: 250 },
+      lineSpacing: Math.round(4 * layout.scaleFactor),
+      wordWrap: { width: layout.panelWidth * 0.7 },
     }).setOrigin(0.5);
-    const speakerButton = this.createSpeakerButton(548, 96, {
+    const speakerButton = this.createSpeakerButton(layout.speakerX, layout.speakerY, {
       active: this.mode === "settings",
       muted: this.runtime.voice.muted,
       onClick: () => {
@@ -217,17 +279,16 @@ export class IntroScene extends Phaser.Scene {
       },
     });
 
-    this.root.add([panelShadow, panel, panelInner, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton]);
+    this.root.add([panelShadow, panelGlow, panel, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton]);
 
-    const menuItems = this.getMenuItems();
-    const baseY = 354;
-    const spacing = 60;
+    const baseY = layout.buttonBaseY;
+    const spacing = layout.buttonSpacing;
 
     menuItems.forEach((item, index) => {
       const y = baseY + index * spacing;
-      const width = 272;
-      const height = 52;
-      const button = this.createButton(400, y, width, height, item.label, {
+      const width = Math.min(300, this.scale.width * 0.62);
+      const height = Math.round(52 * layout.scaleFactor);
+      const button = this.createButton(layout.panelX, y, width, height, item.label, {
         active: this.menuIndex === index,
         variant: item.variant,
         onClick: () => {
@@ -238,7 +299,7 @@ export class IntroScene extends Phaser.Scene {
       this.root.add(button);
     });
 
-    const elements = [panelShadow, panel, panelInner, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton];
+    const elements = [panelShadow, panelGlow, panel, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton];
     elements.forEach((el) => {
       el.setAlpha(0);
     });
@@ -259,17 +320,23 @@ export class IntroScene extends Phaser.Scene {
   }
 
   buildSettings() {
-    const shadow = this.add.rectangle(400, 260, 420, 268, 0x000000, 0.18).setOrigin(0.5);
-    const panel = this.add.rectangle(400, 252, 420, 268, PALETTE.paper, 0.97).setOrigin(0.5).setStrokeStyle(1, 0x000000, 0.1);
-    const title = this.add.text(400, 168, "Settings", {
+    const { width, height } = this.scale;
+    const scaleFactor = this.getScaleFactor();
+    const panelWidth = Math.min(420, width * 0.86);
+    const panelHeight = Math.min(268, height * 0.58);
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const shadow = this.add.rectangle(centerX, centerY + 8 * scaleFactor, panelWidth, panelHeight, 0x000000, 0.18).setOrigin(0.5);
+    const panel = this.add.rectangle(centerX, centerY, panelWidth, panelHeight, PALETTE.paper, 0.97).setOrigin(0.5).setStrokeStyle(1, 0x000000, 0.1);
+    const title = this.add.text(centerX, centerY - panelHeight * 0.32, "Settings", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: "34px",
+      fontSize: this.textPx(34),
       color: "#2c2c2c",
       fontStyle: "bold",
     }).setOrigin(0.5);
 
     const voiceState = this.runtime.voice.muted ? "Muted" : "Enabled";
-    const voiceButton = this.createButton(400, 244, 286, 48, `Voice: ${voiceState}`, {
+    const voiceButton = this.createButton(centerX, centerY - panelHeight * 0.03, Math.min(286, panelWidth * 0.75), Math.round(48 * scaleFactor), `Voice: ${voiceState}`, {
       active: true,
       variant: "secondary",
       onClick: () => {
@@ -280,16 +347,16 @@ export class IntroScene extends Phaser.Scene {
     const summary = this.runtime.voice.isSupported()
       ? "Italian voice playback uses the browser speech engine."
       : "Voice playback is unavailable in this browser.";
-    const copy = this.add.text(400, 312, summary, {
+    const copy = this.add.text(centerX, centerY + panelHeight * 0.22, summary, {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: "14px",
+      fontSize: this.textPx(14),
       color: "#444444",
       align: "center",
-      wordWrap: { width: 260 },
-      lineSpacing: 6,
+      wordWrap: { width: panelWidth * 0.64 },
+      lineSpacing: Math.round(6 * scaleFactor),
     }).setOrigin(0.5);
 
-    const backButton = this.createButton(400, 380, 184, 42, "Back", {
+    const backButton = this.createButton(centerX, centerY + panelHeight * 0.48, Math.min(184, panelWidth * 0.5), Math.round(42 * scaleFactor), "Back", {
       active: false,
       variant: "tertiary",
       onClick: () => {
@@ -302,47 +369,60 @@ export class IntroScene extends Phaser.Scene {
   }
 
   buildStory() {
+    const { width, height } = this.scale;
+    const scaleFactor = this.getScaleFactor();
+    const topSafe = this.getTopSafeInset();
     const page = STORY_PAGES[this.pageIndex];
-    const shadow = this.add.rectangle(400, 260, 470, 356, 0x000000, 0.18).setOrigin(0.5);
-    const panel = this.add.rectangle(400, 252, 470, 356, PALETTE.paper, 0.97).setOrigin(0.5).setStrokeStyle(1, 0x000000, 0.1);
+    const panelWidth = Math.min(470, width * 0.9);
+    const panelHeight = Math.min(356, height * 0.72);
+    const centerX = width / 2;
+    const centerY = Math.max(height / 2, topSafe + panelHeight * 0.55);
+    const shadow = this.add.rectangle(centerX, centerY + 8 * scaleFactor, panelWidth, panelHeight, 0x000000, 0.18).setOrigin(0.5);
+    const panel = this.add.rectangle(centerX, centerY, panelWidth, panelHeight, PALETTE.paper, 0.97).setOrigin(0.5).setStrokeStyle(1, 0x000000, 0.1);
     const badge = page.badge
-      ? this.add.text(400, 150, page.badge, {
+      ? this.add.text(centerX, centerY - panelHeight * 0.28, page.badge, {
           fontFamily: '"Nunito Sans", sans-serif',
-          fontSize: "12px",
+          fontSize: this.textPx(12),
           color: "#fff8eb",
           backgroundColor: "#6d7434",
-          padding: { left: 10, right: 10, top: 6, bottom: 6 },
+          padding: {
+            left: 10 * scaleFactor,
+            right: 10 * scaleFactor,
+            top: 6 * scaleFactor,
+            bottom: 6 * scaleFactor,
+          },
         }).setOrigin(0.5)
       : null;
-    const it = this.add.text(400, 214, page.it, {
+    const it = this.add.text(centerX, centerY - panelHeight * 0.11, page.it, {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: "34px",
+      fontSize: this.textPx(34),
       color: "#2c2c2c",
       align: "center",
-      wordWrap: { width: 340 },
+      wordWrap: { width: panelWidth * 0.72 },
     }).setOrigin(0.5);
-    const en = this.add.text(400, 288, page.en, {
+    const en = this.add.text(centerX, centerY + panelHeight * 0.1, page.en, {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: "16px",
+      fontSize: this.textPx(16),
       color: "#444444",
       align: "center",
-      wordWrap: { width: 340 },
-      lineSpacing: 6,
+      wordWrap: { width: panelWidth * 0.72 },
+      lineSpacing: Math.round(6 * scaleFactor),
     }).setOrigin(0.5);
     const note = page.note
-      ? this.add.text(400, 344, page.note, {
+      ? this.add.text(centerX, centerY + panelHeight * 0.255, page.note, {
           fontFamily: '"Nunito Sans", sans-serif',
-          fontSize: "12px",
+          fontSize: this.textPx(12),
           color: "#7b674a",
           align: "center",
         }).setOrigin(0.5)
       : null;
-    const progress = this.add.text(400, 392, `${this.pageIndex + 1} / ${STORY_PAGES.length}`, {
+    const progress = this.add.text(centerX, centerY + panelHeight * 0.39, `${this.pageIndex + 1} / ${STORY_PAGES.length}`, {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: "12px",
+      fontSize: this.textPx(12),
       color: "#8b7556",
     }).setOrigin(0.5);
-    const back = this.createButton(310, 444, 150, 42, "Back", {
+    const buttonY = centerY + panelHeight * 0.54;
+    const back = this.createButton(centerX - panelWidth * 0.2, buttonY, Math.min(170, panelWidth * 0.32), Math.round(42 * scaleFactor), "Back", {
       active: false,
       disabled: this.pageIndex === 0,
       variant: "tertiary",
@@ -354,7 +434,7 @@ export class IntroScene extends Phaser.Scene {
       },
     });
     const nextLabel = this.pageIndex === STORY_PAGES.length - 1 ? "Begin Day 1 Lesson" : "Next";
-    const next = this.createButton(498, 444, 226, 42, nextLabel, {
+    const next = this.createButton(centerX + panelWidth * 0.2, buttonY, Math.min(236, panelWidth * 0.44), Math.round(42 * scaleFactor), nextLabel, {
       active: true,
       variant: "primary",
       onClick: () => {
@@ -450,7 +530,8 @@ export class IntroScene extends Phaser.Scene {
   }
 
   createSpeakerButton(x, y, options) {
-    const frame = this.add.rectangle(x, y, 36, 36, PALETTE.paper, 0.94)
+    const size = 36 * this.getScaleFactor();
+    const frame = this.add.rectangle(x, y, size, size, PALETTE.paper, 0.94)
       .setStrokeStyle(1.5, options.active ? PALETTE.terracotta : PALETTE.paperEdge, 0.9);
     const icon = this.add.graphics();
     icon.fillStyle(options.muted ? 0x8d7f71 : PALETTE.muted, 1);
@@ -481,7 +562,7 @@ export class IntroScene extends Phaser.Scene {
       icon.strokePath();
     }
 
-    const zone = this.add.zone(x, y, 36, 36).setInteractive({ useHandCursor: true });
+    const zone = this.add.zone(x, y, size, size).setInteractive({ useHandCursor: true });
     zone.on("pointerdown", options.onClick);
     zone.on("pointerover", () => {
       this.tweens.add({
@@ -525,6 +606,7 @@ export class IntroScene extends Phaser.Scene {
   }
 
   createButton(x, y, width, height, label, options) {
+    const scaleFactor = this.getScaleFactor();
     const disabled = !!options.disabled;
     const variant = options.variant ?? "secondary";
     const styles = {
@@ -560,14 +642,14 @@ export class IntroScene extends Phaser.Scene {
     }
     const text = this.add.text(x, y, label, {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: variant === "tertiary" ? "16px" : "18px",
+      fontSize: this.textPx(variant === "tertiary" ? 16 : 18),
       color: disabled ? "#8d7f71" : styles.text,
       fontStyle: "bold",
     }).setOrigin(0.5);
     const marker = options.active
-      ? this.add.text(x - width / 2 + 22, y, variant === "primary" ? "▶" : "", {
+      ? this.add.text(x - width / 2 + 22 * scaleFactor, y, variant === "primary" ? "▶" : "", {
           fontFamily: '"Nunito Sans", sans-serif',
-          fontSize: "18px",
+          fontSize: this.textPx(18),
           color: variant === "primary" ? "#fff0cb" : "#8a3a22",
         }).setOrigin(0.5)
       : null;

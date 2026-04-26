@@ -10,15 +10,15 @@ export function createPhaserGame({ canvas, runtime }) {
   const game = new Phaser.Game({
     type: Phaser.CANVAS,
     canvas,
-    width: 800,
-    height: 512,
+    width: window.innerWidth,
+    height: window.innerHeight,
     backgroundColor: "#111920",
     parent: canvas.parentElement ?? undefined,
     scale: {
-      mode: Phaser.Scale.FIT,
+      mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: 800,
-      height: 512,
+      width: window.innerWidth,
+      height: window.innerHeight,
     },
     physics: {
       default: "arcade",
