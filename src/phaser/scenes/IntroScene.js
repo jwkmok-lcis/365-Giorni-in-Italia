@@ -1,18 +1,21 @@
 import * as Phaser from "../../vendor/phaser.esm.js";
 
+const MENU_BG_TEXTURE_KEY = "menu-bg";
+const MENU_BG_URL = "assets/menu-bg-real.png";
+
 const PALETTE = {
-  skyTop: 0xf6d7a3,
-  skyMid: 0xf0bc74,
+  skyTop: 0xf4d8a6,
   skyBottom: 0xcd7a49,
-  stone: 0xf0ddb8,
-  stoneShade: 0xe0c89a,
-  olive: 0x697033,
+  paper: 0xf5ecd9,
+  paperEdge: 0xd4c2a5,
+  paperShadow: 0x69422d,
+  olive: 0x6b7433,
   terracotta: 0xa94a2c,
-  terracottaDark: 0x7e311d,
-  ink: 0x37231a,
-  muted: 0x6a583f,
-  water: 0x58737b,
-  waterShadow: 0x334852,
+  ink: 0x2c2c2c,
+  muted: 0x4a4138,
+  dusk: 0x4d2f25,
+  river: 0x506a74,
+  foreground: 0x221914,
 };
 
 const STORY_PAGES = [
@@ -49,6 +52,12 @@ export class IntroScene extends Phaser.Scene {
     this.root = null;
   }
 
+  preload() {
+    if (!this.textures.exists(MENU_BG_TEXTURE_KEY)) {
+      this.load.image(MENU_BG_TEXTURE_KEY, MENU_BG_URL);
+    }
+  }
+
   create() {
     this.runtime = this.registry.get("runtime");
     this.runtime.setHeaderHidden(true);
@@ -59,7 +68,6 @@ export class IntroScene extends Phaser.Scene {
     this.pageIndex = 0;
     this.menuIndex = 0;
     this.root = this.add.container(0, 0);
-    this.drawBackdrop();
     this.refresh();
 
     this.keyHandler = (event) => this.handleKey(event);
@@ -78,95 +86,71 @@ export class IntroScene extends Phaser.Scene {
     } else {
       items.push({ id: "start", label: "Begin your journey", variant: "primary" });
     }
-    items.push({ id: "settings", label: "Audio settings", variant: "tertiary" });
     return items;
   }
 
-  drawBackdrop() {
-    const graphics = this.add.graphics();
-    graphics.fillStyle(PALETTE.skyTop, 1);
-    graphics.fillRect(0, 0, 800, 170);
-    graphics.fillStyle(PALETTE.skyMid, 1);
-    graphics.fillRect(0, 170, 800, 130);
-    graphics.fillStyle(PALETTE.skyBottom, 1);
-    graphics.fillRect(0, 300, 800, 212);
-    graphics.fillStyle(0xfaf0cf, 0.3);
-    graphics.fillCircle(130, 115, 72);
-    graphics.fillStyle(0xf3d9a9, 0.42);
-    graphics.fillEllipse(400, 286, 800, 180);
-    graphics.fillStyle(0x8c5231, 1);
-    graphics.fillRect(0, 256, 800, 86);
-    graphics.fillStyle(0xb5673c, 1);
-    graphics.fillRect(0, 282, 800, 58);
-    graphics.fillStyle(PALETTE.water, 1);
-    graphics.fillRect(0, 342, 800, 88);
-    graphics.fillStyle(PALETTE.waterShadow, 0.46);
-    graphics.fillRect(0, 384, 800, 30);
-    graphics.fillStyle(0xc97d49, 1);
-    graphics.fillRect(0, 430, 800, 82);
-    graphics.fillStyle(0x8b4b2f, 1);
-    graphics.fillRect(0, 474, 800, 38);
-    graphics.fillStyle(0x3c2d23, 0.9);
-    graphics.fillRect(0, 0, 68, 512);
-    graphics.fillRect(732, 0, 68, 512);
-    graphics.fillStyle(0x2d4a2a, 0.98);
-    graphics.fillRect(46, 0, 16, 206);
-    graphics.fillEllipse(58, 92, 132, 114);
-    graphics.fillEllipse(72, 138, 112, 92);
-    graphics.fillStyle(0x4d301f, 1);
-    graphics.fillRect(706, 56, 10, 156);
-    graphics.fillStyle(0x1f1b18, 1);
-    graphics.fillRect(690, 204, 88, 308);
+  drawMenuBackground() {
+    const { width, height } = this.scale;
 
-    const skyline = this.add.graphics();
-    skyline.fillStyle(0x935734, 1);
-    skyline.fillRect(108, 230, 58, 70);
-    skyline.fillRect(172, 214, 42, 86);
-    skyline.fillRect(214, 226, 54, 74);
-    skyline.fillRect(528, 220, 48, 80);
-    skyline.fillRect(584, 202, 44, 98);
-    skyline.fillRect(632, 214, 54, 86);
-    skyline.fillStyle(0x7b472c, 1);
-    skyline.fillRect(198, 176, 12, 38);
-    skyline.fillRect(600, 168, 14, 34);
-    skyline.fillRect(650, 160, 12, 54);
+    if (this.textures.exists(MENU_BG_TEXTURE_KEY)) {
+      const image = this.add.image(width / 2, height / 2, MENU_BG_TEXTURE_KEY).setDisplaySize(width, height);
+      this.tweens.add({
+        targets: image,
+        x: width / 2 + 10,
+        duration: 10000,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+      const gradient = this.add.graphics();
+      gradient.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.1, 0.22, 0.28, 0.14);
+      gradient.fillRect(0, 0, width, height);
+      const vignetteTop = this.add.rectangle(width / 2, 0, width, 150, 0x000000, 0.08).setOrigin(0.5, 0);
+      const vignetteBottom = this.add.rectangle(width / 2, height, width, 190, 0x000000, 0.16).setOrigin(0.5, 1);
+      const vignetteLeft = this.add.rectangle(0, height / 2, 110, height, 0x000000, 0.12).setOrigin(0, 0.5);
+      const vignetteRight = this.add.rectangle(width, height / 2, 110, height, 0x000000, 0.12).setOrigin(1, 0.5);
+      this.root.add([image, gradient, vignetteTop, vignetteBottom, vignetteLeft, vignetteRight]);
+      return;
+    }
 
-    const bridge = this.add.graphics();
-    bridge.fillStyle(0x6e4530, 1);
-    bridge.fillRect(118, 306, 564, 18);
-    bridge.fillRect(118, 324, 20, 56);
-    bridge.fillRect(216, 324, 20, 56);
-    bridge.fillRect(314, 324, 20, 56);
-    bridge.fillRect(412, 324, 20, 56);
-    bridge.fillRect(510, 324, 20, 56);
-    bridge.fillRect(608, 324, 20, 56);
-    bridge.fillStyle(0x5b3726, 1);
-    bridge.fillRoundedRect(138, 324, 78, 34, 14);
-    bridge.fillRoundedRect(236, 324, 78, 34, 14);
-    bridge.fillRoundedRect(334, 324, 78, 34, 14);
-    bridge.fillRoundedRect(432, 324, 78, 34, 14);
-    bridge.fillRoundedRect(530, 324, 78, 34, 14);
+    const sky = this.add.rectangle(width / 2, height / 2, width, height, PALETTE.skyBottom);
+    const glow = this.add.ellipse(width / 2, 132, width * 1.05, 220, PALETTE.skyTop, 0.85);
+    const city = this.add.graphics();
+    city.fillStyle(0x8d5232, 0.92);
+    city.fillPoints([
+      { x: 0, y: 312 },
+      { x: 74, y: 300 },
+      { x: 126, y: 282 },
+      { x: 186, y: 292 },
+      { x: 244, y: 258 },
+      { x: 312, y: 274 },
+      { x: 392, y: 248 },
+      { x: 468, y: 280 },
+      { x: 544, y: 256 },
+      { x: 610, y: 286 },
+      { x: 688, y: 266 },
+      { x: 800, y: 304 },
+      { x: 800, y: 356 },
+      { x: 0, y: 356 },
+    ], true);
+    city.fillStyle(0x71462f, 1);
+    city.fillRect(160, 208, 18, 76);
+    city.fillRect(242, 178, 22, 82);
+    city.fillRect(612, 188, 18, 96);
+    city.fillRect(692, 164, 24, 104);
+    const river = this.add.rectangle(width / 2, 388, width, 88, PALETTE.river, 0.95);
+    const riverGlow = this.add.rectangle(width / 2, 404, width, 22, 0xf0c98e, 0.1);
+    const embankment = this.add.rectangle(width / 2, 470, width, 84, PALETTE.dusk, 0.96);
+    const leftFrame = this.add.ellipse(12, 270, 180, 620, PALETTE.foreground, 0.92).setOrigin(0.5);
+    const rightFrame = this.add.ellipse(794, 258, 174, 640, PALETTE.foreground, 0.94).setOrigin(0.5);
+    const vignette = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.14);
 
-    const table = this.add.graphics();
-    table.fillStyle(0x5a3626, 1);
-    table.fillRoundedRect(640, 432, 92, 12, 6);
-    table.fillRect(684, 442, 7, 60);
-    table.fillStyle(0x8a593d, 1);
-    table.fillCircle(686, 419, 34);
-
-    const lamp = this.add.graphics();
-    lamp.fillStyle(0x1f1713, 1);
-    lamp.fillRect(694, 82, 4, 90);
-    lamp.fillRect(674, 80, 26, 4);
-    lamp.fillStyle(0xf5c26b, 0.9);
-    lamp.fillRoundedRect(676, 88, 18, 28, 5);
-
-    this.root.add([graphics, skyline, bridge, table, lamp]);
+    this.root.add([sky, glow, city, river, riverGlow, embankment, leftFrame, rightFrame, vignette]);
   }
 
   refresh() {
     this.root.removeAll(true);
-    this.drawBackdrop();
+    this.drawMenuBackground();
     this.menuIndex = Phaser.Math.Clamp(this.menuIndex, 0, this.getMenuItems().length - 1);
 
     if (this.mode === "menu") {
@@ -183,57 +167,66 @@ export class IntroScene extends Phaser.Scene {
   }
 
   buildMenu() {
-    const cardShadow = this.add.rectangle(404, 258, 308, 394, 0x6f4128, 0.28).setOrigin(0.5);
-    const card = this.add.rectangle(400, 252, 308, 394, PALETTE.stone, 0.98)
+    const panelShadow = this.add.rectangle(400, 250, 388, 404, 0x000000, 0.16)
       .setOrigin(0.5)
-      .setStrokeStyle(3, 0x8e6440, 0.9);
-    const inner = this.add.rectangle(400, 252, 292, 378, 0x000000, 0)
+      .setScale(1.04, 1.02);
+    const panel = this.add.rectangle(400, 244, 388, 404, PALETTE.paper, 0.985)
       .setOrigin(0.5)
-      .setStrokeStyle(1, 0xcfb283, 0.8);
-    const crest = this.add.text(400, 82, "365", {
+      .setStrokeStyle(2, PALETTE.paperEdge, 0.62);
+    const panelInner = this.add.rectangle(400, 244, 370, 386, 0x000000, 0)
+      .setOrigin(0.5)
+      .setStrokeStyle(1, 0xcbb28a, 0.6);
+    const crest = this.add.text(400, 92, "365", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: "46px",
-      color: "#a4452b",
-      fontStyle: "bold",
+      fontSize: "48px",
+      color: "#a94a2c",
+      fontStyle: "700",
     }).setOrigin(0.5);
-    const flourishes = this.add.text(400, 83, "❧            ❧", {
+    const title = this.add.text(400, 136, "Giorni in Italia", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: "22px",
-      color: "#788245",
+      fontSize: "32px",
+      color: "#58612f",
+      fontStyle: "700",
     }).setOrigin(0.5);
-    const title = this.add.text(400, 132, "Giorni in Italia", {
-      fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: "34px",
-      color: "#56602c",
-      fontStyle: "bold",
+    const oliveRule = this.add.rectangle(374, 170, 44, 4, PALETTE.olive).setOrigin(0.5);
+    const terracottaRule = this.add.rectangle(426, 170, 44, 4, PALETTE.terracotta).setOrigin(0.5);
+    const subtitleOne = this.add.text(400, 218, "Travel city by city.", {
+      fontFamily: '"Nunito Sans", sans-serif',
+      fontSize: "16px",
+      color: "#333333",
     }).setOrigin(0.5);
-    const oliveRule = this.add.rectangle(364, 167, 58, 4, PALETTE.olive).setOrigin(0.5);
-    const terracottaRule = this.add.rectangle(436, 167, 58, 4, PALETTE.terracotta).setOrigin(0.5);
-    const copy = this.add.text(400, 232, "Travel city by city.\nUncover hidden stories.\n\nYour Italian grows with\nevery choice you make.", {
-      fontFamily: '"IBM Plex Mono", monospace',
-      fontSize: "15px",
-      color: "#382721",
+    const subtitleTwo = this.add.text(400, 242, "Uncover hidden stories.", {
+      fontFamily: '"Nunito Sans", sans-serif',
+      fontSize: "16px",
+      color: "#333333",
+    }).setOrigin(0.5);
+    const copy = this.add.text(400, 292, "Your Italian grows with\nevery choice you make.", {
+      fontFamily: '"Nunito Sans", sans-serif',
+      fontSize: "14px",
+      color: "#666666",
       align: "center",
-      lineSpacing: 7,
+      lineSpacing: 4,
+      wordWrap: { width: 250 },
     }).setOrigin(0.5);
-    const divider = this.add.text(400, 188, "- - -o- - -", {
-      fontFamily: '"IBM Plex Mono", monospace',
-      fontSize: "14px",
-      color: "#bda47f",
-    }).setOrigin(0.5);
-    const footerMark = this.add.text(400, 470, "-o-", {
-      fontFamily: '"IBM Plex Mono", monospace',
-      fontSize: "14px",
-      color: "#9a8b6d",
-    }).setOrigin(0.5);
+    const speakerButton = this.createSpeakerButton(548, 96, {
+      active: this.mode === "settings",
+      muted: this.runtime.voice.muted,
+      onClick: () => {
+        this.runtime.voice.toggleMuted();
+        this.refresh();
+      },
+    });
 
-    this.root.add([cardShadow, card, inner, flourishes, crest, title, oliveRule, terracottaRule, divider, copy, footerMark]);
+    this.root.add([panelShadow, panel, panelInner, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton]);
 
     const menuItems = this.getMenuItems();
+    const baseY = 354;
+    const spacing = 60;
+
     menuItems.forEach((item, index) => {
-      const y = item.variant === "tertiary" ? 394 : 322 + index * 68;
-      const width = item.variant === "tertiary" ? 240 : 254;
-      const height = item.variant === "tertiary" ? 42 : 52;
+      const y = baseY + index * spacing;
+      const width = 272;
+      const height = 52;
       const button = this.createButton(400, y, width, height, item.label, {
         active: this.menuIndex === index,
         variant: item.variant,
@@ -245,27 +238,38 @@ export class IntroScene extends Phaser.Scene {
       this.root.add(button);
     });
 
-    const saveNote = this.runtime.loaded ? "Save available on this browser." : "Your first day starts here.";
-    const footer = this.add.text(400, 438, saveNote, {
-      fontFamily: '"IBM Plex Mono", monospace',
-      fontSize: "11px",
-      color: "#8f7a5d",
-    }).setOrigin(0.5);
-    this.root.add(footer);
+    const elements = [panelShadow, panel, panelInner, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton];
+    elements.forEach((el) => {
+      el.setAlpha(0);
+    });
+    this.tweens.add({
+      targets: panel,
+      alpha: 1,
+      duration: 500,
+      ease: "Power2",
+    });
+    this.tweens.add({
+      targets: elements.filter((el) => el !== panel),
+      alpha: 1,
+      delay: 200,
+      duration: 600,
+      stagger: 80,
+      ease: "Power2",
+    });
   }
 
   buildSettings() {
-    const shadow = this.add.rectangle(404, 258, 348, 248, 0x6f4128, 0.28).setOrigin(0.5);
-    const panel = this.add.rectangle(400, 252, 348, 248, PALETTE.stone, 0.98).setOrigin(0.5).setStrokeStyle(3, 0x8e6440, 0.9);
+    const shadow = this.add.rectangle(400, 260, 420, 268, 0x000000, 0.18).setOrigin(0.5);
+    const panel = this.add.rectangle(400, 252, 420, 268, PALETTE.paper, 0.97).setOrigin(0.5).setStrokeStyle(1, 0x000000, 0.1);
     const title = this.add.text(400, 168, "Settings", {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
       fontSize: "34px",
-      color: "#5a612f",
+      color: "#2c2c2c",
       fontStyle: "bold",
     }).setOrigin(0.5);
 
     const voiceState = this.runtime.voice.muted ? "Muted" : "Enabled";
-    const voiceButton = this.createButton(400, 244, 250, 48, `Voice: ${voiceState}`, {
+    const voiceButton = this.createButton(400, 244, 286, 48, `Voice: ${voiceState}`, {
       active: true,
       variant: "secondary",
       onClick: () => {
@@ -277,9 +281,9 @@ export class IntroScene extends Phaser.Scene {
       ? "Italian voice playback uses the browser speech engine."
       : "Voice playback is unavailable in this browser.";
     const copy = this.add.text(400, 312, summary, {
-      fontFamily: '"IBM Plex Mono", monospace',
-      fontSize: "13px",
-      color: "#4a372a",
+      fontFamily: '"Nunito Sans", sans-serif',
+      fontSize: "14px",
+      color: "#444444",
       align: "center",
       wordWrap: { width: 260 },
       lineSpacing: 6,
@@ -299,42 +303,42 @@ export class IntroScene extends Phaser.Scene {
 
   buildStory() {
     const page = STORY_PAGES[this.pageIndex];
-    const shadow = this.add.rectangle(404, 258, 414, 338, 0x6f4128, 0.24).setOrigin(0.5);
-    const panel = this.add.rectangle(400, 252, 414, 338, PALETTE.stone, 0.98).setOrigin(0.5).setStrokeStyle(3, 0x8e6440, 0.9);
+    const shadow = this.add.rectangle(400, 260, 470, 356, 0x000000, 0.18).setOrigin(0.5);
+    const panel = this.add.rectangle(400, 252, 470, 356, PALETTE.paper, 0.97).setOrigin(0.5).setStrokeStyle(1, 0x000000, 0.1);
     const badge = page.badge
       ? this.add.text(400, 150, page.badge, {
-          fontFamily: '"IBM Plex Mono", monospace',
+          fontFamily: '"Nunito Sans", sans-serif',
           fontSize: "12px",
           color: "#fff8eb",
           backgroundColor: "#6d7434",
           padding: { left: 10, right: 10, top: 6, bottom: 6 },
         }).setOrigin(0.5)
       : null;
-    const it = this.add.text(400, 222, page.it, {
+    const it = this.add.text(400, 214, page.it, {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
       fontSize: "34px",
-      color: "#3d291f",
+      color: "#2c2c2c",
       align: "center",
-      wordWrap: { width: 300 },
+      wordWrap: { width: 340 },
     }).setOrigin(0.5);
     const en = this.add.text(400, 288, page.en, {
-      fontFamily: '"IBM Plex Mono", monospace',
-      fontSize: "15px",
-      color: "#4c3a2d",
+      fontFamily: '"Nunito Sans", sans-serif',
+      fontSize: "16px",
+      color: "#444444",
       align: "center",
-      wordWrap: { width: 300 },
+      wordWrap: { width: 340 },
       lineSpacing: 6,
     }).setOrigin(0.5);
     const note = page.note
       ? this.add.text(400, 344, page.note, {
-          fontFamily: '"IBM Plex Mono", monospace',
+          fontFamily: '"Nunito Sans", sans-serif',
           fontSize: "12px",
           color: "#7b674a",
           align: "center",
         }).setOrigin(0.5)
       : null;
     const progress = this.add.text(400, 392, `${this.pageIndex + 1} / ${STORY_PAGES.length}`, {
-      fontFamily: '"IBM Plex Mono", monospace',
+      fontFamily: '"Nunito Sans", sans-serif',
       fontSize: "12px",
       color: "#8b7556",
     }).setOrigin(0.5);
@@ -396,6 +400,11 @@ export class IntroScene extends Phaser.Scene {
     const menuItems = this.getMenuItems();
 
     if (this.mode === "menu") {
+      if (event.key.toLowerCase() === "s") {
+        this.mode = "settings";
+        this.refresh();
+        return;
+      }
       if (event.key === "ArrowUp") {
         this.menuIndex = (this.menuIndex - 1 + menuItems.length) % menuItems.length;
         this.refresh();
@@ -409,7 +418,6 @@ export class IntroScene extends Phaser.Scene {
       }
       return;
     }
-
     if (this.mode === "settings") {
       if (event.key === "Escape" || event.key === "Backspace" || event.key === "Enter" || event.key === " ") {
         this.mode = "menu";
@@ -439,6 +447,60 @@ export class IntroScene extends Phaser.Scene {
       this.refresh();
       this.speakCurrentPage();
     }
+  }
+
+  createSpeakerButton(x, y, options) {
+    const frame = this.add.rectangle(x, y, 36, 36, PALETTE.paper, 0.94)
+      .setStrokeStyle(1.5, options.active ? PALETTE.terracotta : PALETTE.paperEdge, 0.9);
+    const icon = this.add.graphics();
+    icon.fillStyle(options.muted ? 0x8d7f71 : PALETTE.muted, 1);
+    icon.fillPoints([
+      { x: x - 10, y: y - 5 },
+      { x: x - 5, y: y - 5 },
+      { x: x + 1, y: y - 11 },
+      { x: x + 1, y: y + 11 },
+      { x: x - 5, y: y + 5 },
+      { x: x - 10, y: y + 5 },
+    ], true);
+
+    if (options.muted) {
+      icon.lineStyle(2, PALETTE.terracotta, 1);
+      icon.beginPath();
+      icon.moveTo(x + 5, y - 8);
+      icon.lineTo(x + 14, y + 8);
+      icon.moveTo(x + 14, y - 8);
+      icon.lineTo(x + 5, y + 8);
+      icon.strokePath();
+    } else {
+      icon.lineStyle(2, PALETTE.olive, 0.95);
+      icon.beginPath();
+      icon.arc(x + 4, y, 6, -0.75, 0.75, false);
+      icon.strokePath();
+      icon.beginPath();
+      icon.arc(x + 4, y, 10, -0.72, 0.72, false);
+      icon.strokePath();
+    }
+
+    const zone = this.add.zone(x, y, 36, 36).setInteractive({ useHandCursor: true });
+    zone.on("pointerdown", options.onClick);
+    zone.on("pointerover", () => {
+      this.tweens.add({
+        targets: frame,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 120,
+      });
+    });
+    zone.on("pointerout", () => {
+      this.tweens.add({
+        targets: frame,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 120,
+      });
+    });
+
+    return this.add.container(0, 0, [frame, icon, zone]);
   }
 
   speakCurrentPage() {
@@ -472,12 +534,12 @@ export class IntroScene extends Phaser.Scene {
         text: "#fff4d8",
       },
       secondary: {
-        fill: PALETTE.stone,
+        fill: PALETTE.paper,
         stroke: 0x9f825c,
         text: "#34231b",
       },
       tertiary: {
-        fill: 0xf2e1c0,
+        fill: 0xefe2cc,
         stroke: 0xb4946c,
         text: "#4e392d",
       },
@@ -486,22 +548,62 @@ export class IntroScene extends Phaser.Scene {
     const stroke = disabled ? 0xc0b19b : options.active ? PALETTE.terracotta : styles.stroke;
     const alpha = disabled ? 0.55 : 0.98;
     const rect = this.add.rectangle(x, y, width, height, fill, alpha).setStrokeStyle(2, stroke, 1);
+    if (variant === "primary" && !disabled) {
+      this.tweens.add({
+        targets: rect,
+        alpha: 1,
+        yoyo: true,
+        repeat: -1,
+        duration: 1200,
+        ease: "Sine.easeInOut",
+      });
+    }
     const text = this.add.text(x, y, label, {
-      fontFamily: variant === "primary" ? '"IBM Plex Mono", monospace' : '"Nunito Sans", sans-serif',
+      fontFamily: '"Nunito Sans", sans-serif',
       fontSize: variant === "tertiary" ? "16px" : "18px",
       color: disabled ? "#8d7f71" : styles.text,
       fontStyle: "bold",
     }).setOrigin(0.5);
     const marker = options.active
-      ? this.add.text(x - width / 2 + 18, y, "▸", {
-          fontFamily: '"IBM Plex Mono", monospace',
+      ? this.add.text(x - width / 2 + 22, y, variant === "primary" ? "▶" : "", {
+          fontFamily: '"Nunito Sans", sans-serif',
           fontSize: "18px",
           color: variant === "primary" ? "#fff0cb" : "#8a3a22",
         }).setOrigin(0.5)
       : null;
     const zone = this.add.zone(x, y, width, height).setInteractive({ useHandCursor: !disabled });
     if (!disabled) {
-      zone.on("pointerdown", options.onClick);
+      zone.on("pointerdown", () => {
+        this.tweens.killTweensOf(rect);
+        this.tweens.add({
+          targets: rect,
+          scaleX: 0.96,
+          scaleY: 0.96,
+          duration: 80,
+          yoyo: true,
+        });
+        options.onClick();
+      });
+      zone.on("pointerover", () => {
+        this.tweens.killTweensOf(rect);
+        this.tweens.add({
+          targets: rect,
+          scaleX: 1.04,
+          scaleY: 1.04,
+          duration: 120,
+        });
+        rect.setStrokeStyle(3, PALETTE.terracotta, 1);
+      });
+      zone.on("pointerout", () => {
+        this.tweens.killTweensOf(rect);
+        this.tweens.add({
+          targets: rect,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 120,
+        });
+        rect.setStrokeStyle(2, stroke, 1);
+      });
     }
     return this.add.container(0, 0, marker ? [rect, text, marker, zone] : [rect, text, zone]);
   }
