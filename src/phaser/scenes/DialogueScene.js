@@ -16,6 +16,7 @@ export class DialogueScene extends Phaser.Scene {
   create() {
     this.runtime = this.registry.get("runtime");
     this.runtime.setHeaderHidden(true);
+    this.runtime.setInfoDrawerHidden(false);
     this.dialogueState = createDialogueState(
       this.runtime,
       this.sceneData.npcId,

@@ -3,6 +3,7 @@ import { createRuntime, hardRefreshApp, unlockVoiceFromFirstGesture } from "./ph
 
 const canvas = document.getElementById("gameCanvas");
 const header = document.getElementById("gameHeader");
+const infoDrawer = document.getElementById("infoDrawer");
 const statusPanel = document.getElementById("statusPanel");
 const promptPanel = document.getElementById("promptPanel");
 const hardResetBtn = document.getElementById("hardResetBtn");
@@ -68,7 +69,7 @@ if (hardResetBtn instanceof HTMLButtonElement) {
   });
 }
 
-const runtime = createRuntime({ canvas, header, statusPanel, promptPanel });
+const runtime = createRuntime({ canvas, header, infoDrawer, statusPanel, promptPanel });
 unlockVoiceFromFirstGesture(runtime);
 
 try {

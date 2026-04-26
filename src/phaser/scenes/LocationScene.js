@@ -23,6 +23,7 @@ export class LocationScene extends Phaser.Scene {
   create() {
     this.runtime = this.registry.get("runtime");
     this.runtime.setHeaderHidden(true);
+    this.runtime.setInfoDrawerHidden(false);
     this.location = LOCATIONS.find((entry) => entry.id === this.sceneData.locationId) ?? LOCATIONS[0];
     this.runtime.currentLocationId = this.location.id;
     this.theme = INTERIOR_THEMES[this.location.id] ?? INTERIOR_THEMES.piazza_maggiore;

@@ -7,7 +7,8 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     const runtime = this.registry.get("runtime");
-    runtime.setHeaderHidden(false);
+    runtime.setHeaderHidden(true);
+    runtime.setInfoDrawerHidden(true);
     runtime.refreshResumeScene();
     this.scene.start("IntroScene");
   }

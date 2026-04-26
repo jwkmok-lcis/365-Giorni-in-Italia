@@ -37,19 +37,36 @@ export function createRuntime(dom) {
     currentLocationId: null,
     currentNpcId: null,
     headerHidden: false,
+    infoDrawerHidden: true,
+    syncInfoDrawer() {
+      if (!dom.infoDrawer) {
+        return;
+      }
+
+      const hasStatus = !!dom.statusPanel?.textContent?.trim();
+      const hasPrompt = !!dom.promptPanel?.textContent?.trim();
+      const visible = !runtime.infoDrawerHidden && (hasStatus || hasPrompt);
+      dom.infoDrawer.classList.toggle("hidden", !visible);
+    },
     setStatus(message) {
       if (dom.statusPanel) {
         dom.statusPanel.textContent = message ?? "";
       }
+      runtime.syncInfoDrawer();
     },
     setPrompt(message) {
       if (dom.promptPanel) {
         dom.promptPanel.textContent = message ?? "";
       }
+      runtime.syncInfoDrawer();
     },
     setHeaderHidden(hidden) {
       runtime.headerHidden = !!hidden;
       dom.header?.classList.toggle("hidden", runtime.headerHidden);
+    },
+    setInfoDrawerHidden(hidden) {
+      runtime.infoDrawerHidden = !!hidden;
+      runtime.syncInfoDrawer();
     },
     clearUi() {
       runtime.setStatus("");
@@ -144,7 +161,8 @@ export function createRuntime(dom) {
     runtime.eventFeed.push("Welcome to Bologna. Start your daily lesson.");
   }
 
-  runtime.setHeaderHidden(false);
+  runtime.setHeaderHidden(true);
+  runtime.setInfoDrawerHidden(true);
 
   return runtime;
 }

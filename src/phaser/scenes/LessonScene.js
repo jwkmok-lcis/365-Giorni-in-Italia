@@ -13,6 +13,7 @@ export class LessonScene extends Phaser.Scene {
   create() {
     this.runtime = this.registry.get("runtime");
     this.runtime.setHeaderHidden(true);
+    this.runtime.setInfoDrawerHidden(false);
     this.lesson = this.runtime.lesson.getLessonForDay(this.runtime.day.currentDay);
     this.phase = this.runtime.day.gameComplete ? "complete" : "intro";
     this.questionIndex = 0;

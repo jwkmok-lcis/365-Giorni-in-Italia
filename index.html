@@ -15,15 +15,19 @@
       <button id="hardResetBtn" class="hard-reset-btn" type="button" aria-label="Hard refresh app">
         Hard Reset
       </button>
-      <header class="hud" id="gameHeader">
-        <h1>365 Giorni in Italia</h1>
-        <p class="subtitle">Investigate Bologna's hidden ragù history while each conversation trains a live grammar skill track.</p>
-      </header>
-      <canvas id="gameCanvas" width="800" height="512" tabindex="0" aria-label="365 Giorni in Italia game canvas"></canvas>
-      <aside id="infoDrawer" class="info-drawer" aria-live="polite">
-        <section id="statusPanel" class="panel"></section>
-        <section id="promptPanel" class="panel"></section>
-      </aside>
+      <section class="stage-shell" aria-label="365 Giorni in Italia stage">
+        <header class="hud hidden" id="gameHeader">
+          <h1>365 Giorni in Italia</h1>
+          <p class="subtitle">Investigate Bologna's hidden ragù history while each conversation trains a live grammar skill track.</p>
+        </header>
+        <div class="canvas-wrap">
+          <canvas id="gameCanvas" width="800" height="512" tabindex="0" aria-label="365 Giorni in Italia game canvas"></canvas>
+          <aside id="infoDrawer" class="info-drawer hidden" aria-live="polite">
+            <section id="statusPanel" class="panel"></section>
+            <section id="promptPanel" class="panel"></section>
+          </aside>
+        </div>
+      </section>
     </main>
     <script type="module" src="src/main.js"></script>
     <script>
