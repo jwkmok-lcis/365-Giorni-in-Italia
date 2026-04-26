@@ -75,8 +75,16 @@ unlockVoiceFromFirstGesture(runtime);
 try {
   showDebugMessage("Booting game...");
   const game = createPhaserGame({ canvas, runtime });
+  const applyViewportSize = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    game.scale.resize(width, height);
+    game.canvas.style.width = `${width}px`;
+    game.canvas.style.height = `${height}px`;
+  };
+  applyViewportSize();
   window.addEventListener("resize", () => {
-    game.scale.resize(window.innerWidth, window.innerHeight);
+    applyViewportSize();
   });
   window.__giorniGame = game;
   canvas.focus();

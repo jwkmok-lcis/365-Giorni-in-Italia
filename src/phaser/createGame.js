@@ -8,7 +8,7 @@ import { LocationScene } from "./scenes/LocationScene.js";
 
 export function createPhaserGame({ canvas, runtime }) {
   const game = new Phaser.Game({
-    type: Phaser.CANVAS,
+    type: Phaser.AUTO,
     canvas,
     width: window.innerWidth,
     height: window.innerHeight,

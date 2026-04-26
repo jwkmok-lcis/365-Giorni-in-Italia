@@ -21,15 +21,19 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  min-height: 100vh;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  min-height: 100%;
   min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(1rem, 2vw, 1.5rem);
-  overflow-x: hidden;
+  display: block;
+  overflow: hidden;
   font-family: "Nunito Sans", sans-serif;
   color: var(--text-light);
   background:
@@ -70,11 +74,12 @@ body::after {
 }
 
 .app {
-  width: min(1180px, 100%);
-  min-height: calc(100vh - (2 * clamp(1rem, 2vw, 1.5rem)));
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   margin: 0 auto;
   padding: 0;
   position: relative;
@@ -82,16 +87,20 @@ body::after {
 }
 
 .stage-shell {
-  width: min(1040px, 100%);
-  padding: clamp(0.75rem, 1.8vw, 1.25rem);
-  border-radius: 34px;
-  background: linear-gradient(180deg, rgba(91, 54, 38, 0.16), rgba(22, 17, 14, 0.28));
-  box-shadow: 0 30px 70px rgba(53, 29, 19, 0.28);
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .canvas-wrap {
   position: relative;
-  width: 100%;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
 }
 
 .hard-reset-btn {
@@ -137,14 +146,15 @@ body::after {
 }
 
 #gameCanvas {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
   display: block;
   margin: 0 auto;
-  border: 3px solid rgba(255, 240, 207, 0.8);
-  border-radius: 28px;
-  box-shadow: 0 26px 60px rgba(58, 31, 17, 0.3), 0 0 0 1px rgba(96, 54, 34, 0.12) inset;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   background: #112434;
   cursor: pointer;
   touch-action: none;
@@ -184,27 +194,6 @@ body::after {
 
 /* ── Mobile fullscreen ─────────────────────── */
 @media (max-width: 840px) {
-  body {
-    padding: 0;
-  }
-
-  .app {
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100dvh;
-    margin: 0;
-  }
-
-  .stage-shell {
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
   .hard-reset-btn {
     position: fixed;
     top: calc(var(--safe-top) + 0.65rem);
@@ -218,10 +207,6 @@ body::after {
     width: 100vw;
     height: 100vh;
     height: 100dvh;
-    max-width: none;
-    border-width: 0;
-    border-radius: 0;
-    box-shadow: none;
   }
 
   .info-drawer {
