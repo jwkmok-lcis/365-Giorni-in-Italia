@@ -20,25 +20,35 @@ const PALETTE = {
 };
 
 const STORY_PAGES = [
-  { it: "Arrivi in Italia.", en: "You arrive in Italy." },
-  { it: "Vuoi imparare l'italiano.", en: "You want to learn Italian." },
-  { it: "Ma non vuoi studiare solo dai libri.", en: "But you do not want to study only from books." },
-  { it: "Vuoi vivere la lingua.", en: "You want to live the language." },
-  { it: "A Bologna, senti una storia.", en: "In Bologna, you hear a story." },
-  { it: "Il ragù perfetto esiste.", en: "The perfect ragù exists." },
-  { it: "Ma nessuno dice la verità.", en: "But no one tells the truth." },
-  { it: "Ogni persona dice qualcosa di diverso.", en: "Everyone says something different." },
-  { it: "Parli con le persone.", en: "You talk to people." },
-  { it: "Ascolti.", en: "You listen." },
-  { it: "Fai domande.", en: "You ask questions." },
-  { it: "Impari poco a poco.", en: "You learn little by little." },
-  { it: "Nel gioco, scegli le frasi.", en: "In the game, you choose sentences." },
-  { it: "Più parli, più impari.", en: "The more you speak, the more you learn." },
-  { it: "Oggi sei in Piazza Maggiore.", en: "Today you are in Piazza Maggiore." },
-  { it: "Qualcuno può aiutarti.", en: "Someone can help you." },
+  { it: "Arrivi in Italia. Vuoi imparare l'italiano.", en: "You arrive in Italy. You want to learn Italian." },
   {
-    it: "Inizia da Marco.",
-    en: "Start with Marco.",
+    it: "Ma non vuoi studiare solo dai libri. Vuoi vivere la lingua.",
+    en: "But you do not want to study only from books. You want to live the language.",
+  },
+  {
+    it: "A Bologna, senti una storia: il ragù perfetto esiste.",
+    en: "In Bologna, you hear a story: the perfect ragù exists.",
+  },
+  {
+    it: "Ma nessuno dice la verità. Ogni persona dice qualcosa di diverso.",
+    en: "But no one tells the truth. Everyone says something different.",
+  },
+  {
+    it: "Parli con le persone, ascolti e fai domande.",
+    en: "You talk to people, listen, and ask questions.",
+  },
+  {
+    it: "Impari poco a poco. Nel gioco, scegli le frasi.",
+    en: "You learn little by little. In the game, you choose sentences.",
+  },
+  {
+    it: "Più parli, più impari.",
+    en: "The more you speak, the more you learn.",
+    location: "Piazza Maggiore",
+  },
+  {
+    it: "Qualcuno può aiutarti. Inizia da Marco.",
+    en: "Someone can help you. Start with Marco.",
     badge: "Quest Started · Sussurri del Mercato",
     note: "Hai un taccuino. Scrivi qui quello che scopri.",
   },
@@ -56,6 +66,13 @@ export class IntroScene extends Phaser.Scene {
     this.isSwiping = false;
     this.blockStoryTapNav = false;
     this.isStoryTransitioning = false;
+    this.bgImage = null;
+    this.backgroundElements = [];
+    this.forceBackgroundRefresh = false;
+    this.bgPanTween = null;
+    this.bgPortraitTween = null;
+    this.itText = null;
+    this.typewriterEvent = null;
   }
 
   preload() {
@@ -120,9 +137,14 @@ export class IntroScene extends Phaser.Scene {
     this.input.on("pointerdown", this.pointerDownHandler);
     this.input.on("pointermove", this.pointerMoveHandler);
     this.input.on("pointerup", this.pointerUpHandler);
-    this.resizeHandler = () => this.refresh();
+    this.resizeHandler = () => {
+      this.forceBackgroundRefresh = true;
+      this.refresh();
+      this.forceBackgroundRefresh = false;
+    };
     this.scale.on(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.clearStoryEffects();
       this.input.keyboard.off("keydown", this.keyHandler);
       this.input.off("pointerdown", this.pointerDownHandler);
       this.input.off("pointermove", this.pointerMoveHandler);
@@ -231,14 +253,15 @@ export class IntroScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     if (this.textures.exists(MENU_BG_TEXTURE_KEY)) {
-      const image = this.add.image(0, 0, MENU_BG_TEXTURE_KEY).setOrigin(0);
+      this.bgImage = this.add.image(0, 0, MENU_BG_TEXTURE_KEY).setOrigin(0);
+      const image = this.bgImage;
       const scaleX = width / image.width;
       const scaleY = height / image.height;
       const scale = Math.max(scaleX, scaleY);
       image.setScale(scale);
       image.setPosition((width - image.width * scale) / 2, (height - image.height * scale) / 2);
       const baseX = image.x;
-      this.tweens.add({
+      this.bgPanTween = this.tweens.add({
         targets: image,
         x: baseX + 10,
         duration: 10000,
@@ -247,7 +270,7 @@ export class IntroScene extends Phaser.Scene {
         ease: "Sine.easeInOut",
       });
       if (this.isPortrait()) {
-        this.tweens.add({
+        this.bgPortraitTween = this.tweens.add({
           targets: image,
           scaleX: scale * 1.05,
           scaleY: scale * 1.05,
@@ -264,6 +287,7 @@ export class IntroScene extends Phaser.Scene {
       const vignetteBottom = this.add.rectangle(width / 2, height, width, 190, 0x000000, 0.16).setOrigin(0.5, 1);
       const vignetteLeft = this.add.rectangle(0, height / 2, 110, height, 0x000000, 0.12).setOrigin(0, 0.5);
       const vignetteRight = this.add.rectangle(width, height / 2, 110, height, 0x000000, 0.12).setOrigin(1, 0.5);
+      this.backgroundElements = [image, gradient, vignetteTop, vignetteBottom, vignetteLeft, vignetteRight];
       this.root.add([image, gradient, vignetteTop, vignetteBottom, vignetteLeft, vignetteRight]);
       return;
     }
@@ -300,10 +324,19 @@ export class IntroScene extends Phaser.Scene {
     const rightFrame = this.add.ellipse(794, 258, 174, 640, PALETTE.foreground, 0.94).setOrigin(0.5);
     const vignette = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.14);
 
+    this.backgroundElements = [sky, glow, city, river, riverGlow, embankment, leftFrame, rightFrame, vignette];
     this.root.add([sky, glow, city, river, riverGlow, embankment, leftFrame, rightFrame, vignette]);
   }
 
   refresh() {
+    if (this.mode === "story" && this.backgroundElements.length && !this.forceBackgroundRefresh) {
+      this.clearStoryPageEffects();
+      this.clearForegroundElements();
+      this.buildStory();
+      return;
+    }
+
+    this.clearStoryEffects();
     this.root.removeAll(true);
     this.drawMenuBackground();
     this.menuIndex = Phaser.Math.Clamp(this.menuIndex, 0, this.getMenuItems().length - 1);
@@ -486,77 +519,113 @@ export class IntroScene extends Phaser.Scene {
   buildStory() {
     const { width, height } = this.scale;
     const scaleFactor = this.getScaleFactor();
-    const topSafe = this.getTopSafeInset();
     const page = STORY_PAGES[this.pageIndex];
-    const panelWidth = Math.min(470, width * 0.9);
-    const panelHeight = Math.min(356, height * 0.72);
+
     const centerX = width / 2;
-    const centerY = Math.max(height / 2, topSafe + panelHeight * 0.55);
-    const shadow = this.add.rectangle(centerX, centerY + 8 * scaleFactor, panelWidth, panelHeight, 0x000000, 0.18).setOrigin(0.5);
-    const panel = this.add.rectangle(centerX, centerY, panelWidth, panelHeight, PALETTE.paper, 0.97).setOrigin(0.5).setStrokeStyle(1, 0x000000, 0.1);
-    const badge = page.badge
-      ? this.add.text(centerX, centerY - panelHeight * 0.28, page.badge, {
-          fontFamily: '"Nunito Sans", sans-serif',
-          fontSize: this.textPx(12),
-          color: "#fff8eb",
-          backgroundColor: "#6d7434",
-          padding: {
-            left: 10 * scaleFactor,
-            right: 10 * scaleFactor,
-            top: 6 * scaleFactor,
-            bottom: 6 * scaleFactor,
-          },
-        }).setOrigin(0.5)
-      : null;
-    const it = this.add.text(centerX, centerY - panelHeight * 0.11, page.it, {
+    const textWidth = width * 0.65;
+    const textLeft = centerX - textWidth / 2;
+
+    // Gradient overlay only.
+    const overlay = this.add.graphics();
+    overlay.fillGradientStyle(
+      0x000000, 0x000000,
+      0x000000, 0x000000,
+      0.0, 0.0,
+      0.55, 0.75
+    );
+    overlay.fillRect(0, 0, width, height);
+
+    const textY = height * 0.42;
+
+    const it = this.add.text(textLeft, textY, page.it, {
       fontFamily: '"Cormorant Garamond", Georgia, serif',
-      fontSize: this.textPx(34),
-      color: "#2c2c2c",
-      align: "center",
-      wordWrap: { width: panelWidth * 0.72 },
-    }).setOrigin(0.5);
-    const en = this.add.text(centerX, centerY + panelHeight * 0.1, page.en, {
+      fontSize: this.textPx(36),
+      color: "#ffffff",
+      align: "left",
+      wordWrap: { width: textWidth },
+      lineSpacing: Math.round(10 * scaleFactor),
+    }).setOrigin(0, 0.5);
+
+    it.setShadow(0, 3, "#000000", 10, true, true);
+    const italianHeight = it.height;
+    this.itText = it;
+
+    const en = this.add.text(textLeft, textY + italianHeight / 2 + 18 * scaleFactor, page.en, {
       fontFamily: '"Nunito Sans", sans-serif',
-      fontSize: this.textPx(16),
-      color: "#444444",
-      align: "center",
-      wordWrap: { width: panelWidth * 0.72 },
-      lineSpacing: Math.round(6 * scaleFactor),
-    }).setOrigin(0.5);
-    const note = page.note
-      ? this.add.text(centerX, centerY + panelHeight * 0.255, page.note, {
-          fontFamily: '"Nunito Sans", sans-serif',
-          fontSize: this.textPx(12),
-          color: "#7b674a",
-          align: "center",
-        }).setOrigin(0.5)
-      : null;
-    const progress = this.add.text(centerX, centerY + panelHeight * 0.39, `${this.pageIndex + 1} / ${STORY_PAGES.length}`, {
+      fontSize: this.textPx(18),
+      color: "#f0f0f0",
+      align: "left",
+      wordWrap: { width: textWidth * 0.85 },
+      lineSpacing: Math.round(8 * scaleFactor),
+    }).setOrigin(0, 0);
+
+    this.revealText(it, page.it, 28);
+
+    const buttonY = height * 0.9;
+
+    const back = this.createButton(
+      centerX - 100 * scaleFactor,
+      buttonY,
+      140,
+      42,
+      "Back",
+      {
+        disabled: this.pageIndex === 0,
+        variant: "tertiary",
+        onClick: () => this.goPrevPage(),
+      }
+    );
+
+    const nextLabel = this.pageIndex === STORY_PAGES.length - 1
+      ? "Begin Day 1 →"
+      : "Next →";
+
+    const next = this.createButton(
+      centerX + 100 * scaleFactor,
+      buttonY,
+      180,
+      42,
+      nextLabel,
+      {
+        active: true,
+        variant: "primary",
+        onClick: () => this.goNextPage(),
+      }
+    );
+
+    const progress = this.add.text(
+      centerX,
+      buttonY - 30 * scaleFactor,
+      `${this.pageIndex + 1} / ${STORY_PAGES.length}`,
+      {
       fontFamily: '"Nunito Sans", sans-serif',
       fontSize: this.textPx(12),
-      color: "#8b7556",
-    }).setOrigin(0.5);
-    const buttonY = centerY + panelHeight * 0.54;
-    const back = this.createButton(centerX - panelWidth * 0.2, buttonY, Math.min(170, panelWidth * 0.32), Math.round(42 * scaleFactor), "Back", {
-      active: false,
-      disabled: this.pageIndex === 0,
-      variant: "tertiary",
-      onClick: () => {
-        this.goPrevPage();
-      },
-    });
-    const nextLabel = this.pageIndex === STORY_PAGES.length - 1 ? "Begin Day 1 Lesson" : "Next";
-    const next = this.createButton(centerX + panelWidth * 0.2, buttonY, Math.min(236, panelWidth * 0.44), Math.round(42 * scaleFactor), nextLabel, {
-      active: true,
-      variant: "primary",
-      onClick: () => {
-        this.goNextPage();
-      },
-    });
+      color: "#cccccc",
+      }
+    ).setOrigin(0.5);
 
-    this.root.add([shadow, panel, it, en, progress, back, next]);
-    if (badge) this.root.add(badge);
-    if (note) this.root.add(note);
+    this.root.add([overlay, it, en, progress, back, next]);
+
+    [it, en, progress, back, next].forEach((el) => {
+      el.alpha = 0;
+      el.y += 20;
+    });
+    overlay.alpha = 0;
+
+    this.tweens.add({
+      targets: overlay,
+      alpha: 1,
+      duration: 320,
+      ease: "Power2",
+    });
+    this.tweens.add({
+      targets: [it, en, progress, back, next],
+      alpha: 1,
+      y: "-=20",
+      duration: 400,
+      ease: "Power2",
+      stagger: 60,
+    });
   }
 
   activateMenuItem(id) {
@@ -601,7 +670,7 @@ export class IntroScene extends Phaser.Scene {
   transitionStory(direction) {
     if (this.mode !== "story" || this.isStoryTransitioning) return;
     this.isStoryTransitioning = true;
-    const oldElements = [...this.root.list];
+    const oldElements = this.getForegroundElements();
     this.root.x = 0;
     this.tweens.add({
       targets: oldElements,
@@ -611,7 +680,7 @@ export class IntroScene extends Phaser.Scene {
       ease: "Power2",
       onComplete: () => {
         this.refresh();
-        const newElements = [...this.root.list];
+        const newElements = this.getForegroundElements();
         newElements.forEach((el) => {
           el.x += direction * 80;
           el.alpha = 0;
@@ -750,6 +819,57 @@ export class IntroScene extends Phaser.Scene {
     }
 
     this.runtime.setPrompt("Enter or Right Arrow advances. Backspace or Left Arrow goes back.");
+  }
+
+  revealText(textObject, fullText, speed = 35) {
+    if (this.typewriterEvent) {
+      this.typewriterEvent.remove();
+      this.typewriterEvent = null;
+    }
+    textObject.setText("");
+    let i = 0;
+    this.typewriterEvent = this.time.addEvent({
+      delay: speed,
+      repeat: fullText.length - 1,
+      callback: () => {
+        if (!textObject.active) {
+          this.typewriterEvent?.remove();
+          this.typewriterEvent = null;
+          return;
+        }
+        textObject.setText(fullText.slice(0, i + 1));
+        i++;
+        if (i >= fullText.length) {
+          this.typewriterEvent = null;
+        }
+      },
+    });
+  }
+
+  getForegroundElements() {
+    const backgroundSet = new Set(this.backgroundElements);
+    return this.root.list.filter((el) => !backgroundSet.has(el));
+  }
+
+  clearForegroundElements() {
+    this.getForegroundElements().forEach((el) => el.destroy());
+  }
+
+  clearStoryPageEffects() {
+    this.typewriterEvent?.remove();
+    this.typewriterEvent = null;
+    this.itText = null;
+  }
+
+  clearStoryEffects() {
+    this.clearStoryPageEffects();
+    this.bgPanTween?.stop();
+    this.bgPanTween = null;
+    this.bgPortraitTween?.stop();
+    this.bgPortraitTween = null;
+    this.itText = null;
+    this.bgImage = null;
+    this.backgroundElements = [];
   }
 
   createButton(x, y, width, height, label, options) {

@@ -8,6 +8,7 @@ export class LessonScene extends Phaser.Scene {
     this.choiceIndex = 0;
     this.answers = [];
     this.root = null;
+    this.backdropTween = null;
   }
 
   create() {
@@ -22,20 +23,70 @@ export class LessonScene extends Phaser.Scene {
     this.result = null;
 
     this.root = this.add.container(0, 0);
-    this.drawBackdrop();
     this.refresh();
 
     this.keyHandler = (event) => this.handleKey(event);
     this.input.keyboard.on("keydown", this.keyHandler);
+    this.resizeHandler = () => this.refresh();
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.backdropTween?.stop();
+      this.backdropTween = null;
       this.input.keyboard.off("keydown", this.keyHandler);
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     });
   }
 
   drawBackdrop() {
-    const bg = this.add.rectangle(400, 256, 800, 512, 0x0d1824);
-    const panel = this.add.rectangle(400, 256, 700, 420, 0x17283a, 0.96).setStrokeStyle(2, 0xe0bb78, 0.55);
-    this.root.add([bg, panel]);
+    const { width, height } = this.scale;
+
+    this.backdropTween?.stop();
+    this.backdropTween = null;
+
+    const bg = this.textures.exists("menu-bg")
+      ? this.add.image(0, 0, "menu-bg").setOrigin(0)
+      : this.add.rectangle(0, 0, width, height, 0x0d1824).setOrigin(0);
+
+    if (bg.setDisplaySize) {
+      bg.setDisplaySize(width, height);
+    }
+
+    this.backdropTween = this.tweens.add({
+      targets: bg,
+      scaleX: 1.05,
+      scaleY: 1.05,
+      duration: 12000,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
+    const overlay = this.add.graphics();
+    overlay.fillGradientStyle(
+      0x000000, 0x000000,
+      0x000000, 0x000000,
+      0.1, 0.2,
+      0.6, 0.85
+    );
+    overlay.fillRect(0, 0, width, height);
+
+    this.root.add([bg, overlay]);
+  }
+
+  getLayout() {
+    const { width, height } = this.scale;
+    const portrait = height > width;
+    const maxWidth = portrait ? width * 0.92 : Math.min(900, width * 0.75);
+    const centerX = width / 2;
+    const centerY = height * 0.52;
+
+    return {
+      centerX,
+      centerY,
+      contentWidth: maxWidth,
+      isMobile: portrait,
+      scale: Phaser.Math.Clamp(width / 900, 0.7, 1.2),
+    };
   }
 
   refresh() {
@@ -100,46 +151,112 @@ export class LessonScene extends Phaser.Scene {
   }
 
   buildIntro() {
-    const title = this.add.text(400, 92, this.lesson.title, {
-      fontFamily: "Georgia, serif",
-      fontSize: "34px",
-      color: "#f5ead4",
-      fontStyle: "bold",
+    const L = this.getLayout();
+    const { centerX, centerY, contentWidth, scale, isMobile } = L;
+    const cardWidth = contentWidth;
+    const cardHeight = isMobile ? 420 : 360;
+
+    const card = this.add.rectangle(
+      centerX,
+      centerY,
+      cardWidth,
+      cardHeight,
+      0x000000,
+      0.35
+    ).setStrokeStyle(1, 0xffffff, 0.08);
+
+    const title = this.add.text(centerX, centerY - cardHeight * 0.35, this.lesson.title, {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: `${Math.round(36 * scale)}px`,
+      color: "#f5ecd9",
+      fontStyle: "700",
     }).setOrigin(0.5);
+    title.setShadow(0, 2, "#000000", 6, true, true);
 
-    const vocabLines = this.lesson.vocab.map((entry) => `${entry.it} — ${entry.en}`).join("\n");
-    const vocab = this.add.text(170, 154, vocabLines, {
-      fontFamily: "Trebuchet MS, sans-serif",
-      fontSize: "20px",
-      color: "#e3d5bf",
-      lineSpacing: 8,
-    });
+    const vocabText = this.lesson.vocab
+      .map((v) => `${v.it} — ${v.en}`)
+      .join("\n");
 
-    const phrase = this.add.text(520, 178, `${this.lesson.phrase.it}\n${this.lesson.phrase.en}`, {
-      fontFamily: "Trebuchet MS, sans-serif",
-      fontSize: "21px",
-      color: "#c5d9df",
+    const vocabX = isMobile ? centerX : centerX - cardWidth * 0.25;
+    const phraseX = isMobile ? centerX : centerX + cardWidth * 0.25;
+    const vocabY = isMobile ? centerY - cardHeight * 0.12 : centerY - 20;
+    const phraseY = isMobile ? centerY + cardHeight * 0.11 : centerY - 10;
+
+    const vocab = this.add.text(vocabX, vocabY, vocabText, {
+      fontFamily: '"Nunito Sans", sans-serif',
+      fontSize: `${Math.round(18 * scale)}px`,
+      color: "#e8dcc6",
+      lineSpacing: 6,
       align: "center",
-      wordWrap: { width: 220 },
+      wordWrap: { width: isMobile ? cardWidth * 0.82 : cardWidth * 0.4 },
     }).setOrigin(0.5);
 
-    const grammar = this.add.text(400, 316, `${this.lesson.grammar.topic}\n${this.lesson.grammar.note}`, {
-      fontFamily: "Trebuchet MS, sans-serif",
-      fontSize: "18px",
-      color: "#d6c49e",
-      align: "center",
-      wordWrap: { width: 520 },
-      lineSpacing: 8,
-    }).setOrigin(0.5);
+    const phrase = this.add.text(
+      phraseX,
+      phraseY,
+      `${this.lesson.phrase.it}\n${this.lesson.phrase.en}`,
+      {
+        fontFamily: '"Nunito Sans", sans-serif',
+        fontSize: `${Math.round(20 * scale)}px`,
+        color: "#ffffff",
+        align: "center",
+        wordWrap: { width: isMobile ? cardWidth * 0.82 : cardWidth * 0.35 },
+      }
+    ).setOrigin(0.5);
 
-    const back = this.createButton(268, 430, 190, 44, "Back to Title", () => {
-      this.scene.start("IntroScene");
+    const grammar = this.add.text(
+      centerX,
+      centerY + cardHeight * 0.28,
+      `${this.lesson.grammar.topic}\n${this.lesson.grammar.note}`,
+      {
+        fontFamily: '"Nunito Sans", sans-serif',
+        fontSize: `${Math.round(15 * scale)}px`,
+        color: "#d6c49e",
+        align: "center",
+        wordWrap: { width: cardWidth * 0.7 },
+      }
+    ).setOrigin(0.5);
+
+    const buttonY = centerY + cardHeight * 0.6;
+    const backX = isMobile ? centerX - 110 * scale : centerX - 140;
+    const startX = isMobile ? centerX + 110 * scale : centerX + 140;
+
+    const back = this.createButton(
+      backX,
+      buttonY,
+      Math.round(200 * scale),
+      44,
+      "Back",
+      () => this.scene.start("IntroScene")
+    );
+
+    const start = this.createButton(
+      startX,
+      buttonY,
+      Math.round(220 * scale),
+      44,
+      "Start Quiz",
+      () => {
+        this.phase = "quiz";
+        this.refresh();
+      },
+      true
+    );
+
+    const introElements = [card, title, vocab, phrase, grammar, back, start];
+    this.root.add(introElements);
+    introElements.forEach((el) => {
+      el.alpha = 0;
+      el.y += 10;
     });
-    const start = this.createButton(532, 430, 220, 44, "Start Quiz", () => {
-      this.phase = "quiz";
-      this.refresh();
-    }, true);
-    this.root.add([title, vocab, phrase, grammar, back, start]);
+    this.tweens.add({
+      targets: introElements,
+      alpha: 1,
+      y: "-=10",
+      duration: 400,
+      stagger: 40,
+      ease: "Power2",
+    });
   }
 
   buildQuiz() {
