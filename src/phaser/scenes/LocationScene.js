@@ -7,7 +7,7 @@ import { Events } from "../../engine/EventBus.js";
 import { NPC_DISPLAY, INTERIOR_THEMES } from "../content/bolognaMeta.js";
 import { getCurrentObjectiveNpcId } from "../runtime/createRuntime.js";
 import { createTownInput } from "../../systems/input.js";
-import { createPlayerController, updatePlayerMovement } from "../../systems/player.js";
+import { createPlayerController } from "../../systems/player.js";
 
 export class LocationScene extends Phaser.Scene {
   constructor() {
@@ -24,10 +24,15 @@ export class LocationScene extends Phaser.Scene {
     this.runtime = this.registry.get("runtime");
     this.runtime.setHeaderHidden(true);
     this.runtime.setInfoDrawerHidden(false);
+    this.worldWidth = 800;
+    this.worldHeight = 512;
     this.location = LOCATIONS.find((entry) => entry.id === this.sceneData.locationId) ?? LOCATIONS[0];
     this.runtime.currentLocationId = this.location.id;
     this.theme = INTERIOR_THEMES[this.location.id] ?? INTERIOR_THEMES.piazza_maggiore;
-    this.drawInterior();
+    this.drawMap();
+    this.setupWalkZones();
+    this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight);
+    this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight);
 
     this.inputController = createTownInput(this);
     this.playerController = createPlayerController(this, {
@@ -35,8 +40,9 @@ export class LocationScene extends Phaser.Scene {
       y: 392,
       isTouch: this.inputController.isTouch,
     });
-    this.playerController.sprite.setDepth(10);
+    this.playerController.sprite.setDepth(this.playerController.sprite.y);
     this.playerController.shadow.setDepth(9);
+    this.cameras.main.startFollow(this.playerController.sprite, true, 0.08, 0.08);
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     this.escapeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
@@ -49,7 +55,7 @@ export class LocationScene extends Phaser.Scene {
       backgroundColor: "rgba(10,20,30,0.46)",
       padding: { left: 10, right: 10, top: 6, bottom: 6 },
       wordWrap: { width: 720 },
-    }).setOrigin(0.5).setDepth(30);
+    }).setOrigin(0.5).setDepth(30).setScrollFactor(0);
 
     this.focusText = this.add.text(782, 138, "", {
       fontFamily: "Trebuchet MS, sans-serif",
@@ -59,7 +65,7 @@ export class LocationScene extends Phaser.Scene {
       backgroundColor: "rgba(28,38,31,0.62)",
       padding: { left: 8, right: 8, top: 6, bottom: 6 },
       wordWrap: { width: 250 },
-    }).setOrigin(1, 0).setDepth(30);
+    }).setOrigin(1, 0).setDepth(30).setScrollFactor(0);
 
     this.progressText = this.add.text(782, 198, "", {
       fontFamily: "Trebuchet MS, sans-serif",
@@ -69,72 +75,124 @@ export class LocationScene extends Phaser.Scene {
       backgroundColor: "rgba(10,20,30,0.46)",
       padding: { left: 8, right: 8, top: 6, bottom: 6 },
       wordWrap: { width: 250 },
-    }).setOrigin(1, 0).setDepth(30);
+    }).setOrigin(1, 0).setDepth(30).setScrollFactor(0);
+
+    this.scale.on("resize", this.handleResize, this);
+    this.handleResize(this.scale.gameSize);
 
     this.pointerHandler = (pointer) => this.handlePointer(pointer);
     this.input.on("pointerdown", this.pointerHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.off("pointerdown", this.pointerHandler);
+      this.scale.off("resize", this.handleResize, this);
       this.inputController.destroy();
     });
   }
 
-  drawInterior() {
-    const floor = Number.parseInt(this.theme.floor.toString().replace("#", ""), 16);
-    const wall = Number.parseInt(this.theme.wall.toString().replace("#", ""), 16);
-    const accent = Number.parseInt(this.theme.accent.toString().replace("#", ""), 16);
-    const shadow = Math.max(0, accent - 0x222222);
+  handleResize(gameSize) {
+    const { width, height } = gameSize;
 
-    this.add.rectangle(400, 256, 800, 512, floor, 1);
-    this.add.rectangle(400, 78, 800, 156, wall, 1);
-    this.add.rectangle(400, 120, 800, 2, accent, 1);
-    this.add.rectangle(400, 162, 800, 12, shadow, 0.25);
-    this.add.rectangle(400, 448, 800, 128, shadow, 0.18);
-    this.add.rectangle(400, 420, 530, 72, accent, 0.16).setStrokeStyle(2, 0xf3d79f, 0.22);
-    this.add.rectangle(400, 276, 588, 20, 0x0d1721, 0.12);
-    this.add.rectangle(140, 222, 116, 148, accent, 0.34).setStrokeStyle(2, 0xf2debb, 0.26);
-    this.add.rectangle(660, 222, 116, 148, accent, 0.34).setStrokeStyle(2, 0xf2debb, 0.26);
-    this.add.circle(178, 140, 18, 0xf7d89c, 0.24);
-    this.add.circle(622, 140, 18, 0xf7d89c, 0.24);
-    this.add.text(400, 42, this.location.label, {
-      fontFamily: "Alegreya, Georgia, serif",
-      fontSize: "29px",
-      color: "#f5ead4",
-      fontStyle: "bold",
-    }).setOrigin(0.5);
-    this.add.text(400, 78, this.location.description, {
-      fontFamily: "Manrope, Trebuchet MS, sans-serif",
-      fontSize: "15px",
-      color: "#d5c6b1",
-      wordWrap: { width: 600 },
-      align: "center",
-    }).setOrigin(0.5);
-    this.add.text(400, 112, "Listen closely. Every room hides both a clue and a grammar pattern.", {
-      fontFamily: "Manrope, Trebuchet MS, sans-serif",
-      fontSize: "13px",
-      color: "#f0dfb8",
-      align: "center",
-    }).setOrigin(0.5);
-    this.add.rectangle(400, 494, 168, 32, 0x263949, 0.95).setStrokeStyle(2, 0xe2c17b, 0.5);
-    this.add.text(400, 494, "Exit", {
-      fontFamily: "Manrope, Trebuchet MS, sans-serif",
+    this.cameras.resize(width, height);
+
+    const scaleX = width / this.worldWidth;
+    const scaleY = height / this.worldHeight;
+    const zoom = Phaser.Math.Clamp(Math.min(scaleX, scaleY), 0.8, 1.5);
+
+    this.cameras.main.setZoom(zoom);
+
+    if (this.messageText) {
+      this.messageText.setPosition(width * 0.5, height - 42);
+      this.messageText.setWordWrapWidth(Math.max(320, width - 80));
+    }
+
+    if (this.focusText) {
+      this.focusText.setPosition(width - 18, 24);
+      this.focusText.setWordWrapWidth(Math.min(250, width * 0.34));
+    }
+
+    if (this.progressText) {
+      this.progressText.setPosition(width - 18, 92);
+      this.progressText.setWordWrapWidth(Math.min(250, width * 0.34));
+    }
+  }
+
+  drawMap() {
+    // Ground
+    this.add.rectangle(400, 256, 800, 512, 0xd8c3a5);
+
+    // Top buildings (like Piazza Maggiore edges)
+    this.add.rectangle(400, 70, 800, 140, 0x8c5a3c);
+
+    // Arcades (Bologna feel)
+    for (let i = 0; i < 6; i++) {
+      this.add.rectangle(100 + i * 120, 120, 80, 60, 0x6e4630);
+    }
+
+    // Central piazza
+    this.add.circle(400, 260, 110, 0xc9ae8a);
+
+    // Paths
+    this.add.rectangle(400, 420, 300, 90, 0xb89a74); // south
+    this.add.rectangle(650, 260, 120, 260, 0xb89a74); // east
+    this.add.rectangle(150, 260, 120, 260, 0xb89a74); // west
+
+    // Fountain (center landmark)
+    this.add.circle(400, 260, 40, 0x6f8fa6);
+
+    // Market (left)
+    this.add.rectangle(220, 330, 100, 60, 0xa34a2f);
+    this.add.rectangle(220, 360, 100, 30, 0x2f7a4a);
+
+    // Cafe (right)
+    this.add.rectangle(600, 330, 120, 80, 0x7a3e2f);
+
+    // Exit area (bottom)
+    this.add.rectangle(400, 490, 180, 40, 0x263949)
+      .setStrokeStyle(2, 0xe2c17b, 0.5);
+
+    this.add.text(400, 490, "Exit", {
+      fontFamily: "Manrope, sans-serif",
       fontSize: "16px",
       color: "#f6efe2",
     }).setOrigin(0.5);
   }
 
+  setupWalkZones() {
+    this.walkZones = [
+      new Phaser.Geom.Circle(400, 260, 120), // piazza
+      new Phaser.Geom.Rectangle(300, 380, 200, 140), // south
+      new Phaser.Geom.Rectangle(600, 140, 120, 260), // east
+      new Phaser.Geom.Rectangle(80, 140, 120, 260), // west
+    ];
+  }
+
+  isWalkable(x, y) {
+    return this.walkZones.some((zone) => zone.contains(x, y));
+  }
+
   createNpcs() {
     const slots = this.location.npcSlots ?? [];
-    this.npcEntries = slots.map((npcId, index) => {
-      const x = 220 + index * 180;
-      const y = 236 + (index % 2) * 68;
-      const body = this.add.circle(x, y, 20, 0xb64c33, 0.95).setStrokeStyle(3, 0xf2dcc0, 0.6).setDepth(12);
+    this.npcEntries = slots.map((npcId) => {
+      const positions = {
+        mercato: { x: 220, y: 330 },
+        caffe: { x: 600, y: 330 },
+        forno: { x: 400, y: 420 },
+        libreria: { x: 650, y: 200 },
+      };
+
+      const pos = positions[npcId] ?? { x: 400, y: 260 };
+
+      const x = pos.x;
+      const y = pos.y;
+      const body = this.add.circle(x, y, 20, 0xb64c33, 0.95).setStrokeStyle(3, 0xf2dcc0, 0.6);
       const label = this.add.text(x, y - 38, NPC_DISPLAY[npcId] ?? DIALOGUES[npcId]?.npcName ?? npcId, {
         fontFamily: "Manrope, Trebuchet MS, sans-serif",
         fontSize: "15px",
         color: "#f5ead4",
         align: "center",
-      }).setOrigin(0.5).setDepth(12);
+      }).setOrigin(0.5);
+      body.setDepth(y);
+      label.setDepth(y);
       return { npcId, x, y, body, label };
     });
   }
@@ -142,9 +200,16 @@ export class LocationScene extends Phaser.Scene {
   update(_, delta) {
     this.inputController.update();
     const movement = this.inputController.getMovementVector();
-    updatePlayerMovement(this.playerController, movement, delta);
-    this.playerController.sprite.x = Phaser.Math.Clamp(this.playerController.sprite.x, 38, 762);
-    this.playerController.sprite.y = Phaser.Math.Clamp(this.playerController.sprite.y, 148, 450);
+
+    const nextX = this.playerController.sprite.x + movement.x * delta * 0.2;
+    const nextY = this.playerController.sprite.y + movement.y * delta * 0.2;
+
+    if (this.isWalkable(nextX, nextY)) {
+      this.playerController.sprite.x = nextX;
+      this.playerController.sprite.y = nextY;
+    }
+
+    this.playerController.sprite.setDepth(this.playerController.sprite.y);
     this.playerController.shadow.setPosition(this.playerController.sprite.x, this.playerController.sprite.y + 24);
 
     this.nearestNpc = this.getNearestNpc();
@@ -262,7 +327,7 @@ export class LocationScene extends Phaser.Scene {
 
   handlePointer(pointer) {
     if (this.inputController.pointerInJoystick(pointer)) return;
-    if (pointer.y > 476) {
+    if (pointer.y > this.scale.height - 36) {
       this.leaveLocation();
       return;
     }
