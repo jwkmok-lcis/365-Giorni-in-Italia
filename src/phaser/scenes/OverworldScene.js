@@ -55,7 +55,7 @@ export class OverworldScene extends Phaser.Scene {
     this.runtime = this.registry.get("runtime");
     this.layout = OVERWORLD_LAYOUT;
     this.runtime.setHeaderHidden(true);
-    this.runtime.setInfoDrawerHidden(false);
+    this.runtime.setInfoDrawerHidden(true);
     this.runtime.currentLocationId = null;
 
     const { width, height } = this.layout.world;

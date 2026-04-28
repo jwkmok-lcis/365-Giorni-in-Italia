@@ -19,26 +19,38 @@ export function createTownCamera(scene, target, options = {}) {
     return Math.max(minFitZoom, Math.min(maxFitZoom, fit));
   }
 
+  function getViewportCoverZoom() {
+    if (!options.worldWidth || !options.worldHeight) {
+      return 1;
+    }
+
+    const cover = Math.max(scene.scale.width / options.worldWidth, scene.scale.height / options.worldHeight);
+    const minCoverZoom = options.minCoverZoom ?? 0.7;
+    const maxCoverZoom = options.maxCoverZoom ?? 2.4;
+    return Math.max(minCoverZoom, Math.min(maxCoverZoom, cover));
+  }
+
   function getProfile() {
     const isPortrait = scene.scale.height >= scene.scale.width;
     const isTouchPortrait = options.isTouch && isPortrait;
     const viewportFitZoom = getViewportFitZoom();
+    const viewportCoverZoom = getViewportCoverZoom();
 
     if (options.mode === "overworld") {
       if (isTouchPortrait) {
         return {
-          zoom: 1.08 * viewportFitZoom,
-          plazaZoom: 0.98 * viewportFitZoom,
-          buildingZoom: 1.22 * viewportFitZoom,
+          zoom: viewportCoverZoom * 1.04,
+          plazaZoom: viewportCoverZoom,
+          buildingZoom: viewportCoverZoom * 1.14,
           followOffsetY: -126,
           lookAheadY: 28,
         };
       }
 
       return {
-        zoom: 0.72 * viewportFitZoom,
-        plazaZoom: 0.66 * viewportFitZoom,
-        buildingZoom: 0.84 * viewportFitZoom,
+        zoom: viewportCoverZoom * 1.02,
+        plazaZoom: viewportCoverZoom,
+        buildingZoom: viewportCoverZoom * 1.12,
         followOffsetY: -18,
         lookAheadY: 10,
       };
