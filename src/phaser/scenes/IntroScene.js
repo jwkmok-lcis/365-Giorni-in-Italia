@@ -425,7 +425,21 @@ export class IntroScene extends Phaser.Scene {
       },
     });
 
-    this.root.add([panelShadow, panelGlow, panel, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton]);
+    const menuShellElements = [
+      panelShadow,
+      panelGlow,
+      panel,
+      crest,
+      title,
+      oliveRule,
+      terracottaRule,
+      subtitleOne,
+      subtitleTwo,
+      copy,
+      speakerButton,
+    ].filter(Boolean);
+
+    this.root.add(menuShellElements);
 
     const baseY = layout.buttonBaseY;
     const spacing = layout.buttonSpacing;
@@ -447,7 +461,7 @@ export class IntroScene extends Phaser.Scene {
       this.root.add(button);
     });
 
-    const elements = [panelShadow, panelGlow, panel, crest, title, oliveRule, terracottaRule, subtitleOne, subtitleTwo, copy, speakerButton].filter(Boolean);
+    const elements = menuShellElements;
     elements.forEach((el) => {
       el.setAlpha(0);
     });
