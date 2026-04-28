@@ -8,25 +8,37 @@ export function createTownCamera(scene, target, options = {}) {
 
   camera.startFollow(target, true, options.mode === "overworld" ? 0.06 : 0.09, options.mode === "overworld" ? 0.06 : 0.09);
 
+  function getViewportFitZoom() {
+    if (!options.worldWidth || !options.worldHeight) {
+      return 1;
+    }
+
+    const fit = Math.min(scene.scale.width / options.worldWidth, scene.scale.height / options.worldHeight);
+    const minFitZoom = options.minFitZoom ?? 0.7;
+    const maxFitZoom = options.maxFitZoom ?? 1.45;
+    return Math.max(minFitZoom, Math.min(maxFitZoom, fit));
+  }
+
   function getProfile() {
     const isPortrait = scene.scale.height >= scene.scale.width;
     const isTouchPortrait = options.isTouch && isPortrait;
+    const viewportFitZoom = getViewportFitZoom();
 
     if (options.mode === "overworld") {
       if (isTouchPortrait) {
         return {
-          zoom: 1.08,
-          plazaZoom: 0.98,
-          buildingZoom: 1.22,
+          zoom: 1.08 * viewportFitZoom,
+          plazaZoom: 0.98 * viewportFitZoom,
+          buildingZoom: 1.22 * viewportFitZoom,
           followOffsetY: -126,
           lookAheadY: 28,
         };
       }
 
       return {
-        zoom: 0.72,
-        plazaZoom: 0.66,
-        buildingZoom: 0.84,
+        zoom: 0.72 * viewportFitZoom,
+        plazaZoom: 0.66 * viewportFitZoom,
+        buildingZoom: 0.84 * viewportFitZoom,
         followOffsetY: -18,
         lookAheadY: 10,
       };

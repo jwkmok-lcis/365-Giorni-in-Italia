@@ -6,6 +6,9 @@ import { createTownInput } from "../../systems/input.js";
 import { createPlayerController, updatePlayerMovement } from "../../systems/player.js";
 import { getCurrentObjectiveNpcId } from "../runtime/createRuntime.js";
 
+const OVERWORLD_MAP_TEXTURE = "overworld-map-image";
+const OVERWORLD_MAP_IMAGE = "assets/maps/piazza-overworld.png";
+
 const PAPER = 0xe7d6b6;
 const PAPER_SHADE = 0xd6c19a;
 const PATH_BASE = 0xcbb38a;
@@ -42,6 +45,12 @@ export class OverworldScene extends Phaser.Scene {
     this.activeLocation = null;
   }
 
+  preload() {
+    if (!this.textures.exists(OVERWORLD_MAP_TEXTURE)) {
+      this.load.image(OVERWORLD_MAP_TEXTURE, OVERWORLD_MAP_IMAGE);
+    }
+  }
+
   create() {
     this.runtime = this.registry.get("runtime");
     this.layout = OVERWORLD_LAYOUT;
@@ -50,7 +59,8 @@ export class OverworldScene extends Phaser.Scene {
     this.runtime.currentLocationId = null;
 
     const { width, height } = this.layout.world;
-    this.scale.resize(800, 512);
+    this.worldWidth = width;
+    this.worldHeight = height;
     this.physics.world.setBounds(0, 0, width, height);
     this.cameras.main.setBounds(0, 0, width, height);
 
@@ -77,6 +87,8 @@ export class OverworldScene extends Phaser.Scene {
     this.cameraController = createTownCamera(this, this.playerController.sprite, {
       isTouch: this.inputController.isTouch,
       mode: "overworld",
+      worldWidth: this.worldWidth,
+      worldHeight: this.worldHeight,
     });
     this.cameraController.applyForViewport(true);
 
@@ -95,6 +107,7 @@ export class OverworldScene extends Phaser.Scene {
     };
     this.input.on("pointerdown", this.pointerHandler);
     this.scale.on("resize", this.handleResize, this);
+    this.handleResize();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.input.off("pointerdown", this.pointerHandler);
       this.scale.off("resize", this.handleResize, this);
@@ -216,6 +229,15 @@ export class OverworldScene extends Phaser.Scene {
 
   drawMap() {
     const { width, height, parchmentInset } = this.layout.world;
+
+    if (this.textures.exists(OVERWORLD_MAP_TEXTURE)) {
+      this.add.image(0, 0, OVERWORLD_MAP_TEXTURE)
+        .setOrigin(0, 0)
+        .setDisplaySize(width, height)
+        .setDepth(1);
+      return;
+    }
+
     const graphics = this.add.graphics().setDepth(1);
     graphics.fillStyle(0x1b2430, 1);
     graphics.fillRect(0, 0, width, height);
@@ -654,7 +676,12 @@ export class OverworldScene extends Phaser.Scene {
 
   pointerHitsEndDayButton(pointer) {
     if (!this.endDayButton?.visible) return false;
-    return pointer.x >= 570 && pointer.x <= 782 && pointer.y >= 456 && pointer.y <= 490;
+    const halfWidth = 106;
+    const halfHeight = 17;
+    return pointer.x >= this.endDayButton.x - halfWidth
+      && pointer.x <= this.endDayButton.x + halfWidth
+      && pointer.y >= this.endDayButton.y - halfHeight
+      && pointer.y <= this.endDayButton.y + halfHeight;
   }
 
   endDay() {
@@ -667,7 +694,21 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   handleResize() {
+    const { width, height } = this.scale;
     this.inputController.resize();
-    this.cameraController.applyForViewport();
+    this.cameraController.applyForViewport(true);
+
+    if (this.topBar) {
+      this.topBar.setPosition(width * 0.5, 24);
+    }
+    if (this.focusChip) {
+      this.focusChip.setPosition(width - 152, 68);
+    }
+    if (this.contextChip) {
+      this.contextChip.setPosition(width * 0.5, height - 44);
+    }
+    if (this.endDayButton) {
+      this.endDayButton.setPosition(width - 124, height - 40);
+    }
   }
 }
