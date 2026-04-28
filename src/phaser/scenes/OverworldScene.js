@@ -92,8 +92,8 @@ export class OverworldScene extends Phaser.Scene {
     });
     this.cameraController.applyForViewport(true);
 
-    this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-    this.endDayKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+    this.enterKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER) ?? null;
+    this.endDayKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.N) ?? null;
     this.markerPulse = 0;
 
     this.buildUi();
@@ -153,12 +153,12 @@ export class OverworldScene extends Phaser.Scene {
       movement,
     });
 
-    if (this.activeLocation && (this.inputController.consumeInteract() || Phaser.Input.Keyboard.JustDown(this.enterKey))) {
+    if (this.activeLocation && (this.inputController.consumeInteract() || (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)))) {
       this.enterLocation(this.activeLocation);
       return;
     }
 
-    if (Phaser.Input.Keyboard.JustDown(this.endDayKey)) {
+    if (this.endDayKey && Phaser.Input.Keyboard.JustDown(this.endDayKey)) {
       this.endDay();
     }
 

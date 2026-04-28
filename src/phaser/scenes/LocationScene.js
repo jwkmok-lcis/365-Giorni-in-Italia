@@ -43,8 +43,8 @@ export class LocationScene extends Phaser.Scene {
     this.playerController.sprite.setDepth(this.playerController.sprite.y);
     this.playerController.shadow.setDepth(9);
     this.cameras.main.startFollow(this.playerController.sprite, true, 0.08, 0.08);
-    this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-    this.escapeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    this.enterKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER) ?? null;
+    this.escapeKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC) ?? null;
 
     this.createNpcs();
     this.messageText = this.add.text(400, 470, "", {
@@ -213,11 +213,11 @@ export class LocationScene extends Phaser.Scene {
     this.playerController.shadow.setPosition(this.playerController.sprite.x, this.playerController.sprite.y + 24);
 
     this.nearestNpc = this.getNearestNpc();
-    if (Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
+    if (this.escapeKey && Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
       this.leaveLocation();
       return;
     }
-    if (this.nearestNpc && (this.inputController.consumeInteract() || Phaser.Input.Keyboard.JustDown(this.enterKey))) {
+    if (this.nearestNpc && (this.inputController.consumeInteract() || (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)))) {
       this.interactWithNpc(this.nearestNpc);
       return;
     }
