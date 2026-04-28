@@ -26,13 +26,13 @@ export class LessonScene extends Phaser.Scene {
     this.refresh();
 
     this.keyHandler = (event) => this.handleKey(event);
-    this.input.keyboard.on("keydown", this.keyHandler);
+    this.input.keyboard?.on("keydown", this.keyHandler);
     this.resizeHandler = () => this.refresh();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.backdropTween?.stop();
       this.backdropTween = null;
-      this.input.keyboard.off("keydown", this.keyHandler);
+      this.input.keyboard?.off("keydown", this.keyHandler);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     });
   }

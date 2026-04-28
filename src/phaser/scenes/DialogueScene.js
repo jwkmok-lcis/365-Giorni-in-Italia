@@ -30,9 +30,9 @@ export class DialogueScene extends Phaser.Scene {
     });
 
     this.keyHandler = (event) => this.handleKey(event);
-    this.input.keyboard.on("keydown", this.keyHandler);
+    this.input.keyboard?.on("keydown", this.keyHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.keyboard.off("keydown", this.keyHandler);
+      this.input.keyboard?.off("keydown", this.keyHandler);
       this.runtime.voice.stop();
     });
   }

@@ -94,7 +94,7 @@ export class IntroScene extends Phaser.Scene {
     this.refresh();
 
     this.keyHandler = (event) => this.handleKey(event);
-    this.input.keyboard.on("keydown", this.keyHandler);
+    this.input.keyboard?.on("keydown", this.keyHandler);
     this.pointerDownHandler = (pointer) => {
       if (this.mode !== "story") return;
       this.touchStartX = pointer.x;
@@ -145,7 +145,7 @@ export class IntroScene extends Phaser.Scene {
     this.scale.on(Phaser.Scale.Events.RESIZE, this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.clearStoryEffects();
-      this.input.keyboard.off("keydown", this.keyHandler);
+      this.input.keyboard?.off("keydown", this.keyHandler);
       this.input.off("pointerdown", this.pointerDownHandler);
       this.input.off("pointermove", this.pointerMoveHandler);
       this.input.off("pointerup", this.pointerUpHandler);

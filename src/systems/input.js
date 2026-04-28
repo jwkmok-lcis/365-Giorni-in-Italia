@@ -18,7 +18,7 @@ export function createTownInput(scene) {
       joystick.destroy();
     },
     consumeInteract() {
-      return Phaser.Input.Keyboard.JustDown(letterKeys.E);
+      return letterKeys ? Phaser.Input.Keyboard.JustDown(letterKeys.E) : false;
     },
     pointerInJoystick(pointer) {
       return joystick.contains(pointer);
@@ -26,16 +26,16 @@ export function createTownInput(scene) {
     getMovementVector() {
       const movement = new Phaser.Math.Vector2(0, 0);
 
-      if (cursors?.left.isDown || letterKeys.A.isDown) {
+      if (cursors?.left.isDown || letterKeys?.A.isDown) {
         movement.x -= 1;
       }
-      if (cursors?.right.isDown || letterKeys.D.isDown) {
+      if (cursors?.right.isDown || letterKeys?.D.isDown) {
         movement.x += 1;
       }
-      if (cursors?.up.isDown || letterKeys.W.isDown) {
+      if (cursors?.up.isDown || letterKeys?.W.isDown) {
         movement.y -= 1;
       }
-      if (cursors?.down.isDown || letterKeys.S.isDown) {
+      if (cursors?.down.isDown || letterKeys?.S.isDown) {
         movement.y += 1;
       }
 
